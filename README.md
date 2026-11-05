@@ -20,6 +20,14 @@ report built only from real measurements.
 | 7 | `Noise_Simulation.ipynb` | 15-qubit GHZ state with depolarizing / bit-flip / phase-flip / amplitude-damping noise | done |
 | 8 | `QFT.ipynb` | QFT of a 15-qubit periodic state, compared with NumPy's FFT | done |
 
+## Teaching material
+
+* [`presentations/QFT_Lecture.pdf`](presentations/QFT_Lecture.pdf) - a 55-slide lecture (16:9, vector graphics) that
+  explains the Quantum Fourier Transform to first-year engineering students: Fourier analysis, complex numbers,
+  qubits, the QFT definition, the circuit derived step by step, worked examples, CUDA-Q results and exercises with
+  answers. Source: `presentations/qft_source/` (`python make_figures.py` regenerates the figures with CUDA-Q, then
+  `latexmk -pdf qft_lecture.tex` builds the slides; needs TeX Live with beamer and quantikz).
+
 ## Structure of the notebooks
 
 `QML.ipynb` is deliberately **short and easy to modify**: one input cell, one small CUDA-Q kernel driven by a Python

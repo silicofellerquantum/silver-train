@@ -6,3 +6,15 @@ __pycache__/
 *.pyc
 # Notebooks exported as scripts for MPI runs
 /*.py
+# LaTeX build files (presentations/qft_source)
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+presentations/qft_source/qft_lecture.pdf

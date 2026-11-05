@@ -274,7 +274,8 @@ cells.append(md(r"""
   controlled rotations $R_{k-j+1}$ (`r1` by angle $\pi/2^{k-j}$) controlled by every less significant qubit $k$,
   and finally SWAPs that reverse the qubit order.
 * `qft_from_gates` - prepares the input with $H$/$X$ gates (basis and power-of-2 periodic states).
-* `qft_from_amplitudes` - loads an arbitrary normalised vector with `cudaq.qvector(amplitudes)`.
+* `qft_from_amplitudes` - loads an arbitrary normalised vector, passed as `cudaq.State.from_data(vector)`, with
+  `cudaq.qvector(state)` (a plain Python list would be limited to 10 qubits in CUDA-Q 0.16).
 
 CUDA-Q stores state vectors with qubit 0 as the **least** significant index bit, while printed bitstrings show
 qubit 0 **first**; the helper `bit_reverse_order()` converts between the two so that index $y$ always means the
@@ -322,15 +323,15 @@ def build_qft_kernels():
         mz(qubits)
 
     @cudaq.kernel
-    def qft_from_amplitudes(amplitudes: list[complex]):
-        """Amplitude-encoded input (vector in CUDA-Q's index order), QFT, no measurement."""
-        qubits = cudaq.qvector(amplitudes)
+    def qft_from_amplitudes(initial: cudaq.State):
+        """Amplitude-encoded input (a cudaq.State in CUDA-Q's index order), QFT, no measurement."""
+        qubits = cudaq.qvector(initial)
         qft(qubits)
 
     @cudaq.kernel
-    def qft_from_amplitudes_measured(amplitudes: list[complex]):
+    def qft_from_amplitudes_measured(initial: cudaq.State):
         """Amplitude-encoded input, QFT, measurement of every qubit."""
-        qubits = cudaq.qvector(amplitudes)
+        qubits = cudaq.qvector(initial)
         qft(qubits)
         mz(qubits)
 
@@ -342,8 +343,9 @@ def kernel_arguments(kernels, measured):
     """(kernel, arguments) for the configured input; amplitudes are converted to CUDA-Q's index order."""
     if preparation == "gates":
         return kernels["gates_measured" if measured else "gates"], (N_QUBITS, h_mask, x_mask)
-    vector = bit_reverse_order(input_amplitudes, N_QUBITS).tolist()
-    return kernels["amplitudes_measured" if measured else "amplitudes"], (vector,)
+    # cudaq.State.from_data works for any size; a plain Python list is limited to 10 qubits in CUDA-Q 0.16
+    vector = np.ascontiguousarray(bit_reverse_order(input_amplitudes, N_QUBITS).astype(np.complex128))
+    return kernels["amplitudes_measured" if measured else "amplitudes"], (cudaq.State.from_data(vector),)
 
 
 kernels_vis = build_qft_kernels()                                    # used for drawing / statistics only
