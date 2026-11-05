@@ -12,7 +12,12 @@ for ov in overrides:
     cell.source = pattern.sub(f"{name} = {value}", cell.source, count=1)
 client = NotebookClient(nb, timeout=3600, kernel_name="python3", allow_errors=True,
                         resources={"metadata": {"path": __import__("os").path.dirname(__import__("os").path.abspath(nb_path))}})
-t0 = time.time(); client.execute(); print(f"executed in {time.time() - t0:.1f}s")
+t0 = time.time()
+try:
+    client.execute()
+    print(f"executed in {time.time() - t0:.1f}s")
+except Exception as exc:                      # e.g. DeadKernelError: keep the partial outputs for debugging
+    print(f"EXECUTION ABORTED after {time.time() - t0:.1f}s: {type(exc).__name__}: {exc}")
 nbformat.write(nb, out_path)
 errs = [(i, o.ename, o.evalue[:300]) for i, c in enumerate(nb.cells) if c.cell_type == "code" for o in c.get("outputs", []) if o.output_type == "error"]
 print("errors:", errs if errs else "none")

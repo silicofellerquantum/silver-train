@@ -86,7 +86,7 @@ cells.append(code(r'''
 # =====================================================================================
 
 # ---- Problem definition: circuit and noise ----------------------------------------------
-N_QUBITS = 15                    # qubits in the circuit (density matrix: keep <= 12; stabilizer: hundreds possible)
+N_QUBITS = 15                    # qubits in the circuit (density matrix: keep <= 10; stabilizer: hundreds possible)
 CIRCUIT = "ghz"                  # "ghz" (Clifford, default) | "mirror" (random rotations + inverse, non-Clifford)
 MIRROR_LAYERS = 2                # "mirror": random layers before the inverse (circuit depth ~ 2 x layers)
 NOISE_MODEL = "depolarizing"     # "depolarizing" | "bit_flip" | "phase_flip" | "amplitude_damping"
@@ -118,9 +118,9 @@ the trajectory simulator.
 | Goal | Setting in Section 3 | What you will see |
 |---|---|---|
 | Phase noise is invisible in Z | `NOISE_MODEL = "phase_flip"` | Z-basis population stays 1, X-basis parity drops |
-| Energy relaxation | `NOISE_MODEL = "amplitude_damping"`, `N_QUBITS = 10` | outcomes biased towards 0 (density matrix) |
-| Non-Clifford circuit | `CIRCUIT = "mirror"`, `N_QUBITS = 8` | success probability of returning to `00000000` |
-| Exact density matrix | `SIMULATION_METHOD = "density_matrix"`, `N_QUBITS = 10` | state fidelity and purity |
+| Energy relaxation | `NOISE_MODEL = "amplitude_damping"`, `N_QUBITS = 8` | outcomes biased towards 0 (density matrix) |
+| Non-Clifford circuit | `CIRCUIT = "mirror"`, `N_QUBITS = 6` | success probability of returning to `000000` |
+| Exact density matrix | `SIMULATION_METHOD = "density_matrix"`, `N_QUBITS = 8` | state fidelity and purity |
 | Large stabilizer run | `N_QUBITS = 100` (GHZ, Pauli noise) | runs in seconds on a CPU |
 """))
 cells.append(code(r'''
@@ -159,6 +159,39 @@ def no_error_probability(p):
     """Probability that no error happens anywhere = lower bound on the fidelity (Pauli noise)."""
     p2 = p if noise_kind == "depolarizing" else 1 - (1 - p) ** 2   # 2-qubit: one joint or two independent channels
     return (1 - p) ** gates_1q * (1 - p2) ** gates_2q
+
+# cudaq.get_state() has no noise_model argument in CUDA-Q 0.16, so the density-matrix method uses
+# cudaq.set_noise(), which prints a deprecation notice. The model object must stay referenced while in use.
+warnings.filterwarnings("ignore", message=".*set_noise is deprecated.*")
+
+
+def build_noise_model(kind, p):
+    """cudaq.NoiseModel with `kind` noise of strength p after every gate."""
+    model = cudaq.NoiseModel()
+    if p == 0.0:
+        return model                                    # empty model = noiseless
+    if kind == "depolarizing":
+        one, two = cudaq.DepolarizationChannel(p), cudaq.Depolarization2(p)
+    elif kind == "bit_flip":
+        probs = [0.0] * 15                              # Pauli2 order: IX IY IZ XI XX XY XZ YI YX YY YZ ZI ZX ZY ZZ
+        probs[0] = probs[3] = p * (1 - p)               # flip on one qubit only
+        probs[4] = p * p                                # flip on both qubits
+        one, two = cudaq.BitFlipChannel(p), cudaq.Pauli2(probs)
+    elif kind == "phase_flip":
+        probs = [0.0] * 15
+        probs[2] = probs[11] = p * (1 - p)              # IZ and ZI
+        probs[14] = p * p                               # ZZ
+        one, two = cudaq.PhaseFlipChannel(p), cudaq.Pauli2(probs)
+    else:                                               # amplitude damping, independently on both qubits of a CNOT
+        k0 = np.array([[1, 0], [0, np.sqrt(1 - p)]], dtype=complex)
+        k1 = np.array([[0, np.sqrt(p)], [0, 0]], dtype=complex)
+        one = cudaq.AmplitudeDampingChannel(p)
+        two = cudaq.KrausChannel([np.kron(a, b) for a in (k0, k1) for b in (k0, k1)])
+    for gate in ("h", "x", "ry", "rz"):
+        model.add_all_qubit_channel(gate, one)           # after every single-qubit gate of these types
+    model.add_all_qubit_channel("x", two, num_controls=1)   # after every CNOT
+    return model
+
 
 print(f"Circuit            : {description}")
 print(f"Noisy gate count   : {gates_1q} single-qubit + {gates_2q} two-qubit gates")
@@ -246,9 +279,33 @@ seconds_per_gate, timing_note = measure_gate_time(backend_cfg, N_QUBITS)
 print("\nExpected execution time (ESTIMATE)")
 print(f"  Circuit runs : {runs} ({len(sweep)} noise values x {'2 bases' if runs > len(sweep) else '1 basis'})")
 print(f"  Calibration  : {timing_note}")
-if seconds_per_gate is not None:
-    channel_cost = 4 if chosen_method == "density_matrix" else 1    # Kraus channels cost several gate applications
-    estimate = runs * (gates_1q + gates_2q) * seconds_per_gate * (1 + channel_cost)
+if chosen_method == "density_matrix":
+    # Noise channels dominate the cost and general Kraus channels (amplitude damping) are much slower than Pauli
+    # channels, so we time ONE real noisy density-matrix run of a small GHZ chain with the configured noise and
+    # scale it: cost ~ 4^N (density-matrix size) x number of noisy gate locations.
+    @cudaq.kernel
+    def calibration_chain(n: int):
+        qubits = cudaq.qvector(n)
+        h(qubits[0])
+        for i in range(n - 1):
+            x.ctrl(qubits[i], qubits[i + 1])
+
+    n_cal = min(N_QUBITS, 6)
+    calibration_model = build_noise_model(noise_kind, max(p_main, 0.01))   # keep a reference while CUDA-Q uses it
+    cudaq.set_noise(calibration_model)
+    try:
+        cudaq.get_state(calibration_chain, n_cal)                    # warm-up (JIT compilation)
+        t0 = time.perf_counter()
+        cudaq.get_state(calibration_chain, n_cal)
+        t_cal = time.perf_counter() - t0
+    finally:
+        cudaq.unset_noise()
+    per_run = t_cal * 4 ** (N_QUBITS - n_cal) * (gates_1q + gates_2q) / n_cal
+    print(f"  Noisy calibration run: {n_cal}-qubit chain with {noise_kind} noise took {t_cal * 1e3:.1f} ms; "
+          f"scaled by 4^{N_QUBITS - n_cal} and the gate count")
+    print(f"  Estimated    : ~{format_duration(runs * per_run)} for {runs} runs (rough estimate)")
+elif seconds_per_gate is not None:
+    estimate = runs * (gates_1q + gates_2q) * seconds_per_gate * 2
     print(f"  Estimated    : ~{format_duration(estimate)} (rough: each noise channel costs about one more gate)")
 elif chosen_method == "stabilizer":
     print("  Stabilizer simulation cost grows only polynomially (expect well below a second per run for N <= 100).")
@@ -261,7 +318,7 @@ cells.append(md(r"""
 * `ghz_z` / `ghz_x` - GHZ preparation measured in the Z basis / in the X basis (Hadamards before measuring).
 * `ghz_state`, `mirror_state` - the same circuits without measurement (density-matrix method reads $\rho$ directly).
 * `mirror_z` - mirror circuit $U^\dagger U$ with random $R_Y R_Z$ layers and CNOT ladders.
-* `build_noise_model(kind, p)` - a `cudaq.NoiseModel` that attaches the chosen channel after **every**
+* `build_noise_model(kind, p)` (defined in Section 4) - a `cudaq.NoiseModel` that attaches the chosen channel after **every**
   single-qubit gate (`h`, `x`, `ry`, `rz`) and a two-qubit channel after every CNOT (`x` with one control).
 """))
 cells.append(code(r'''
@@ -346,35 +403,6 @@ def build_noise_kernels():
 
     return {"ghz_state": ghz_state, "ghz_z": ghz_z, "ghz_x_state": ghz_x_state, "ghz_x": ghz_x,
             "mirror_state": mirror_state, "mirror_z": mirror_z}
-
-
-def build_noise_model(kind, p):
-    """cudaq.NoiseModel with `kind` noise of strength p after every gate."""
-    model = cudaq.NoiseModel()
-    if p == 0.0:
-        return model                                    # empty model = noiseless
-    if kind == "depolarizing":
-        one, two = cudaq.DepolarizationChannel(p), cudaq.Depolarization2(p)
-    elif kind == "bit_flip":
-        probs = [0.0] * 15                              # Pauli2 order: IX IY IZ XI XX XY XZ YI YX YY YZ ZI ZX ZY ZZ
-        probs[0] = probs[3] = p * (1 - p)               # flip on one qubit only
-        probs[4] = p * p                                # flip on both qubits
-        one, two = cudaq.BitFlipChannel(p), cudaq.Pauli2(probs)
-    elif kind == "phase_flip":
-        probs = [0.0] * 15
-        probs[2] = probs[11] = p * (1 - p)              # IZ and ZI
-        probs[14] = p * p                               # ZZ
-        one, two = cudaq.PhaseFlipChannel(p), cudaq.Pauli2(probs)
-    else:                                               # amplitude damping, independently on both qubits of a CNOT
-        k0 = np.array([[1, 0], [0, np.sqrt(1 - p)]], dtype=complex)
-        k1 = np.array([[0, np.sqrt(p)], [0, 0]], dtype=complex)
-        one = cudaq.AmplitudeDampingChannel(p)
-        two = cudaq.KrausChannel([np.kron(a, b) for a in (k0, k1) for b in (k0, k1)])
-    for gate in ("h", "x", "ry", "rz"):
-        model.add_all_qubit_channel(gate, one)           # after every single-qubit gate of these types
-    model.add_all_qubit_channel("x", two, num_controls=1)   # after every CNOT
-    return model
-
 
 kernels_vis = build_noise_kernels()
 print("Kernels defined:", ", ".join(kernels_vis))

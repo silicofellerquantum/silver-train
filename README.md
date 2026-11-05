@@ -5,8 +5,9 @@ Educational, executable Jupyter notebooks that demonstrate, visualize and benchm
 runs on CPU, NVIDIA GPU(s) or quantum-hardware targets, monitors RAM and GPU memory live, and ends with a benchmark
 report built only from real measurements.
 
-> **Status (work in progress):** 7 of the 8 planned notebooks are complete and tested. The QML notebook
-> (Quantum Convolutional Neural Network, QCNN) is still being written - see [Open work](#open-work).
+> **Status:** all 8 notebooks are complete. They are committed **with their outputs** from a full run at default
+> settings on a CPU-only test machine (see [Validation results](#validation-results-cpu-only-test-machine)); running
+> them on your hardware replaces those outputs with your own measurements.
 
 | # | Notebook | Default problem | Status |
 |---|---|---|---|
@@ -15,11 +16,15 @@ report built only from real measurements.
 | 3 | `Shor.ipynb` | Factor N = 15 (12 qubits) + resource / reverse estimation for larger N | done |
 | 4 | `Grover.ipynb` | Find 1 marked item among 2^15 | done |
 | 5 | `HHL.ipynb` | Solve a 4x4 linear system A x = b (7 qubits) | done |
-| 6 | `QML.ipynb` | QCNN classifier (planned: 3x5-pixel images = 15 qubits) | **in progress** |
+| 6 | `QML.ipynb` | QCNN (quantum convolutional neural network) classifying 2x4-pixel line images (8 qubits; 3x5 = 15 qubits on a GPU) | done |
 | 7 | `Noise_Simulation.ipynb` | 15-qubit GHZ state with depolarizing / bit-flip / phase-flip / amplitude-damping noise | done |
 | 8 | `QFT.ipynb` | QFT of a 15-qubit periodic state, compared with NumPy's FFT | done |
 
-## Structure of every notebook
+## Structure of the notebooks
+
+`QML.ipynb` is deliberately **short and easy to modify**: one input cell, one small CUDA-Q kernel driven by a Python
+layout function, a plain training loop, plots and a short report - without the shared utility cell and without
+memory monitoring. The other seven notebooks follow this full structure:
 
 1. Problem statement and mathematical explanation (LaTeX)
 2. Import libraries (with installation instructions and a version check)
@@ -122,7 +127,8 @@ Every rank prints its own node and per-GPU memory lines, so multi-node memory us
 ## Changing the number of qubits
 
 Edit Section 3. The parameter is `N_QUBITS` (VQE, QAOA, Grover, Noise, QFT), `N_TO_FACTOR` (Shor: qubits = 3 x bits
-of N) or `NUM_CLOCK_QUBITS` + matrix size (HHL). Memory needed for the state:
+of N), `NUM_CLOCK_QUBITS` + matrix size (HHL) or `IMAGE_ROWS` x `IMAGE_COLS` (QML: one qubit per pixel).
+Memory needed for the state:
 
 | Method | Memory | 15 qubits | 30 qubits | 40 qubits |
 |---|---|---|---|---|
@@ -157,19 +163,24 @@ are written to `exports/<notebook>/` (ignored by git).
 
 ## Validation results (CPU-only test machine)
 
-Measured while developing the notebooks at their default settings on a CPU-only container (4 vCPU Intel Xeon
-@ 2.1 GHz, 16.9 GB RAM, CUDA-Q 0.16.0, no GPU). Your numbers will differ; GPU runs are much faster.
+These are the outputs now stored in the notebooks: a full run of all 8 notebooks at their default settings on a
+CPU-only container (4 vCPU Intel Xeon @ 2.1 GHz, 16.9 GB RAM, CUDA-Q 0.16.0, simulator `qpp-cpu` / `stim`, no GPU).
+Your numbers will differ; GPU runs are much faster.
 
-| Notebook | Result | Execution cell |
+| Notebook | Result | Execution time |
 |---|---|---|
-| VQE (TFIM, 15 qubits, h = 0.5) | E = -15.05339 vs exact -15.08252 (0.19 % above, variational) | 75 s |
-| VQE (H2 example) | error 1.3e-10 Ha, chemical accuracy in 22 evaluations | 0.2 s |
-| QAOA (15 nodes, 30 edges, p = 2) | optimal cut 25 found, approximation ratio 0.82, P(optimal) = 0.06 | 41 s |
-| Shor (N = 15, a = 7) | 15 = 3 x 5 verified, 77 % of shots yield the factors | 0.1 s |
-| Grover (15 qubits) | marked item in 2000/2000 shots; sweep matches sin^2((2k+1)theta) to 1e-12 | 70 s |
+| VQE (TFIM, 15 qubits, h = 0.5) | E = -15.05339 vs exact -15.08252 (0.19 % above, as the variational principle requires) | 70 s |
+| QAOA (15 nodes, 30 edges, p = 2) | optimal cut 25 found, approximation ratio 0.82, P(optimal split) = 0.06 | 41 s |
+| Shor (N = 15, a = 7) | 15 = 3 x 5 verified, 77 % of shots yield the factors | 0.07 s |
+| Grover (15 qubits) | marked item in 2000/2000 shots; iteration sweep matches sin^2((2k+1)theta) to 8e-13 | 67 s |
 | HHL (4x4) | fidelity 1.0000000000, relative error 1.7e-15; shot read-out within statistical error | 0.2 s |
-| Noise (15-qubit GHZ, depolarizing p = 0.01, stim) | population 0.894 (lower bound 0.860), X-basis parity 0.691 | 0.4 s |
-| QFT (15 qubits, period 8) | state fidelity 1.000000000000 vs NumPy FFT, max amplitude error 7.5e-16 | 1 s |
+| QML / QCNN (8 qubits, 20 + 20 images) | training accuracy 90 %, test accuracy 85 % (random guessing 50 %), loss 1.12 -> 0.67 | 3.4 s training |
+| Noise (15-qubit GHZ, depolarizing p = 0.01, stim) | population 0.894 (lower bound 0.860), X-basis parity 0.691; noiseless check 1.000 | 0.25 s |
+| QFT (15 qubits, period 8) | state fidelity 1.000000000000 vs NumPy FFT, max amplitude error 7.5e-16 | 0.9 s |
+
+Also checked during development: VQE with the H2 example reaches chemical accuracy (error 1.3e-10 Ha in 22
+evaluations); the noise notebook's density-matrix path (amplitude damping, mirror circuit) and the phase-flip case
+(Z-basis population stays 1 while the X-basis parity drops to 0.56) behave as expected.
 
 GPU, multi-GPU, MPS/tensor-network and real-hardware paths are implemented following the CUDA-Q 0.16 APIs but
 could not be executed on the CPU-only test machine.
@@ -196,15 +207,14 @@ could not be executed on the CPU-only test machine.
 * `multi-gpu` from inside Jupyter runs on one GPU; real pooling needs `mpiexec` (see above).
 * Hardware targets support sampling only (no state vectors); real submissions need provider credentials and may cost money.
 * Execution-time estimates are rough (calibrated per backend, extrapolated with 2^N or 4^N scaling).
+* **QML / QCNN:** training runs the circuit once per image per optimizer step, so simulation cost dominates. In a test
+  at 15 qubits (3x5 images, 16 training images, 60 COBYLA evaluations) each circuit took ~0.35 s on the 4-core test
+  CPU and the accuracy reached only 69 %: the deeper 15-qubit QCNN needs more optimizer steps. That is why the QML
+  default is 8 qubits; use a GPU (`TARGET = "nvidia"`) and raise `MAX_ITERATIONS` for 15+ qubits.
 
 ## Open work
 
-* `QML.ipynb`: Quantum Convolutional Neural Network (QCNN) - convolution layers with parameters shared across qubit
-  pairs, pooling by measurement-free conditional rotations, readout of one qubit; classification of 3x5-pixel
-  horizontal-vs-vertical line images (15 qubits). Training cost on CPU is the main design constraint.
-* Noise notebook: calibrate the density-matrix time estimate with a short noisy run (the current estimate can be
-  ~10x too low for general Kraus channels).
-* Re-run all notebooks at default settings after the latest fixes, and validate GPU / multi-GPU runs.
+* Validate the GPU, multi-GPU (MPI) and real-hardware paths on a machine with NVIDIA GPUs (the test machine had none).
 
 ## Development: regenerating the notebooks
 
@@ -215,6 +225,9 @@ self-contained. You can edit the notebooks directly, but **regenerating overwrit
 ```bash
 cd dev/notebook_builders && python build_grover.py ../../Grover.ipynb
 ```
+
+There is one builder per notebook (`build_vqe.py`, `build_qaoa.py`, `build_shor.py`, `build_grover.py`, `build_hhl.py`,
+`build_qml.py`, `build_noise.py`, `build_qft.py`). Regenerated notebooks contain no outputs until they are run.
 
 `run_variant.py` executes a notebook with overridden Section 3 parameters (useful for tests), for example:
 
