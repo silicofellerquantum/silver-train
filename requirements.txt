@@ -1,0 +1,11 @@
+# CUDA-Q quantum algorithm benchmarking suite - Python >= 3.11, pip >= 24
+# Tested with cudaq 0.16.0.post1 (pip picks the CUDA 12 or CUDA 13 build automatically).
+cudaq>=0.16.0
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.5
+psutil>=5.9
+nvidia-ml-py>=12.0      # GPU memory monitoring via NVML (optional on CPU-only machines)
+jupyter
+nbformat>=5.9           # only needed for dev/notebook_builders
+nbclient>=0.10          # only needed for dev/notebook_builders/run_variant.py

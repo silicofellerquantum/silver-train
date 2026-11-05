@@ -1,0 +1,8 @@
+# Files written when the notebooks run
+exports/
+# Jupyter / Python caches
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+# Notebooks exported as scripts for MPI runs
+/*.py

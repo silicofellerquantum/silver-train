@@ -1,0 +1,223 @@
+# CUDA-Q Quantum Algorithm Benchmarking Suite
+
+Educational, executable Jupyter notebooks that demonstrate, visualize and benchmark quantum algorithms with
+**NVIDIA CUDA-Q**. Every notebook explains the problem and the mathematics, lets you change all inputs in one cell,
+runs on CPU, NVIDIA GPU(s) or quantum-hardware targets, monitors RAM and GPU memory live, and ends with a benchmark
+report built only from real measurements.
+
+> **Status (work in progress):** 7 of the 8 planned notebooks are complete and tested. The QML notebook
+> (Quantum Convolutional Neural Network, QCNN) is still being written - see [Open work](#open-work).
+
+| # | Notebook | Default problem | Status |
+|---|---|---|---|
+| 1 | `VQE.ipynb` | Ground state of a 15-qubit transverse-field Ising chain (H2 molecule as built-in example) | done |
+| 2 | `QAOA.ipynb` | Max-Cut on a 15-node random graph | done |
+| 3 | `Shor.ipynb` | Factor N = 15 (12 qubits) + resource / reverse estimation for larger N | done |
+| 4 | `Grover.ipynb` | Find 1 marked item among 2^15 | done |
+| 5 | `HHL.ipynb` | Solve a 4x4 linear system A x = b (7 qubits) | done |
+| 6 | `QML.ipynb` | QCNN classifier (planned: 3x5-pixel images = 15 qubits) | **in progress** |
+| 7 | `Noise_Simulation.ipynb` | 15-qubit GHZ state with depolarizing / bit-flip / phase-flip / amplitude-damping noise | done |
+| 8 | `QFT.ipynb` | QFT of a 15-qubit periodic state, compared with NumPy's FFT | done |
+
+## Structure of every notebook
+
+1. Problem statement and mathematical explanation (LaTeX)
+2. Import libraries (with installation instructions and a version check)
+3. **Input parameters** - the only cell you need to edit
+4. Example inputs (a working default plus a table of alternatives)
+5. Benchmark utilities and backend initialization
+6. Expected output *before* execution (exact expectations, memory formula, calibrated time estimate)
+7. Quantum circuit generation (drawing limited to 10 qubits, full-circuit gate statistics, export)
+8. Execution cell with live memory monitoring
+9. Results and visualization
+10. Final benchmark report (also saved as JSON + PNG in `exports/<notebook>/`)
+
+## Installation
+
+Requirements: Linux x86_64/aarch64 (GPU acceleration) or macOS on Apple silicon (CPU only), Python >= 3.11, pip >= 24.
+
+```bash
+python3 -m venv cudaq-env
+```
+
+```bash
+source cudaq-env/bin/activate
+```
+
+```bash
+pip install --upgrade pip
+```
+
+```bash
+pip install -r requirements.txt
+```
+
+```bash
+jupyter lab
+```
+
+A GPU is not required: CPU simulators (`qpp-cpu`, `density-matrix-cpu`, `stim`) are always available.
+
+### CUDA-Q setup, NVIDIA drivers and CUDA compatibility
+
+* `pip install cudaq` detects the CUDA runtime/driver on the machine at install time and installs the matching
+  binary package: `cuda-quantum-cu12` (CUDA 12.x) or `cuda-quantum-cu13` (CUDA 13.x). If no CUDA installation is
+  detected it installs the CUDA 13 build. Do not install two variants side by side.
+* Driver requirement: CUDA 12.x builds need an NVIDIA Linux driver >= 525.60.13; CUDA 13.x builds need driver R580
+  or newer. Check with `nvidia-smi` (top-right shows the highest CUDA version the driver supports). If CUDA-Q reports
+  "CUDA driver version is insufficient", install the CUDA 12 build (`pip uninstall cudaq cuda-quantum-cu13` then
+  `pip install cuda-quantum-cu12`) or update the driver.
+* CUDA 13 no longer supports some older GPU architectures (Maxwell, Pascal, Volta); use the CUDA 12 build on those.
+* Verify the installation:
+
+```bash
+python -c "import cudaq; print(cudaq.__version__); print('GPUs:', cudaq.num_available_gpus())"
+```
+
+* **Multi-GPU / multi-node** (state vector distributed over GPUs) needs MPI. The CUDA-Q package README recommends a
+  conda environment with `openmpi>=5.0.3` and `mpi4py`, then running CUDA-Q's
+  `distributed_interfaces/activate_custom_mpi.sh` (inside the installed package) once, and setting
+  `export OMPI_MCA_opal_cuda_support=true OMPI_MCA_btl='^openib'`.
+
+## Selecting a backend
+
+In Section 3 of each notebook:
+
+```python
+BACKEND = "auto"              # "auto" | "cpu" | "gpu" | "multi-gpu" | "hardware"
+SIMULATION_METHOD = "statevector"
+GPU_PRECISION = "fp64"        # "fp32" halves GPU memory
+```
+
+| Choice | CUDA-Q target | Notes |
+|---|---|---|
+| `cpu` + `statevector` | `qpp-cpu` | OpenMP, fp64 |
+| `cpu` + `density_matrix` | `density-matrix-cpu` | mixed states / noise, memory 16 x 4^N bytes |
+| `cpu` + `stabilizer` | `stim` | Clifford circuits + Pauli noise only (noise notebook) |
+| `gpu` + `statevector` | `nvidia` (option `fp32`/`fp64`) | cuStateVec, one GPU |
+| `gpu` + `trajectory` | `nvidia` + noise model | Monte-Carlo noise trajectories (noise notebook) |
+| `gpu` + `mps` | `tensornet-mps` | matrix product state |
+| `gpu` + `tensornet` | `tensornet` | exact tensor-network contraction |
+| `multi-gpu` + `statevector` | `nvidia` (option `mgpu,fp64`) | one state vector split over GPUs, requires `mpiexec` |
+| `hardware` | `quantinuum`, `ionq`, `oqc`, `anyon`, `infleqtion`, ... | `HARDWARE_EMULATE = True` runs the provider's flow locally (no account, no cost) |
+
+`"auto"` uses a GPU when CUDA-Q sees one, otherwise the CPU. Unsupported combinations stop with an explanation
+(for example MPS on a CPU). Each notebook only offers the methods that make sense for it.
+
+### Running on several GPUs or nodes
+
+A Jupyter kernel is a single process, so it uses one GPU. To pool several GPUs, export the notebook as a script and
+launch one MPI rank per GPU (with `BACKEND = "multi-gpu"` set in the script):
+
+```bash
+jupyter nbconvert --to script Grover.ipynb
+```
+
+```bash
+mpiexec -np 4 python Grover.py
+```
+
+Every rank prints its own node and per-GPU memory lines, so multi-node memory use is reported per node.
+
+## Changing the number of qubits
+
+Edit Section 3. The parameter is `N_QUBITS` (VQE, QAOA, Grover, Noise, QFT), `N_TO_FACTOR` (Shor: qubits = 3 x bits
+of N) or `NUM_CLOCK_QUBITS` + matrix size (HHL). Memory needed for the state:
+
+| Method | Memory | 15 qubits | 30 qubits | 40 qubits |
+|---|---|---|---|---|
+| state vector fp64 | 16 x 2^N bytes | 0.5 MB | 17.2 GB | 17.6 TB |
+| state vector fp32 | 8 x 2^N bytes | 0.26 MB | 8.6 GB | 8.8 TB |
+| density matrix | 16 x 4^N bytes | 17.2 GB | - | - |
+
+Section 6 of every notebook computes the memory exactly, compares it with free RAM / GPU memory and refuses runs
+that exceed `MEMORY_SAFETY_FRACTION`. It also prints a calibrated execution-time estimate (rough, about +-3x).
+For 40+ qubits use `SIMULATION_METHOD = "mps"` where the notebook offers it (QFT, Grover, QAOA, VQE) or multiple GPUs.
+
+## Executing a notebook
+
+Open it in Jupyter and run all cells (*Kernel -> Restart & Run All*), or headless:
+
+```bash
+jupyter nbconvert --to notebook --execute VQE.ipynb --output VQE_executed.ipynb --ExecutePreprocessor.timeout=3600
+```
+
+Outputs (circuit drawings as `.txt`/`.png`, the full circuit as QIR `.ll`, the benchmark report as `.json`/`.png`)
+are written to `exports/<notebook>/` (ignored by git).
+
+## What is measured and how
+
+* **Timing:** circuit construction (Python -> Quake IR), compilation (MLIR passes + LLVM JIT) and quantum execution
+  are separated with CUDA-Q's built-in span tracer on the first kernel launch; later launches are timed with a wall
+  clock. If the tracer is unavailable, the report says so.
+* **Memory:** a separate lightweight sampler process records host RAM (all processes), the notebook's own RSS
+  (`psutil`) and every NVIDIA GPU's memory (NVML), so peaks are captured even while CUDA-Q holds the Python GIL.
+  NVML values are device-wide (they include other processes on the GPU).
+* Nothing is estimated or invented in the reports: unavailable measurements are reported as unavailable.
+
+## Validation results (CPU-only test machine)
+
+Measured while developing the notebooks at their default settings on a CPU-only container (4 vCPU Intel Xeon
+@ 2.1 GHz, 16.9 GB RAM, CUDA-Q 0.16.0, no GPU). Your numbers will differ; GPU runs are much faster.
+
+| Notebook | Result | Execution cell |
+|---|---|---|
+| VQE (TFIM, 15 qubits, h = 0.5) | E = -15.05339 vs exact -15.08252 (0.19 % above, variational) | 75 s |
+| VQE (H2 example) | error 1.3e-10 Ha, chemical accuracy in 22 evaluations | 0.2 s |
+| QAOA (15 nodes, 30 edges, p = 2) | optimal cut 25 found, approximation ratio 0.82, P(optimal) = 0.06 | 41 s |
+| Shor (N = 15, a = 7) | 15 = 3 x 5 verified, 77 % of shots yield the factors | 0.1 s |
+| Grover (15 qubits) | marked item in 2000/2000 shots; sweep matches sin^2((2k+1)theta) to 1e-12 | 70 s |
+| HHL (4x4) | fidelity 1.0000000000, relative error 1.7e-15; shot read-out within statistical error | 0.2 s |
+| Noise (15-qubit GHZ, depolarizing p = 0.01, stim) | population 0.894 (lower bound 0.860), X-basis parity 0.691 | 0.4 s |
+| QFT (15 qubits, period 8) | state fidelity 1.000000000000 vs NumPy FFT, max amplitude error 7.5e-16 | 1 s |
+
+GPU, multi-GPU, MPS/tensor-network and real-hardware paths are implemented following the CUDA-Q 0.16 APIs but
+could not be executed on the CPU-only test machine.
+
+## Known limitations
+
+* Classical simulation memory is exponential: state vectors need 16 x 2^N bytes (fp64), density matrices 16 x 4^N.
+* **Shor:** modular multiplication is implemented as exact permutation unitaries (custom gates). This is correct
+  and efficient for small N on simulators but is not a gate-level fault-tolerant circuit, and it cannot run on
+  hardware targets. The notebook includes resource-estimation modes for larger N; it does not claim that simulators
+  can factor large integers.
+* **HHL:** uses the exact matrix exponential e^{iAt} as custom gates and amplitude encoding of b (simulators only).
+  The full solution vector is read from the simulated state; on hardware only |x_i|^2 can be sampled.
+* **Noise:** the noiseless state-vector simulators ignore noise models, so the noise notebook offers only
+  `stabilizer` (stim, Pauli noise only), `density_matrix` (CPU) and `trajectory` (GPU). With CUDA-Q 0.16, noisy
+  *sampling* on `density-matrix-cpu` was very slow (about 115 s for 10 qubits), so the notebook computes the noisy
+  density matrix once and draws shot counts from its diagonal (statistically identical). General Kraus channels such
+  as amplitude damping are much slower than Pauli channels on the density-matrix simulator.
+* CUDA-Q 0.16 specifics handled in the code: `cudaq.draw("latex", kernel, args)` fails when arguments are given (ASCII
+  drawings are used); OpenQASM 2 export fails for kernels with sub-kernels or list arguments (QIR export is used);
+  in the kernel builder an amplitude-initialized `qalloc(vector)` placed after other registers received extra qubits
+  (HHL initializes one combined register); selecting the `tensornet` target on a machine without a GPU aborts the
+  Python process, so GPU targets are never selected when no GPU is visible.
+* `multi-gpu` from inside Jupyter runs on one GPU; real pooling needs `mpiexec` (see above).
+* Hardware targets support sampling only (no state vectors); real submissions need provider credentials and may cost money.
+* Execution-time estimates are rough (calibrated per backend, extrapolated with 2^N or 4^N scaling).
+
+## Open work
+
+* `QML.ipynb`: Quantum Convolutional Neural Network (QCNN) - convolution layers with parameters shared across qubit
+  pairs, pooling by measurement-free conditional rotations, readout of one qubit; classification of 3x5-pixel
+  horizontal-vs-vertical line images (15 qubits). Training cost on CPU is the main design constraint.
+* Noise notebook: calibrate the density-matrix time estimate with a short noisy run (the current estimate can be
+  ~10x too low for general Kraus channels).
+* Re-run all notebooks at default settings after the latest fixes, and validate GPU / multi-GPU runs.
+
+## Development: regenerating the notebooks
+
+The notebooks were generated from the scripts in `dev/notebook_builders/`. Shared code is defined once there
+(`common_imports.py`, `common_utils.py`, `common_md.py`) and copied into every notebook so each notebook is
+self-contained. You can edit the notebooks directly, but **regenerating overwrites them**:
+
+```bash
+cd dev/notebook_builders && python build_grover.py ../../Grover.ipynb
+```
+
+`run_variant.py` executes a notebook with overridden Section 3 parameters (useful for tests), for example:
+
+```bash
+python dev/notebook_builders/run_variant.py Grover.ipynb /tmp/grover_test.ipynb N_QUBITS=8
+```
