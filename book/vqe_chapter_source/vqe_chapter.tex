@@ -1,0 +1,345 @@
+% Chapter "VQE" -- build with:  latexmk -pdf vqe_chapter.tex
+% Companion of book/qft_chapter_source/qft_chapter.tex (same layout and box styles).
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[a4paper, top=22mm, bottom=22mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{braket}
+\usepackage{array, tabularx, booktabs}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{quantikz2}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{needspace}
+
+\definecolor{brand}{HTML}{1F4E79}
+\definecolor{okgreen}{HTML}{1B7F3B}
+\definecolor{warn}{HTML}{B5551B}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{3em}
+\allowdisplaybreaks
+
+\newtcolorbox{defn}[1]{enhanced, breakable, colback=brand!5, colframe=brand, fonttitle=\bfseries, title={Definition: #1}}
+\newtcolorbox{keyres}[1]{enhanced, breakable, colback=okgreen!5, colframe=okgreen!70!black, fonttitle=\bfseries, title={Key result: #1}}
+\newtcolorbox{trap}{enhanced, breakable, colback=warn!6, colframe=warn, fonttitle=\bfseries, title={Common trap}}
+\newtcolorbox{method}[1]{enhanced, breakable, colback=black!3, colframe=black!55, fonttitle=\bfseries, title={Method: #1}}
+\newcounter{wex}[chapter]
+\newtcolorbox{wexample}[1]{enhanced, breakable, colback=white, colframe=brand!60, coltitle=black, colbacktitle=brand!15,
+  fonttitle=\bfseries, title={\refstepcounter{wex}Worked example \thesection.\arabic{wex}: #1}}
+\newenvironment{steps}{\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=4.2em, itemsep=2pt]}{\end{enumerate}}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{black!70}Chapter: VQE}
+\fancyhead[R]{\small\color{black!70}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+\newcommand{\bt}{\boldsymbol\theta}
+
+\begin{document}
+\begin{titlepage}
+\centering
+{\color{brand}\rule{\linewidth}{1.5pt}}\\[10pt]
+{\Huge\bfseries\color{brand} VQE}\\[8pt]
+{\LARGE The Variational Quantum Eigensolver}\\[6pt]
+{\large A step-by-step chapter: from eigenvalue problems to a CUDA-Q implementation}\\[6pt]
+{\color{brand}\rule{\linewidth}{1.5pt}}
+\vspace{18mm}
+
+\begin{minipage}{0.86\linewidth}
+\large
+\textbf{What you will be able to do after this chapter}
+\begin{itemize}[itemsep=3pt]
+\item solve small eigenvalue problems, compute Rayleigh quotients and apply the variational principle;
+\item set up an electronic-structure problem: Born--Oppenheimer, orbitals, determinants, correlation energy;
+\item use second quantisation and map fermions to qubits with Jordan--Wigner and Bravyi--Kitaev;
+\item decompose Hamiltonians into Pauli strings and compute expectation values from measurements;
+\item design and analyse ansätze (Hartree--Fock, UCC, hardware-efficient) and classical optimisation loops;
+\item read and modify \texttt{VQE.ipynb}, and interpret its results, shot requirements and noise honestly;
+\item solve every type of question in the accompanying 80-question VQE assessment.
+\end{itemize}
+\end{minipage}
+\vfill
+{\small Companion material in the same repository: \texttt{presentations/VQE\_Lecture.pdf} (slides),
+\texttt{VQE.ipynb} (CUDA-Q notebook) and \texttt{assessments/} (question paper and answer book).}
+\end{titlepage}
+
+\tableofcontents
+\setcounter{chapter}{0}
+\chapter*{VQE --- The Variational Quantum Eigensolver}
+\addcontentsline{toc}{chapter}{VQE --- The Variational Quantum Eigensolver}
+\markboth{VQE}{VQE}
+
+\section*{How to use this chapter}
+Sections~1--3 are the \emph{mathematics and chemistry} (eigenproblems, molecular Hamiltonians, second quantisation).
+Sections~4--5 are the \emph{quantum-computing toolkit} (fermion-to-qubit mappings, Pauli strings, measurement). Sections~6--9 are
+\emph{VQE itself} (variational principle, ansätze, optimisation, worked examples). Sections~10--12 cover the \emph{implementation}, shots,
+noise and limitations. Section~13 maps every assessment question to the section that teaches it; Section~14 has practice problems with
+answers. Statements are marked as general theory, the notebook's implementation, or illustrative examples; ``previously recorded''
+results are the outputs stored in \texttt{VQE.ipynb}.
+
+\begin{defn}{Conventions used everywhere in this chapter}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item Pauli words: character $k$ acts on qubit $k$; basis states $\ket{q_0q_1\dots}$ are written qubit 0 first.
+\item $R_Y(\theta) = e^{-i\theta Y/2}$; CUDA-Q's \texttt{exp\_pauli(theta, q, word)} $= e^{+i\theta P}$.
+\item Jordan--Wigner with $\ket1$ = occupied: $a_j^\dagger = Z_0\cdots Z_{j-1}\tfrac12(X_j - iY_j)$.
+\item Energies in Hartree (Ha); 1 Ha $= 627.51$ kcal/mol; chemical accuracy $1.6$ mHa.
+\end{itemize}
+\end{defn}
+
+%=====================================================================================================
+\section{Eigenvalue problems}
+A Hermitian matrix $H$ has real eigenvalues, an orthonormal eigenbasis, and the spectral decomposition $H = \sum_kE_k\ket{E_k}\bra{E_k}$.
+The \textbf{ground-state energy} is the smallest eigenvalue $E_0$.
+\begin{keyres}{Rayleigh quotient}
+For every non-zero $v$: $E_0 \le R(v) = \dfrac{v^\dagger Hv}{v^\dagger v} \le E_{\max}$, with equality at eigenvectors. If $\|v\| = 1$, $R(v) = \braket{v|H|v}$.
+\end{keyres}
+\begin{wexample}{a $2\times2$ problem}
+$H = \begin{psmallmatrix}1&2\\2&-2\end{psmallmatrix}$: $\lambda^2 + \lambda - 6 = 0$, $\lambda \in \{-3, 2\}$; ground vector $(1, -2)/\sqrt5$. For $v = (1, -1)$: $Hv = (-1, 4)$,
+$R = -5/2 = -2.5 \ge -3$. Weight of the ground vector in $v/\|v\|$: $0.9$; check $0.9(-3) + 0.1(2) = -2.5$.
+\end{wexample}
+\begin{trap}
+The ground energy lies \emph{below} the smallest diagonal element when off-diagonal couplings exist ($-3 < -2$). And: trace = sum,
+determinant = product of eigenvalues --- use them to check answers.
+\end{trap}
+Classically, dense diagonalisation costs $O(D^3)$ and sparse Lanczos methods $O(D)$ per iteration, with $D = 2^n$ for $n$ qubits. The
+notebook diagonalises up to 18 qubits (\texttt{REFERENCE\_MAX\_QUBITS}) and solves the Ising chain exactly for any size via free fermions.
+
+%=====================================================================================================
+\section{Quantum chemistry essentials}
+\subsection{Schr\"odinger equation and Born--Oppenheimer}
+$i\hbar\partial_t\ket\psi = H\ket\psi$; eigenstates evolve only by a global phase $e^{-iEt/\hbar}$ (stationary states), so energies come from
+$H\ket\psi = E\ket\psi$. With nuclei fixed (Born--Oppenheimer), the nuclear repulsion $V_{NN}$ is a constant that ends up in the identity
+coefficient of a qubit Hamiltonian.
+\subsection{Orbitals, determinants, correlation}
+A basis of $N_{\mathrm{orb}}$ spatial orbitals gives $N = 2N_{\mathrm{orb}}$ spin-orbitals; a Slater determinant is a choice of $N_e$ occupied spin-orbitals:
+$\binom N{N_e}$ of them. Hartree--Fock (HF) is the best single determinant; full configuration interaction (FCI) diagonalises over all of
+them. $E_{\mathrm{corr}} = E_{\mathrm{FCI}} - E_{\mathrm{HF}} \le 0$.
+\begin{wexample}{H$_2$ in STO-3G (the notebook's molecule)}
+2 spatial orbitals ($\sigma_g$, $\sigma_u$), 4 spin-orbitals, 2 electrons: $\binom42 = 6$ determinants, 4 with $S_z = 0$.
+$E_{\mathrm{HF}} = -1.116759$ Ha, $E_{\mathrm{FCI}} = -1.137284$ Ha: $E_{\mathrm{corr}} = -20.5$ mHa $\approx 13$ kcal/mol, far above chemical accuracy.
+\end{wexample}
+\begin{wexample}{LiH (illustration, not in the notebook)}
+STO-3G: Li $1s, 2s, 2p_{x,y,z}$ + H $1s$ = 6 spatial orbitals $\to$ 12 qubits, 4 electrons; PySCF + OpenFermion give 631 Pauli terms. Freezing
+the Li $1s$ core removes 2 qubits.
+\end{wexample}
+\begin{trap}
+At large bond length, restricted HF puts $50\,\%$ weight on ionic configurations and lies far too high (static correlation). The
+nuclear repulsion has nothing to do with this error: it is identical in every method.
+\end{trap}
+
+%=====================================================================================================
+\section{Second quantisation}
+$\{a_p, a_q^\dagger\} = \delta_{pq}$, $\{a_p, a_q\} = 0$; hence $(a_p^\dagger)^2 = 0$ (Pauli exclusion) and $n_p = a_p^\dagger a_p$ has eigenvalues 0, 1.
+\[ H = \sum_{pq}h_{pq}a_p^\dagger a_q + \tfrac12\sum_{pqrs}h_{pqrs}a_p^\dagger a_q^\dagger a_ra_s + E_{\mathrm{const}} \]
+has $O(N^4)$ terms. The integrals come from a classical code (PySCF); the quantum computer only has to handle the many-electron state.
+
+%=====================================================================================================
+\section{From fermions to qubits}
+\begin{keyres}{Jordan--Wigner}
+$a_j^\dagger = Z_0\cdots Z_{j-1}\,\tfrac12(X_j - iY_j)$, $\ n_j = \tfrac12(I - Z_j)$. Hopping: $a_j^\dagger a_{j+1} + \text{h.c.} = \tfrac12(X_jX_{j+1} + Y_jY_{j+1})$.
+A double excitation $a_3^\dagger a_2^\dagger a_1a_0 - \text{h.c.}$ becomes 8 Pauli strings with coefficients $\pm i/8$.
+\end{keyres}
+\begin{wexample}{hopping, derived}
+$a_0^\dagger a_1 = \tfrac12(X_0 - iY_0)\cdot Z_0\tfrac12(X_1 + iY_1)$ and $(X - iY)Z = X - iY$, so $a_0^\dagger a_1 = \tfrac14(X_0 - iY_0)(X_1 + iY_1)$.
+Adding the Hermitian conjugate cancels the cross terms: $\tfrac12(X_0X_1 + Y_0Y_1)$.
+\end{wexample}
+\textbf{Other encodings.} Parity mapping (qubit $j$ stores $n_0\oplus\dots\oplus n_j$); Bravyi--Kitaev ($b = Bn \bmod 2$ on a binary tree, Pauli weight
+$O(\log N)$; for 4 modes the HF occupation $(1,1,0,0)$ becomes $\ket{1000}$); tapering removes qubits using $\mathbb Z_2$ symmetries.
+\begin{trap}
+The same physical state has different bitstrings in different encodings: the HF state is $\ket{1100}$ under JW but $\ket{1000}$ under BK.
+\end{trap}
+\textbf{The notebook's H$_2$ Hamiltonian} has 15 Jordan--Wigner terms (identity, 10 $Z$-type, 4 exchange terms $\texttt{XXYY}, \texttt{XYYX}, \texttt{YXXY}, \texttt{YYXX}$).
+PySCF + OpenFermion reproduce every coefficient to $10^{-15}$ at $R = 0.740$ \AA{} (the notebook's text says $0.7414$ \AA, where the
+coefficients differ by up to $1.8$ mHa).
+
+%=====================================================================================================
+\section{Pauli strings and measurement}
+\begin{itemize}
+\item $4^n$ Pauli strings form an orthogonal basis: $c_P = 2^{-n}\operatorname{tr}(PH)$, real for Hermitian $H$. Example:
+$\begin{psmallmatrix}3 & 1-2i\\ 1+2i & -1\end{psmallmatrix} = I + X + 2Y + 2Z$; $\operatorname{diag}(1,2,3,4) = 2.5\,II - ZI - 0.5\,IZ$.
+\item Pauli algebra: $XY = iZ$ (cyclic), strings multiply position by position; they commute iff they anticommute at an even number of positions.
+\item $e^{i\theta P} = \cos\theta + i\sin\theta P$; on an eigenvector $e^{i\theta P}\ket v = e^{i\theta\lambda}\ket v$. $X_0X_1X_2Y_3\ket{1100} = i\ket{0011}$.
+\item Measuring: $X \to H$, $Y \to S^\dagger$ then $H$, $Z \to$ nothing; outcome $(-1)^{\text{parity of measured bits}}$; standard error $\le 1/\sqrt S$.
+\item Grouping: qubit-wise commuting strings share single-qubit basis changes. H$_2$: 5 QWC settings, 2 with general commuting groups.
+\item Ordering: CUDA-Q state vectors are little-endian (qubit 0 least significant): $\ket{1100}$ has index 3.
+\end{itemize}
+\begin{keyres}{zero-variance principle}
+$\mathrm{Var}(H) = \braket{H^2} - \braket H^2 = 0$ exactly for eigenstates; it sets the shot noise $\sqrt{\mathrm{Var}/S}$ of energy estimates.
+\end{keyres}
+
+%=====================================================================================================
+\section{The variational principle and the VQE loop}
+\begin{keyres}{variational principle}
+For every normalised $\ket\psi$ (and every density matrix $\rho$): $\braket{\psi|H|\psi} = \sum_k|c_k|^2E_k \ge E_0$, $\operatorname{tr}(\rho H) \ge E_0$.
+Rayleigh--Ritz: Ritz values in any subspace are upper bounds to the corresponding exact eigenvalues.
+\end{keyres}
+VQE: prepare $\ket{\psi(\bt)} = U(\bt)\ket{0\dots0}$ (normalised because gates are unitary), estimate $E(\bt) = \sum_kc_k\braket{P_k}$, update $\bt$
+classically, repeat; report the lowest energy found.
+\begin{trap}
+An energy below $E_0$ computed with \emph{exact} expectation values is a bug (Hamiltonian, reference, normalisation). With finite shots,
+estimates can fall below $E_0$; error-mitigated (extrapolated) values have no variational guarantee either.
+\end{trap}
+\begin{wexample}{one qubit}
+$H = -Z + \tfrac12X$, $\ket{\psi(\theta)} = R_Y(\theta)\ket0$: $\braket Z = \cos\theta$, $\braket X = \sin\theta$, $E(\theta) = -\cos\theta + \tfrac12\sin\theta$.
+$E' = 0 \Rightarrow \tan\theta = -\tfrac12$, $\theta^* = -0.4636$, $E(\theta^*) = -\sqrt5/2 = -1.118 = E_0$. Start $\theta = 0$: error $0.118$, variance $0.25$.
+\end{wexample}
+
+%=====================================================================================================
+\section{Ansatz design}
+\subsection{Hartree--Fock and UCC}
+HF under JW is a basis state (H$_2$: $\ket{1100}$, two $X$ gates; energy from the identity and $Z$ terms only, $-1.116759$ Ha).
+UCC: $\ket\psi = e^{T - T^\dagger}\ket{\mathrm{HF}}$ with singles and doubles; counts $n_on_v$ and $\binom{n_o}2\binom{n_v}2$ (LiH: 32 and 168; H$_2$: 4 and 1).
+\begin{keyres}{the notebook's UCC for H$_2$}
+$\ket{\psi(\theta)} = e^{i\theta X_0X_1X_2Y_3}\ket{1100} = \cos\theta\ket{1100} - \sin\theta\ket{0011}$. The exact ground state lies in this plane, so one parameter
+reaches FCI: $\theta^* = 0.112783$, $E = -1.137283834$ Ha (CUDA-Q and NumPy agree to $10^{-15}$).
+\end{keyres}
+\subsection{Hardware-efficient ansatz}
+\begin{center}
+\begin{quantikz}[row sep=0.2cm, column sep=0.25cm]
+\lstick{$q_0$} & \gate{R_Y} & \ctrl{1} & \qw & \gate{R_Y} & \ctrl{1} & \qw & \gate{R_Y} & \qw\\
+\lstick{$q_1$} & \gate{R_Y} & \targ{} & \ctrl{1} & \gate{R_Y} & \targ{} & \ctrl{1} & \gate{R_Y} & \qw\\
+\lstick{$q_2$} & \gate{R_Y} & \qw & \targ{} & \gate{R_Y} & \qw & \targ{} & \gate{R_Y} & \qw
+\end{quantikz}
+\end{center}
+$L$ layers of [$R_Y$ on all qubits, CNOT ladder] + final $R_Y$: $(L+1)N$ parameters, $L(N-1)$ CNOTs. Default $N = 15$, $L = 2$: 45, 28, 73 gates.
+Real gates only: fine for real Hamiltonians (Ising, H$_2$). Initial angles $\mathcal N(0, 0.1^2)$, i.e.\ near $\ket{0\dots0}$ (Ising energy $-14$).
+\begin{trap}
+Deep random hardware-efficient circuits suffer from barren plateaus (gradients vanishing exponentially in $n$); chemistry-inspired
+ansätze, HF starts and local cost functions help.
+\end{trap}
+
+%=====================================================================================================
+\section{Classical optimisation}
+COBYLA (trust region, derivative-free; notebook default with \texttt{rhobeg = 0.3}, \texttt{maxiter = 300}), Nelder--Mead (simplex), Powell
+(conjugate directions), L-BFGS-B (quasi-Newton; finite-difference gradients, $n_p + 1$ runs). Exact parameter-shift gradients for gates
+$e^{-i\theta P/2}$: $\partial_\theta E = \tfrac12[E(\theta + \tfrac\pi2) - E(\theta - \tfrac\pi2)]$, $2n_p$ runs. The notebook keeps the \emph{best} evaluated angles
+(\texttt{argmin(energy\_history)}), not necessarily \texttt{opt.x}. A \texttt{MAXFUN} message means the budget ended the run.
+
+%=====================================================================================================
+\section{Worked examples}
+\begin{wexample}{H$_2$ as a $2\times2$ problem}
+\begin{steps}
+\item $H_{11} = \braket{1100|H|1100} = -1.116759$, $H_{22} = \braket{0011|H|0011} = 0.462618$, $H_{12} = 0.181210$ Ha (from the 15 terms).
+\item $E(\theta) = H_{11}\cos^2\theta + H_{22}\sin^2\theta - H_{12}\sin2\theta$.
+\item $\tan2\theta^* = 2H_{12}/(H_{22} - H_{11}) = 0.2295$: $\theta^* = 0.1128$; $P(\ket{0011}) = \sin^2\theta^* = 0.0127$.
+\item $E_{\min} = \frac{H_{11} + H_{22}}{2} - \sqrt{(\frac{H_{22} - H_{11}}{2})^2 + H_{12}^2} = -1.137284$ Ha $= E_{\mathrm{FCI}}$.
+\end{steps}
+\end{wexample}
+\begin{wexample}{two-qubit Ising chain}
+$H = -Z_0Z_1 - \tfrac12(X_0 + X_1)$. Circuit $R_Y(\pi/2)\otimes I$, CNOT: Bell state, $E = -1$. Exact: block $\{\ket{\Phi^+}, \ket{\Psi^+}\}$ with
+$\begin{psmallmatrix}-1&-1\\-1&1\end{psmallmatrix}$, $E_0 = -\sqrt2$; relative error $29.3\,\%$. After the CNOT $\braket{Z_0Z_1} = \cos\theta_1$ in general.
+\end{wexample}
+
+%=====================================================================================================
+\section{The implementation in \texttt{VQE.ipynb}}
+\begin{itemize}
+\item Hamiltonians: \texttt{"tfim"} ($-J\sum Z_iZ_{i+1} - h\sum X_i$, default $N = 15$, 29 terms), \texttt{"H2"} (15 terms), \texttt{"custom"} (real coefficients only),
+built with \texttt{cudaq.SpinOperator.from\_word}.
+\item Exact references: free fermions ($2N\times2N$ matrix, any $N$) for TFIM, cross-checked by sparse diagonalisation for $N \le 16$; sparse
+diagonalisation up to 18 qubits otherwise.
+\item Kernels: \texttt{hea\_ansatz}, \texttt{ucc\_ansatz} (+ sampled versions); energy: \texttt{cudaq.observe(kernel, hamiltonian, *args).expectation()};
+optimiser: \texttt{scipy.optimize.minimize}; final \texttt{cudaq.sample} with 4000 shots.
+\item Backends: \texttt{qpp-cpu}, \texttt{density-matrix-cpu}, \texttt{nvidia}, \texttt{tensornet(-mps)}, multi-GPU via MPI, hardware providers;
+\texttt{"gpu"} without a GPU raises \texttt{RuntimeError}. Only the CPU path has been executed.
+\item Reports and exports in \texttt{exports/vqe/}: circuit drawing, QIR, JSON/PNG report.
+\end{itemize}
+\textbf{Previously recorded default run:} $E_{\mathrm{VQE}} = -15.0533898284$ vs.\ $E_0 = -15.0825179883$ (error $0.0291$, $0.193\,\%$), 300 evaluations
+(budget), $69.10$ s quantum execution ($0.23$ s per evaluation), $\ket{0\dots0}$ sampled with probability $0.70$ (symmetry breaking). Measured from the
+product state ($-14$), VQE recovered $97.3\,\%$ of the remaining energy. The lecture's own run and a re-execution of the notebook reproduce these
+numbers on a different CPU (see the lecture).
+
+%=====================================================================================================
+\section{Shots, noise and mitigation}
+\begin{itemize}
+\item Shots: $S = (\sigma/\varepsilon)^2$; $\sigma = 0.1$ Ha, $\varepsilon = 1.6$ mHa $\Rightarrow$ 3906 shots per energy evaluation.
+\item Complete depolarisation: $E = \operatorname{tr}(H)/2^n = c_{I\dots I}$ ($-0.0971$ Ha for H$_2$); noise raises energies but keeps $\operatorname{tr}\rho H \ge E_0$.
+\item Zero-noise extrapolation: $E(1) = -1.10$, $E(3) = -1.00$ $\Rightarrow$ $E(0) = -1.15$ (linear); no variational guarantee.
+\item Memory: state vector $16\cdot2^n$ B (12 qubits: 65.5 kB), density matrix $16\cdot4^n$ B (12 qubits: 268 MB).
+\end{itemize}
+
+%=====================================================================================================
+\section{Limitations and advanced methods}
+Measurement cost ($O(N^4)$ terms $\times$ shots $\times$ evaluations), barren plateaus, local minima, limited expressiveness and noise limit VQE;
+no chemical quantum advantage has been demonstrated. Advanced directions: ADAPT-VQE, k-UpCCGSD, active spaces and tapering, excited-state
+methods (variational quantum deflation, subspace-search VQE, quantum subspace expansion), error mitigation. Applications: reaction energies,
+potential surfaces, materials and magnetism.
+
+%=====================================================================================================
+\section{Problem-solving strategies and question map}
+\begin{method}{five habits}
+\begin{enumerate}[itemsep=1pt]
+\item Fix the conventions: qubit order, occupied = $\ket1$, sign of \texttt{exp\_pauli}.
+\item Diagonal terms first: on a basis state only $I$/$Z$ strings contribute.
+\item Use symmetry to shrink matrices ($2\times2$ blocks).
+\item Check every energy against the variational bound.
+\item Separate recorded, re-executed and illustrative numbers.
+\end{enumerate}
+\end{method}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule Section & Assessment questions\\ \midrule
+1 Eigenvalue problems & 1, 2, 3, 8, 13, 14, 15\\
+2 Quantum chemistry & 4, 5, 6, 9, 10, 18, 19, 20, 77, 78\\
+3 Second quantisation & 11, 12\\
+4 Fermions to qubits & 61, 62, 63, 64, 65, 67\\
+5 Pauli strings, measurement & 16, 17, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 40, 47, 54\\
+6 Variational principle & 7, 37, 41, 42, 53, 71\\
+7 Ansatz design & 43, 44, 49, 56, 66\\
+8 Optimisation & 51, 52, 58, 68\\
+9 Worked examples & 45, 48, 59, 60\\
+10 Implementation & 46, 50, 55, 57, 73, 74, 75, 76, 79, 80\\
+11 Shots, noise & 69, 70, 72\\ \bottomrule
+\end{tabularx}
+\end{center}
+
+%=====================================================================================================
+\section{Practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item Eigenvalues of $\begin{psmallmatrix}2&1\\1&2\end{psmallmatrix}$ and the Rayleigh quotient of $(1, 0)$.
+\item Pauli decomposition of $\begin{psmallmatrix}0 & -i\\ i & 2\end{psmallmatrix}$.
+\item Number of 2-electron determinants in 6 spin-orbitals.
+\item Jordan--Wigner form of $n_0n_1$.
+\item $\braket{\Phi^+|X_0X_1|\Phi^+}$ and $\braket{\Phi^+|Z_0|\Phi^+}$ for the Bell state.
+\item For $H = 2Z + X$, trial $R_Y(\theta)\ket0$: $E(\theta)$ and $E_0$.
+\item HEA counts for $N = 8$, $L = 4$.
+\item $E(\theta)$ for $\cos\theta\ket u - \sin\theta\ket v$ with $H_{uu} = 0$, $H_{vv} = 1$, $H_{uv} = -0.5$; its minimum.
+\item Shots for $0.5$ mHa precision with $\sigma = 0.05$ Ha.
+\item Energy of $\ket{0\dots0}$ for the Ising chain with $N = 10$, $J = 2$, $h = 0.3$.
+\end{enumerate}
+
+\newpage
+\subsection*{Answers to the practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $1$ and $3$; $R((1,0)) = 2$.
+\item $c_I = 1$, $c_Z = -1$, $c_X = 0$, $c_Y = 1$: $I + Y - Z$ (check $M_{01} = c_X - ic_Y = -i$).
+\item $\binom62 = 15$.
+\item $n_0n_1 = \tfrac14(I - Z_0)(I - Z_1) = \tfrac14(I - Z_0 - Z_1 + Z_0Z_1)$.
+\item $1$ and $0$.
+\item $E = 2\cos\theta + \sin\theta$; $E_0 = -\sqrt5$.
+\item $40$ parameters, $28$ CNOTs, $68$ gates.
+\item $E = \sin^2\theta + 0.5\sin2\theta$; eigenvalues of $\begin{psmallmatrix}0&-0.5\\-0.5&1\end{psmallmatrix}$: $\frac12 \pm \frac{\sqrt2}{2}$, minimum $-0.2071$.
+\item $(0.05/0.0005)^2 = 10\,000$.
+\item $-2\times9 = -18$ ($\braket{X_i} = 0$).
+\end{enumerate}
+
+\subsection*{Summary in ten lines}
+\begin{enumerate}[itemsep=1pt]
+\item Ground energy = smallest eigenvalue of a Hermitian $H$; Rayleigh quotients bound it from above.
+\item Born--Oppenheimer + basis $\to$ second-quantised $H$ with $O(N^4)$ terms; constants (incl.\ $V_{NN}$) sit in $c_{I\dots I}$.
+\item Jordan--Wigner: occupation per qubit + $Z$-strings; BK: $O(\log N)$ weight.
+\item $c_P = 2^{-n}\operatorname{tr}(PH)$; measure $P$ after $H$ / $S^\dagger H$ rotations; group commuting terms.
+\item Variational principle: $\braket{\psi|H|\psi} \ge E_0$ for every normalised (or mixed) state.
+\item VQE = circuit state + measured energy + classical optimiser.
+\item H$_2$: HF $\ket{1100}$ + $e^{i\theta XXXY}$ gives FCI exactly ($\theta^* = 0.1128$).
+\item Hardware-efficient: $(L+1)N$ angles, $L(N-1)$ CNOTs; trainability issues when deep.
+\item Shots scale as $(\sigma/\varepsilon)^2$; noise pulls energies towards $c_{I\dots I}$.
+\item Read results honestly: exact vs.\ shot energies, budget-limited runs, recorded vs.\ re-executed.
+\end{enumerate}
+\end{document}
