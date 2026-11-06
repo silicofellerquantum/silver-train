@@ -36,7 +36,7 @@ report built only from real measurements.
   Basics, D Advanced QFT), every question single-correct with 4 options, marking +3 / 0 / -1, 3 hours, 240 marks.
   Formats: single-correct MCQ, matching lists, Assertion-Reason, Statement I/II and paragraph questions. The paper
   ends with an OMR-style response sheet; the Answer Book has the key, topic map, quick-marking grid and the
-  "Answer Bank" with full derivations. Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
+  "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
 
