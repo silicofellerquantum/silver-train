@@ -286,7 +286,7 @@ first line to the second. This is the geometric heart of Grover's algorithm.
 Let $\sin\theta = \tfrac14$ with $0 < \theta < \tfrac\pi2$, and let
 $G = \begin{psmallmatrix}\cos 2\theta & -\sin 2\theta\\ \sin 2\theta & \cos 2\theta\end{psmallmatrix}$. The eigenvalues of $G$ are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$\dfrac{7 \pm \sqrt{15}}{8}$ & \optlabel{B}\,$\dfrac{1 \pm i\sqrt{15}}{4}$ & \optlabel{C}\,$\pm 1$ & \correctlabel{D}\,$\dfrac{7 \pm i\sqrt{15}}{8}$
+\optlabel{A}\,$\dfrac{7 \pm \sqrt{15}}{8}$ & \optlabel{B}\,$\dfrac{\sqrt{15} \pm i}{4}$ & \optlabel{C}\,$\pm 1$ & \correctlabel{D}\,$\dfrac{7 \pm i\sqrt{15}}{8}$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{D}
@@ -361,7 +361,7 @@ The tempting estimate $\frac\pi4\cdot 10 = 7.85$ rounds to $8$, which is wrong: 
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $k = 8$ comes from rounding $\frac\pi4\sqrt N = 7.85$; it overshoots, and $\sin^2 17\theta = 0.983 < 0.995$.
 \item[\textbf{(B)}] $k = 10 = \sqrt N$ omits the factor $\frac\pi4$, giving $21\theta = 2.10$ rad and $\sin^2 \approx 0.74$.
-\item[\textbf{(C)}] $k = 5$ stops too soon: $11\theta = 1.10$ rad and $\sin^2 \approx 0.79$.
+\item[\textbf{(C)}] $k = 5$ stops too soon: $11\theta = 1.10$ rad and $\sin^2 \approx 0.80$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Use $\frac{\pi}{4\theta} - \frac12$, not $\frac\pi4\sqrt N$, when the exact integer matters.
 \end{solbox}
@@ -624,7 +624,7 @@ $\;s = \frac34$: $\frac34\cdot 0 = 0$ (2). Hence P$\to$3, Q$\to$1, R$\to$4, S$\t
 \needspace{13\baselineskip}
 \begin{qitem}{16}
 \qmeta{Matching lists}{Traces of projectors and reflections}
-Let $\ket{u}$ be a unit vector in $\mathbb{C}^{N}$, with $N \ge 3$. Match each matrix in List-I with its trace in List-II.
+Let $\ket{u}$ be a unit vector in $\mathbb{C}^{N}$, with $N \ge 4$. Match each matrix in List-I with its trace in List-II.
 \par\smallskip\noindent{\renewcommand{\arraystretch}{1.35}%
 \begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}p{0.33\linewidth}@{\hspace{1.2em}}cL@{}}
 \toprule
@@ -861,7 +861,7 @@ The full result is $\frac12(\ket{00} + \ket{01} + \ket{10} - \ket{11})$: this st
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $\frac12$ has the wrong sign, from treating the entry for $x = 11$, $y = 11$ as negative.
+\item[\textbf{(A)}] $\frac12$ is the amplitude of the other three outputs $\ket{00}, \ket{01}, \ket{10}$; only $\ket{11}$ carries the minus sign.
 \item[\textbf{(B)}] $0$ would need the signed sum to cancel; here it is $-2$ before the factor $\frac14$.
 \item[\textbf{(D)}] $1$ is the magnitude when all four terms align, which they do not.
 \end{itemize}
@@ -1468,7 +1468,7 @@ For $n = 2$ ($N = 4$), the matrix of the diffusion operator $D = 2\ket{s}\!\bra{
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] This is $-D = I - 2\ket{s}\!\bra{s}$, which is what the circuit implements; it differs from $D$ by a global phase.
-\item[\textbf{(C)}] Forgets the factor $\frac14$ from the normalisation of $\ket{s}$; this matrix is not unitary.
+\item[\textbf{(C)}] Entries of size $1$ ignore the normalisation of $\ket{s}$; each row then has length $2$, so this matrix is not unitary.
 \item[\textbf{(D)}] This is $2\ket{s}\!\bra{s}$, before $I$ has been subtracted.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Row by row, $D$ computes $2\bar c - c_x$, which is inversion about the mean.

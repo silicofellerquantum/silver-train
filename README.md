@@ -39,7 +39,7 @@ report built only from real measurements.
   "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
-* [`presentations/Grover_Lecture.pdf`](presentations/Grover_Lecture.pdf) - a 78-slide lecture in the same style as the QFT
+* [`presentations/Grover_Lecture.pdf`](presentations/Grover_Lecture.pdf) - a 79-slide lecture in the same style as the QFT
   lecture: search problems, the math toolkit, qubits, oracle and diffusion, the geometric derivation, circuits for 2, 3 and
   4 qubits, the CUDA-Q notebook, results, noise and limits, exercises with answers. Source: `presentations/grover_source/`
   (`python make_figures.py` regenerates the figures with CUDA-Q on Linux, then `latexmk -pdf grover_lecture.tex`). Quantum

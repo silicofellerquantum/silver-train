@@ -47,7 +47,7 @@ first line to the second. This is the geometric heart of Grover's algorithm.""")
     dict(id="A4", kind="mcq",
          q=r"""Let $\sin\theta = \tfrac14$ with $0 < \theta < \tfrac\pi2$, and let
 $G = \begin{psmallmatrix}\cos 2\theta & -\sin 2\theta\\ \sin 2\theta & \cos 2\theta\end{psmallmatrix}$. The eigenvalues of $G$ are""",
-         opts=[r"$\dfrac{7 \pm i\sqrt{15}}{8}$", r"$\dfrac{1 \pm i\sqrt{15}}{4}$", r"$\dfrac{7 \pm \sqrt{15}}{8}$", r"$\pm 1$"],
+         opts=[r"$\dfrac{7 \pm i\sqrt{15}}{8}$", r"$\dfrac{\sqrt{15} \pm i}{4}$", r"$\dfrac{7 \pm \sqrt{15}}{8}$", r"$\pm 1$"],
          sol=r"""A rotation by angle $\alpha$ has eigenvalues $e^{\pm i\alpha} = \cos\alpha \pm i\sin\alpha$ (trace $2\cos\alpha$, determinant $1$).
 Here $\alpha = 2\theta$, with
 \[ \cos 2\theta = 1 - 2\sin^2\theta = 1 - \frac{2}{16} = \frac78, \qquad
@@ -138,7 +138,7 @@ $s = \frac18$: $\frac18\cdot\frac{25}{4} = \frac{25}{32}$ (3). $\;s = \frac14$: 
 $\;s = \frac34$: $\frac34\cdot 0 = 0$ (2). Hence P$\to$3, Q$\to$1, R$\to$4, S$\to$2."""),
 
     dict(id="A16", kind="match",
-         q=r"""Let $\ket{u}$ be a unit vector in $\mathbb{C}^{N}$, with $N \ge 3$. Match each matrix in List-I with its trace in List-II.""",
+         q=r"""Let $\ket{u}$ be a unit vector in $\mathbb{C}^{N}$, with $N \ge 4$. Match each matrix in List-I with its trace in List-II.""",
          match=([r"$2\ket{u}\!\bra{u} - I$", r"$I - 2\ket{u}\!\bra{u}$", r"$\ket{u}\!\bra{u}$", r"$I$"],
                 [r"$N$", r"$N - 2$", r"$1$", r"$2 - N$"]),
          opts=[r"P$\to$4, Q$\to$2, R$\to$3, S$\to$1", r"P$\to$2, Q$\to$4, R$\to$3, S$\to$1",

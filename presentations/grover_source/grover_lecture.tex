@@ -484,6 +484,45 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{The Pauli gates $X$, $Y$ and $Z$}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{$X$: bit flip}
+        \[ X = \begin{pmatrix}0&1\\1&0\end{pmatrix} \]
+        $X\ket0 = \ket1$, $X\ket1 = \ket0$
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{$Y$: bit and phase flip}
+        \[ Y = \begin{pmatrix}0&-i\\i&0\end{pmatrix} \]
+        $Y\ket0 = i\ket1$, $Y\ket1 = -i\ket0$
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{$Z$: phase flip}
+        \[ Z = \begin{pmatrix}1&0\\0&-1\end{pmatrix} \]
+        $Z\ket0 = \ket0$, $Z\ket1 = -\ket1$
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      \begin{itemize}
+        \item Each \key{Pauli} matrix $P$ is Hermitian and unitary: $P^2 = I$, with eigenvalues $\pm1$.
+        \item Products: $XY = iZ$, $\ YZ = iX$, $\ ZX = iY$.
+        \item Different Paulis anticommute: $XZ = -ZX$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{exampleblock}{Worked example}
+        $Y\ket{+} = \tfrac{1}{\sqrt2}\big(i\ket1 - i\ket0\big) = -i\ket{-}$.
+      \end{exampleblock}
+      \small \hl{In Grover}: $X$ relabels states and a multi-controlled $Z$ flips a sign. The notebook's circuit does not use $Y$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \begin{frame}{Hadamard layer: state preparation for search}
   Apply $H$ to every qubit of $\ket{0\dots0}$ (the \key{state preparation} step):
   \begin{block}{Uniform superposition}
