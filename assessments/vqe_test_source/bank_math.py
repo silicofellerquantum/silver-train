@@ -215,7 +215,7 @@ $-1.137284$ Ha. The correlation energy $E_{\mathrm{corr}} = E_{\mathrm{FCI}} - E
 HF alone is not good enough, and VQE has to recover this correlation energy. The UCC parameter does exactly that (see C19--C20)."""),
 
     dict(id="A20", kind="mcq",
-         q=r"""A trial state of H$_2$ has $90\,\%$ weight on the ground state ($E_0 = -1.13728$ Ha) and $10\,\%$ on an excited eigenstate with energy
+         q=r"""A trial state of H$_2$ has $90\,\%$ weight on the ground state ($E_0 = -1.13728$ Ha) and $10\,\%$ on another eigenstate of the 4-qubit Hamiltonian with energy
 $E_1 = -0.53821$ Ha. Its energy expectation and its error above $E_0$ are""",
          opts=[r"$-1.0774$ Ha and $59.9$ mHa", r"$-1.1373$ Ha and $0$ mHa", r"$-1.1971$ Ha and $-59.9$ mHa", r"$-0.8378$ Ha and $299.5$ mHa"],
          sol=r"""$E = \sum_k|c_k|^2E_k = 0.9(-1.13728) + 0.1(-0.53821) = -1.02355 - 0.05382 = -1.07738$ Ha.

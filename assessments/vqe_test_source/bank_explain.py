@@ -146,7 +146,7 @@ EXPLAIN = {
     formulae=r"$R_Y(\theta)\ket0 = \cos\frac\theta2\ket0 + \sin\frac\theta2\ket1$; $P(1) = \sin^2\frac\theta2$.",
     wrong=[r"$\frac34 = \cos^2(\pi/6)$ is $P(0)$, the probability of the \emph{other} outcome.",
            r"$\frac12$ needs $\theta = \pi/2$.",
-           r"Uses $\theta$ instead of $\theta/2$ and swaps outcomes."],
+           r"$\frac{\sqrt3}{2} = \cos(\pi/6)$ is the \emph{amplitude} of $\ket0$; probabilities are squared moduli ($P(1) = \sin^2(\pi/6) = \frac14$)."],
     takeaway=r"Half angles in amplitudes: $R_Y(\theta)$ rotates the Bloch vector by $\theta$."),
 "B2": dict(concept=r"Pauli multiplication; tensor products.",
     formulae=r"$XY = iZ$, $YX = -iZ$; $(A\otimes B)(C\otimes D) = AC\otimes BD$.",

@@ -70,7 +70,7 @@ report built only from real measurements.
   explanations). Source: `assessments/vqe_test_source/` - check with `python verify_answers.py --chem --cudaq` (157 checks:
   NumPy, PySCF/OpenFermion and the notebook's CUDA-Q kernels) and rebuild with `python generate_papers.py`.
   Note: the notebook's H$_2$ coefficients correspond to a bond length of 0.740 Angstrom (verified with PySCF); the notebook
-  text states 0.7414 Angstrom.
+  text, which previously said 0.7414 Angstrom, has been corrected.
 
 ## Structure of the notebooks
 

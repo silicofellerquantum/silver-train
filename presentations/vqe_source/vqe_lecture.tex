@@ -328,12 +328,71 @@
         \item $Z$ terms: orbital energies and Coulomb/exchange between occupations. $XY$ terms: the double excitation $\ket{1100} \leftrightarrow \ket{0011}$.
       \end{itemize}
       \begin{alertblock}{Verified provenance}
-        PySCF + OpenFermion reproduce all 15 coefficients to $\numcoefdiff$ at bond length \hl{$R = 0.740$ \AA}; the notebook's text says
-        $0.7414$ \AA, where the coefficients differ by up to $1.8$ mHa.
+        PySCF + OpenFermion reproduce all 15 coefficients to $\numcoefdiff$ at bond length \hl{$R = 0.740$ \AA}. (The notebook's text
+        originally said $0.7414$ \AA, where they would differ by up to $1.8$ mHa; corrected.)
       \end{alertblock}
     \end{column}
   \end{columns}
 \end{frame}
+
+\begin{frame}{Walk-through: the Hartree--Fock energy term by term}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \scriptsize
+      \begin{center}
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{lrrr}
+        \toprule term & $c_k$ & $\braket{1100|P_k|1100}$ & contribution\\ \midrule
+        \texttt{IIII} & $-0.097066$ & $+1$ & $-0.097066$\\
+        \texttt{ZIII}, \texttt{IZII} & $+0.171413$ & $-1$ & $-0.342826$\\
+        \texttt{IIZI}, \texttt{IIIZ} & $-0.223432$ & $+1$ & $-0.446863$\\
+        \texttt{ZZII} & $+0.168689$ & $+1$ & $+0.168689$\\
+        \texttt{ZIZI}, \texttt{IZIZ} & $+0.120625$ & $-1$ & $-0.241250$\\
+        \texttt{ZIIZ}, \texttt{IZZI} & $+0.165928$ & $-1$ & $-0.331856$\\
+        \texttt{IIZZ} & $+0.174413$ & $+1$ & $+0.174413$\\
+        4 exchange terms & $\pm0.045303$ & $0$ & $0$\\ \midrule
+        \multicolumn{3}{l}{$E_{\mathrm{HF}} = \braket{1100|H|1100}$} & $-1.116759$\\ \bottomrule
+      \end{tabular}}
+      \end{center}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item On a basis state $\ket{z}$, $Z_j$ gives $+1$ for an empty orbital ($z_j = 0$) and $-1$ for an occupied one.
+        \item A product $Z_iZ_j$ gives the product of the signs.
+        \item Strings containing $X$ or $Y$ flip bits, so their diagonal element is $0$.
+        \item The sum reproduces the notebook's Hartree--Fock energy, \hl{$-1.116759$ Ha}, exactly ($\theta = 0$ of the UCC ansatz).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Where the exchange terms come from: the coupling $H_{12}$}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      $H_{12} = \braket{1100|H|0011} = \sum_kc_k\braket{1100|P_k|0011}$. Only the four exchange strings connect the two determinants:
+      \small
+      \begin{center}
+      \begin{tabular}{lrrr}
+        \toprule $P_k$ & $P_k\ket{0011}$ & $c_k$ & contribution\\ \midrule
+        \texttt{XXYY} & $-\ket{1100}$ & $-0.045303$ & $+0.045303$\\
+        \texttt{XYYX} & $+\ket{1100}$ & $+0.045303$ & $+0.045303$\\
+        \texttt{YXXY} & $+\ket{1100}$ & $+0.045303$ & $+0.045303$\\
+        \texttt{YYXX} & $-\ket{1100}$ & $-0.045303$ & $+0.045303$\\ \midrule
+        \multicolumn{3}{l}{$H_{12}$} & $+0.181210$\\ \bottomrule
+      \end{tabular}
+      \end{center}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item Example: $\texttt{XXYY}\ket{0011}$: $X\ket0 = \ket1$ twice, $Y\ket1 = -i\ket0$ twice: $(-i)^2\ket{1100} = -\ket{1100}$.
+        \item All four contributions add: $H_{12} = 4\times0.045303$. In second quantisation this is the exchange integral that moves an
+          electron pair $\sigma_g^2 \to \sigma_u^2$.
+        \item $H_{12} \ne 0$ is what makes the exact ground state differ from Hartree--Fock (correlation).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 
 \begin{frame}{Pauli decomposition of any Hamiltonian}
   \begin{columns}[T]
@@ -401,6 +460,35 @@
     \end{column}
   \end{columns}
 \end{frame}
+
+\begin{frame}{Measurement grouping for H$_2$: a worked example}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      \begin{center}
+      \begin{tabular}{lll}
+        \toprule setting & terms & basis change\\ \midrule
+        none & \texttt{IIII} (constant) & ---\\
+        1 & 10 $Z$-type terms & none (measure $Z$)\\
+        2 & \texttt{XXYY} & $H, H, S^\dagger H, S^\dagger H$\\
+        3 & \texttt{XYYX} & $H, S^\dagger H, S^\dagger H, H$\\
+        4 & \texttt{YXXY} & $S^\dagger H, H, H, S^\dagger H$\\
+        5 & \texttt{YYXX} & $S^\dagger H, S^\dagger H, H, H$\\ \bottomrule
+      \end{tabular}
+      \end{center}
+      Qubit-wise commuting grouping: \key{5 settings}. The four exchange strings commute with each other (they differ at an even number of positions), so a joint
+      entangling basis change measures them together: \key{2 settings}.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{From one setting to many terms}
+        Setting 1 returns bitstrings $b$; every $Z$-type term is evaluated from the same shots:
+        $\braket{Z_iZ_j} \approx \frac1S\sum_{\text{shots}}(-1)^{b_i\oplus b_j}$.
+      \end{block}
+      \small Larger molecules: hundreds of terms (LiH: 631), so grouping and shot allocation by $|c_k|$ matter.
+    \end{column}
+  \end{columns}
+\end{frame}
+
 
 \begin{frame}{Expectation values: a numerical example}
   \begin{columns}[T]
@@ -595,6 +683,34 @@
   \end{columns}
 \end{frame}
 
+\begin{frame}{One VQE optimisation by hand}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      $H = -Z + \tfrac12X$, ansatz $R_Y(\theta)\ket0$, $E(\theta) = -\cos\theta + \tfrac12\sin\theta$, start $\theta_0 = 0$.\\[1mm]
+      Gradient by parameter shift, step $\theta_{k+1} = \theta_k - 0.5\,\partial_\theta E$:
+      \small
+      \begin{center}
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{crrrr}
+        \toprule $k$ & $\theta_k$ & $E(\theta_k + \frac\pi2)$, $E(\theta_k - \frac\pi2)$ & $\partial_\theta E$ & $E(\theta_k)$\\ \midrule
+        0 & $0$ & $0.5$, $-0.5$ & $0.500$ & $-1.0000$\\
+        1 & $-0.250$ & & $0.237$ & $-1.0926$\\
+        2 & $-0.369$ & & $0.106$ & $-1.1130$\\
+        3 & $-0.422$ & & $0.047$ & $-1.1170$\\ \bottomrule
+      \end{tabular}}
+      \end{center}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item Every energy is \key{above} $E_0 = -1.1180$ and falls monotonically towards it; $\theta_k \to \theta^* = -0.4636$.
+        \item Each step needs 2 extra circuit runs per parameter (here: 2).
+        \item The notebook uses COBYLA instead: no gradients, a trust region of initial size \texttt{rhobeg = 0.3}.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
 \begin{frame}[fragile]{VQE in pseudocode}
 \begin{lstlisting}[language={}, basicstyle=\ttfamily\tiny]
 input : Hamiltonian H = sum_k c_k P_k (Pauli strings), ansatz U(theta), initial angles theta0
@@ -645,6 +761,43 @@ sample  U(theta*)|0...0> to show the dominant bitstrings
     \end{column}
   \end{columns}
 \end{frame}
+
+\begin{frame}{Checking the numbers with CUDA-Q: the optimal H$_2$ state}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \texttt{cudaq.get\_state(ucc\_ansatz, [theta*])}, reordered to qubit 0 first, $\theta^* = \numthetastar$:
+      \begin{center}
+      \begin{tabular}{lrr}
+        \toprule basis state & amplitude & probability\\ \midrule
+        $\ket{1100}$ & $\numampa$ & $\numproba$\\
+        $\ket{0011}$ & $\numampb$ & $\numprobb$\\
+        14 others & $0$ & $0$\\ \midrule
+        norm & & $\numampnorm$\\ \bottomrule
+      \end{tabular}
+      \end{center}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item Amplitudes $\cos\theta^*$ and $-\sin\theta^*$, exactly as the formula $e^{i\theta X_0X_1X_2Y_3}\ket{1100} = \cos\theta\ket{1100} - \sin\theta\ket{0011}$ predicts.
+        \item Energy from \texttt{cudaq.observe}: $\numeucc$ Ha = FCI to $\numuccerr$ Ha.
+        \item Remember: CUDA-Q lists amplitudes with qubit 0 as the \emph{least} significant bit; $\ket{1100}$ is index 3 there.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Measuring the H$_2$ VQE state: what the shots show}
+  \centering\includegraphics[width=0.86\textwidth]{h2_shots}\\
+  \raggedright\small
+  \begin{itemize}
+    \item Each shot returns one determinant: $\ket{1100}$ (Hartree--Fock) with probability $0.987$, $\ket{0011}$ with $0.013$; nothing else.
+    \item The rare $\ket{0011}$ outcome carries the whole correlation energy ($20.5$ mHa). Estimating $P(0011)$ to $10\,\%$ needs
+      $\sim10^4$ shots --- a first glimpse of VQE's measurement cost.
+    \item The energy itself is measured from the 15 Pauli terms, not from these $Z$-basis counts alone.
+  \end{itemize}
+\end{frame}
+
 
 \begin{frame}{Two-qubit Ising chain by hand}
   \begin{columns}[T]
@@ -908,6 +1061,24 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
   \end{columns}
 \end{frame}
 
+\begin{frame}{Shot noise in practice}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{shot_noise}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      \begin{itemize}
+        \item 40 repeated energy estimates of the optimal H$_2$ state with \texttt{cudaq.observe(..., shots\_count=S)}.
+        \item Spread $\approx \numsdthousand$ mHa at $S = 1000$ and $\numsdtenk$ mHa at $S = 10\,000$: it falls like $1/\sqrt S$.
+        \item Chemical accuracy needs the spread well below $1.6$ mHa --- for every energy evaluation of the optimisation loop.
+        \item Single estimates may fall \emph{below} the FCI energy; only the average obeys the variational bound.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
 \begin{frame}{Noise, error mitigation and hardware}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
@@ -948,6 +1119,53 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
         beyond today's devices. VQE's value today: a well-understood hybrid algorithm and a benchmark; the notebook reproduces small
         problems exactly on a simulator.
       \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{VQE compared with classical methods and with phase estimation}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{p{2.2cm}p{2.4cm}p{4.6cm}}
+        \toprule method & cost & quality\\ \midrule
+        Hartree--Fock & $N^4$ & no correlation (H$_2$: $-20.5$ mHa missed)\\
+        CCSD(T) & $N^7$ & ``gold standard'' near equilibrium; fails for bond breaking\\
+        DMRG & poly.\ for 1D & excellent for chains (like the Ising model)\\
+        FCI & $\binom{N}{N_e}$ & exact in the basis; small molecules only\\
+        VQE & shots $\times$ evaluations & variational upper bound; limited by ansatz, shots, noise\\ \bottomrule
+      \end{tabular}}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \begin{block}{VQE versus quantum phase estimation (QPE)}
+        \begin{itemize}
+          \item QPE (see the QFT lecture) reads $E$ from the phase of $e^{-iHt}$: precision $\varepsilon$ with $O(1/\varepsilon)$ evolution time,
+            deep circuits, fault tolerance needed.
+          \item VQE: shallow circuits, but $O(1/\varepsilon^2)$ shots and a classical optimiser.
+          \item VQE states can serve as good initial states for QPE.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Excited states with VQE}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Variational quantum deflation (VQD)}
+        After finding $\ket{\psi_0}$, minimise
+        \[ F(\bt) = \braket{\psi(\bt)|H|\psi(\bt)} + \beta\,|\braket{\psi_0|\psi(\bt)}|^2 \]
+        with $\beta$ larger than the gap $E_1 - E_0$: the penalty pushes the new state away from the ground state, so the minimum is $E_1$.
+      \end{block}
+      \small The overlap $|\braket{\psi_0|\psi}|^2$ is measured with a swap test or by running $U(\bt_0)^\dagger U(\bt)$ and counting $\ket{0\dots0}$.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item \key{Subspace-search VQE}: optimise several orthogonal input states together with one circuit.
+        \item \key{Quantum subspace expansion}: measure $H$ in a small subspace around the VQE state and diagonalise classically (Rayleigh--Ritz).
+        \item Excitation energies give spectra (colours, absorption) --- not covered by the notebook.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
@@ -1009,6 +1227,29 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
 
 % =====================================================================================
 \section{Part 11: Practice and summary}
+\begin{frame}{Common mistakes and how to spot them}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \begin{itemize}
+        \item \key{Energy below $E_0$} with exact expectation values: a bug (sign, missing term, reference), never a success.
+        \item \key{Amplitude vs.\ probability}: $\cos\frac\theta2$ is an amplitude; $P = \cos^2\frac\theta2$.
+        \item \key{Bit order}: notebook strings are qubit 0 first; CUDA-Q state vectors are qubit 0 least significant.
+        \item \key{Half angles}: $R_Y(\theta) = e^{-i\theta Y/2}$, but \texttt{exp\_pauli(theta, ...)} $= e^{+i\theta P}$ (no $\frac12$, plus sign).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      \begin{itemize}
+        \item \key{Forgetting the constant} $c_{I\dots I}$ (nuclear repulsion) when comparing with total energies.
+        \item \key{Measuring $X$ or $Y$ without a basis change}.
+        \item \key{Relative error looks small}: compare with a trivial baseline (Ising: $\ket{0\dots0}$ already gives $-14$).
+        \item \key{Budget mistaken for convergence}: read the optimizer's stopping message (\texttt{MAXFUN}).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \begin{frame}{Exercises}
   \begin{enumerate}
     \item Eigenvalues and ground-state vector of $\begin{psmallmatrix}0 & 1\\ 1 & 0\end{psmallmatrix}$; Rayleigh quotient of $(1, 0)$.

@@ -60,7 +60,7 @@ Exact $E_0$: map to free fermions (Jordan-Wigner); with the $2N\times 2N$ real a
 resulting Majorana quadratic form, $E_0 = -\tfrac12\sum|\lambda(iA)|$ - computed in Section 4 for any $N$.
 
 ### Example molecule: H$_2$
-Hydrogen at bond length 0.7414 &Aring;, STO-3G basis, Jordan-Wigner mapping: 4 qubits, 15 Pauli terms
+Hydrogen at bond length 0.740 &Aring;, STO-3G basis, Jordan-Wigner mapping: 4 qubits, 15 Pauli terms
 (coefficients in Section 4). Exact (full CI) ground energy: $-1.137284$ Hartree; **chemical accuracy** = 1.6 mHa.
 
 ### Measurement
@@ -132,7 +132,7 @@ cells.append(md(r"""
 and a 2-layer hardware-efficient ansatz (45 parameters).
 
 **Molecular example - hydrogen molecule H$_2$:** set `HAMILTONIAN = "H2"` (4 qubits, UCC ansatz, converges in about
-20 evaluations). Its 15 Pauli terms (bond length 0.7414 &Aring;, STO-3G basis, Jordan-Wigner, spin-orbitals interleaved)
+20 evaluations). Its 15 Pauli terms (bond length 0.740 &Aring;, STO-3G basis, Jordan-Wigner, spin-orbitals interleaved)
 are listed in the cell below; the constant term includes the nuclear repulsion energy.
 
 | Goal | Setting in Section 3 |
@@ -146,7 +146,7 @@ cells.append(code(r'''
 # ---------------------------------------------------------------------------------
 # Section 4 - Build the Hamiltonian, validate it and compute the exact reference energy
 # ---------------------------------------------------------------------------------
-H2_TERMS = [  # (coefficient in Hartree, Pauli string on qubits 0..3): H2, 0.7414 Angstrom, STO-3G, Jordan-Wigner
+H2_TERMS = [  # (coefficient in Hartree, Pauli string on qubits 0..3): H2, 0.740 Angstrom, STO-3G, Jordan-Wigner
     (-0.0970662681676282, "IIII"), (0.17141282644776884, "ZIII"), (0.17141282644776884, "IZII"),
     (-0.22343153690813597, "IIZI"), (-0.22343153690813597, "IIIZ"), (0.16868898170361213, "ZZII"),
     (0.12062523483390425, "ZIZI"), (0.16592785033770352, "ZIIZ"), (0.16592785033770352, "IZZI"),

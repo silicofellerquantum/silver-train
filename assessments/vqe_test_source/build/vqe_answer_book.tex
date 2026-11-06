@@ -870,7 +870,7 @@ HF alone is not good enough, and VQE has to recover this correlation energy. The
 \needspace{13\baselineskip}
 \begin{qitem}{20}
 \qmeta{Single-correct MCQ}{Excited-state contamination}
-A trial state of H$_2$ has $90\,\%$ weight on the ground state ($E_0 = -1.13728$ Ha) and $10\,\%$ on an excited eigenstate with energy
+A trial state of H$_2$ has $90\,\%$ weight on the ground state ($E_0 = -1.13728$ Ha) and $10\,\%$ on another eigenstate of the 4-qubit Hamiltonian with energy
 $E_1 = -0.53821$ Ha. Its energy expectation and its error above $E_0$ are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
 \optlabel{A}\,$-1.1971$ Ha and $-59.9$ mHa & \correctlabel{B}\,$-1.0774$ Ha and $59.9$ mHa \\[3pt]
@@ -906,9 +906,8 @@ always non-negative (variational principle). The energy is lower than the energi
 \begin{qitem}{21}
 \qmeta{Single-correct MCQ}{$R_Y$ and the Born rule}
 The state $R_Y(\pi/3)\ket0$ is measured in the computational basis. The probability of the outcome 1 is
-\par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$\tfrac34$ & \optlabel{B}\,$\sin^2(\pi/3) = \tfrac34$ for outcome 0 \\[3pt]
-\optlabel{C}\,$\tfrac12$ & \correctlabel{D}\,$\tfrac14$
+\par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
+\optlabel{A}\,$\tfrac34$ & \optlabel{B}\,$\tfrac{\sqrt3}{2}$ & \optlabel{C}\,$\tfrac12$ & \correctlabel{D}\,$\tfrac14$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{D}
@@ -925,7 +924,7 @@ ansatz is built from exactly these \texttt{ry} rotations.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $\frac34 = \cos^2(\pi/6)$ is $P(0)$, the probability of the \emph{other} outcome.
-\item[\textbf{(B)}] Uses $\theta$ instead of $\theta/2$ and swaps outcomes.
+\item[\textbf{(B)}] $\frac{\sqrt3}{2} = \cos(\pi/6)$ is the \emph{amplitude} of $\ket0$; probabilities are squared moduli ($P(1) = \sin^2(\pi/6) = \frac14$).
 \item[\textbf{(C)}] $\frac12$ needs $\theta = \pi/2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Half angles in amplitudes: $R_Y(\theta)$ rotates the Bloch vector by $\theta$.

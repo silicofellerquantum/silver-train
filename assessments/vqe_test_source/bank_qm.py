@@ -15,7 +15,7 @@ to qubit 1, then a CNOT with control 0 and target 1. The angles are $\theta_0 = 
 QUESTIONS = [
     dict(id="B1", kind="mcq",
          q=r"""The state $R_Y(\pi/3)\ket0$ is measured in the computational basis. The probability of the outcome 1 is""",
-         opts=[r"$\tfrac14$", r"$\tfrac34$", r"$\tfrac12$", r"$\sin^2(\pi/3) = \tfrac34$ for outcome 0"],
+         opts=[r"$\tfrac14$", r"$\tfrac34$", r"$\tfrac12$", r"$\tfrac{\sqrt3}{2}$"],
          sol=r"""$R_Y(\theta) = e^{-i\theta Y/2} = \begin{psmallmatrix}\cos\frac\theta2 & -\sin\frac\theta2\\ \sin\frac\theta2 & \cos\frac\theta2\end{psmallmatrix}$, so $R_Y(\theta)\ket0 = \cos\frac\theta2\ket0 + \sin\frac\theta2\ket1$
 (real amplitudes). With $\theta = \pi/3$: $P(1) = \sin^2(\pi/6) = \tfrac14$, $P(0) = \cos^2(\pi/6) = \tfrac34$. The notebook's hardware-efficient
 ansatz is built from exactly these \texttt{ry} rotations."""),

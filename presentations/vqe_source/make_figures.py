@@ -266,6 +266,46 @@ ax.set_xlabel("global depolarising probability $p$"); ax.set_ylabel("measured en
 save(fig, "noise_model")
 NUM["pbreakeven"] = f"{(EHF - FCI) / (H2_TERMS[0][0] - FCI):.3f}"
 
+# ---------------------------------------------------------------- 9. sampling the optimal H2 state (measurement shots)
+@cudaq.kernel
+def ucc_sampled(theta: list[float]):
+    qubits = cudaq.qvector(4)
+    x(qubits[0])
+    x(qubits[1])
+    exp_pauli(theta[0], qubits, "XXXY")
+    mz(qubits)
+
+
+st = np.array(cudaq.get_state(ucc_ansatz, [float(res.x)]))
+st = st.reshape([2] * 4).transpose([3, 2, 1, 0]).reshape(-1)                 # qubit 0 first
+NUM.update(ampa=f"{st[int('1100', 2)].real:+.6f}", ampb=f"{st[int('0011', 2)].real:+.6f}",
+           proba=f"{abs(st[int('1100', 2)]) ** 2:.6f}", probb=f"{abs(st[int('0011', 2)]) ** 2:.6f}",
+           ampnorm=f"{np.sum(np.abs(st) ** 2):.12f}")
+fig, axs = plt.subplots(1, 3, figsize=(7.4, 2.3), sharey=True)
+for ax, shots in zip(axs, (100, 1000, 10000)):
+    c = cudaq.sample(ucc_sampled, [float(res.x)], shots_count=shots)
+    p0 = c.count("0011") / shots
+    ax.bar(["1100", "0011", "other"], [c.count("1100") / shots, p0, 1 - c.count("1100") / shots - p0], color=[BLUE, ORANGE, GREY])
+    ax.set_title(f"{shots} shots: P(0011) = {p0:.4f}", fontsize=8)
+    ax.grid(axis="x", visible=False)
+axs[0].set_ylabel("frequency")
+save(fig, "h2_shots")
+
+# ---------------------------------------------------------------- 10. shot noise of the energy estimate
+shots_list = [100, 300, 1000, 3000, 10000]
+sd = []
+for S_ in shots_list:
+    vals = [cudaq.observe(ucc_ansatz, H2OP, [float(res.x)], shots_count=S_).expectation() for _ in range(40)]
+    sd.append(np.std(vals))
+NUM["sdthousand"] = f"{sd[2] * 1000:.1f}"
+NUM["sdtenk"] = f"{sd[4] * 1000:.1f}"
+fig, ax = plt.subplots(figsize=(4.4, 2.5))
+ax.loglog(shots_list, np.array(sd) * 1000, "o-", color=BLUE, label="spread of 40 repeated estimates")
+ax.loglog(shots_list, sd[0] * 1000 * np.sqrt(shots_list[0] / np.array(shots_list)), ":", color=GREY, label=r"$\propto 1/\sqrt{S}$")
+ax.axhline(1.6, color=ORANGE, lw=1); ax.text(110, 1.75, "chemical accuracy 1.6 mHa", fontsize=7, color=ORANGE)
+ax.set_xlabel("shots per term group $S$"); ax.set_ylabel("std. dev. of $E$ (mHa)"); ax.legend(fontsize=7)
+save(fig, "shot_noise")
+
 names = [re.sub("[^a-z]", "", k) for k in NUM]
 assert len(set(names)) == len(names)
 with open(os.path.join(OUT, "vqe_numbers.tex"), "w") as fh:
