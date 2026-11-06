@@ -30,3 +30,7 @@ presentations/vqe_source/vqe_lecture.pdf
 book/vqe_chapter_source/vqe_chapter.pdf
 assessments/vqe_test_source/build/*
 !assessments/vqe_test_source/build/*.tex
+presentations/hhl_source/hhl_lecture.pdf
+book/hhl_chapter_source/hhl_chapter.pdf
+assessments/hhl_test_source/build/*
+!assessments/hhl_test_source/build/*.tex
