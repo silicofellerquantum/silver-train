@@ -55,6 +55,22 @@ report built only from real measurements.
   each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
   `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
   `python generate_papers.py`.
+* [`presentations/HHL_Lecture.pdf`](presentations/HHL_Lecture.pdf) - a 54-slide lecture on the Harrow-Hassidim-Lloyd
+  algorithm in the same style: linear systems, classical solvers, Hermitian and sparse matrices, eigenvalues and the
+  condition number, amplitude encoding, phase estimation, Hamiltonian simulation, the HHL derivation (registers,
+  eigenvalue inversion, the constant $C$, uncomputation, post-selection, read-out limits), worked $2\times2$ and
+  $4\times4$ examples, complexity and dequantisation, a walkthrough of `HHL.ipynb` with re-computed CUDA-Q results,
+  noise models, limitations, applications, advanced algorithms and exercises with answers. Source:
+  `presentations/hhl_source/` (`python make_figures.py` recomputes every figure and number with CUDA-Q, then
+  `latexmk -pdf hhl_lecture.tex`).
+* [`assessments/HHL_Question_Paper.pdf`](assessments/HHL_Question_Paper.pdf) and
+  [`assessments/HHL_Answer_Book.pdf`](assessments/HHL_Answer_Book.pdf) - an 80-question HHL test in the QFT format
+  (A Linear Algebra and Mathematical Foundations, B Quantum Computing Foundations, C HHL Algorithm Fundamentals,
+  D Advanced HHL and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response
+  sheet). The Answer Book has the key, a topic-wise map, a quick-marking grid and, for every question, the concepts
+  required, relevant formulae, a step-by-step solution, why each wrong option is wrong and a key takeaway. Source:
+  `assessments/hhl_test_source/` - check with `python verify_answers.py --cudaq` (82 checks, including an exact NumPy
+  HHL simulator and a rebuild of the notebook's CUDA-Q kernel) and rebuild with `python generate_papers.py`.
 
 ## Structure of the notebooks
 

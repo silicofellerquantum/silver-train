@@ -1,0 +1,1222 @@
+% =====================================================================================
+% The HHL algorithm - solving linear systems on a quantum computer, step by step
+% Build:  python make_figures.py   (needs cudaq, numpy, scipy, matplotlib)
+%         latexmk -pdf hhl_lecture.tex
+% Same design as presentations/qft_source/qft_lecture.tex.
+% =====================================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{braket}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{quantikz}
+\usepackage{listings}
+\graphicspath{{figures/}}
+\input{figures/hhl_numbers.tex}
+
+% ---- colours and look (identical to the QFT lecture) ----------------------------------
+\definecolor{qblue}{HTML}{2A78D6}
+\definecolor{qdark}{HTML}{1C5CAB}
+\definecolor{qorange}{HTML}{EB6834}
+\definecolor{qaqua}{HTML}{1BAF7A}
+\definecolor{qink}{HTML}{0B0B0B}
+\definecolor{qgrey}{HTML}{52514E}
+\definecolor{qlight}{HTML}{EEF4FC}
+\setbeamercolor{structure}{fg=qdark}
+\setbeamercolor{frametitle}{fg=qdark}
+\setbeamercolor{title}{fg=qdark}
+\setbeamercolor{normal text}{fg=qink}
+\setbeamercolor{block title}{bg=qblue,fg=white}
+\setbeamercolor{block body}{bg=qlight,fg=qink}
+\setbeamercolor{block title example}{bg=qaqua,fg=white}
+\setbeamercolor{block body example}{bg=qaqua!10,fg=qink}
+\setbeamercolor{block title alerted}{bg=qorange,fg=white}
+\setbeamercolor{block body alerted}{bg=qorange!10,fg=qink}
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{enumerate items}[default]
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.4ex,dp=1ex,leftskip=0.4cm,rightskip=0.4cm]{normal text}%
+    \color{qgrey}\tiny The HHL Algorithm\ \ $\cdot$\ \ \insertsectionhead\hfill\insertframenumber\,/\,\inserttotalframenumber
+  \end{beamercolorbox}}}
+\newcommand{\hl}[1]{{\color{qorange}\textbf{#1}}}
+\newcommand{\key}[1]{{\color{qdark}\textbf{#1}}}
+
+\lstset{language=Python, basicstyle=\ttfamily\scriptsize, keywordstyle=\color{qdark}\bfseries,
+  commentstyle=\color{qgrey}\itshape, stringstyle=\color{qorange}, showstringspaces=false,
+  frame=single, rulecolor=\color{qblue!40}, backgroundcolor=\color{qlight}, columns=fullflexible}
+
+\title{The HHL Algorithm}
+\subtitle{Solving linear systems $A\vec x = \vec b$ on a quantum computer --- explained step by step}
+\author{CUDA-Q Quantum Algorithm Benchmarking Suite}
+\date{From linear algebra to a working CUDA-Q implementation}
+
+\begin{document}
+
+% =====================================================================================
+\section{Introduction}
+\begin{frame}
+  \titlepage
+  \centering\small\color{qgrey}
+  All quantum results in these slides were computed with NVIDIA CUDA-Q (CPU simulator \texttt{qpp-cpu}) and checked against NumPy.
+  No quantum hardware was used.
+\end{frame}
+
+\begin{frame}{What you will learn today}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \footnotesize
+      \begin{enumerate}\setlength{\itemsep}{1pt}
+        \item \key{Linear algebra} for HHL: linear systems, eigenvalues, Hermitian and sparse matrices, condition number
+        \item \key{Quantum tools}: amplitude encoding, controlled gates, measurement, QFT, \key{phase estimation}, Hamiltonian simulation
+        \item The \key{HHL algorithm}, derived step by step: registers, eigenvalue inversion, uncomputation, post-selection
+        \item Worked \key{$2\times2$} and \key{$4\times4$} examples
+        \item \key{Complexity}: where the speed-up comes from and where it disappears
+        \item The \key{CUDA-Q implementation} in \texttt{HHL.ipynb}, with real results
+        \item Noise, limitations, applications and \key{advanced algorithms}
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \begin{block}{You only need}
+        \begin{itemize}
+          \item matrices and vectors
+          \item complex numbers $e^{i\phi}$
+          \item basic qubits and gates (the QFT lecture is a good preparation)
+        \end{itemize}
+        Everything else is explained on the way.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The big picture in one slide}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item Classical task: given $A$ ($d\times d$) and $\vec b$, find $\vec x$ with $A\vec x = \vec b$.
+        \item HHL (Harrow, Hassidim, Lloyd, 2009) prepares the \key{quantum state}
+          \[ \ket x = \frac{A^{-1}\ket b}{\lVert A^{-1}\ket b\rVert} \]
+          using only $\log_2 d$ qubits for the data.
+        \item Idea: write $\ket b$ in the eigenbasis of $A$ and \key{divide every component by its eigenvalue}.
+        \item Cost $\tilde O(\log(d)\,s^2\kappa^2/\epsilon)$ --- but only under strong \hl{assumptions}, and the output is a state, \hl{not a list of numbers}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{Keep in mind all lecture long}
+        HHL is \textbf{not} a faster \texttt{numpy.linalg.solve}. It is a subroutine that produces $\ket x$ so that a
+        \emph{property} of $\vec x$ (an expectation value, an overlap) can be estimated.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================================================
+\section{Part 1: Linear algebra foundations}
+\begin{frame}{Vectors, matrices and linear systems}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      A \key{linear system} of $d$ equations in $d$ unknowns:
+      \[ \begin{aligned} 2x_1 + x_2 &= 1\\ x_1 + 3x_2 &= 2\end{aligned}
+         \quad\Longleftrightarrow\quad
+         \underbrace{\begin{pmatrix}2&1\\1&3\end{pmatrix}}_{A}\underbrace{\begin{pmatrix}x_1\\x_2\end{pmatrix}}_{\vec x} = \underbrace{\begin{pmatrix}1\\2\end{pmatrix}}_{\vec b} \]
+      \begin{itemize}
+        \item Unique solution $\iff$ $\det A \neq 0$ ($A$ invertible): $\vec x = A^{-1}\vec b$.
+        \item $2\times2$: $A^{-1} = \frac{1}{ad - bc}\begin{psmallmatrix}d&-b\\-c&a\end{psmallmatrix}$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{exampleblock}{Worked example}
+        $\det A = 6 - 1 = 5$,
+        \[ \vec x = \frac15\begin{pmatrix}3&-1\\-1&2\end{pmatrix}\begin{pmatrix}1\\2\end{pmatrix} = \begin{pmatrix}0.2\\0.6\end{pmatrix}. \]
+        Check: $2(0.2) + 0.6 = 1$, $\ 0.2 + 3(0.6) = 2$. \checkmark
+      \end{exampleblock}
+      \small Linear systems appear in circuit simulation, finite elements, fluid dynamics, least-squares fitting,
+      machine learning, network flow \dots
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Classical methods for $A\vec x = \vec b$}
+  \centering\small
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Method} & \textbf{Cost} & \textbf{Comment}\\ \midrule
+    Gaussian elimination / LU & $O(d^3)$ & direct, dense, factorisation reusable \\
+    Cholesky ($A$ positive definite) & $\approx\frac13 d^3$ & half the work of LU \\
+    Conjugate gradient ($A$ PD, $s$-sparse) & $O(d\,s\sqrt\kappa\log\frac1\epsilon)$ & iterative, matrix--vector products only \\
+    Krylov methods (GMRES, \dots) & $O(d\,s\cdot\text{iterations})$ & general sparse matrices \\
+    \bottomrule
+  \end{tabular}
+  \vspace{4mm}
+  \begin{itemize}
+    \item Every classical method must at least \key{read} $\vec b$ and \key{write} $\vec x$: cost $\ge d$.
+    \item HHL's exponential improvement in $d$ is only possible because it does \hl{neither}: $\ket b$ is prepared by a circuit and $\ket x$ is never written out.
+    \item The reference in the notebook is \texttt{np.linalg.solve} (LAPACK, LU with pivoting).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Matrix properties that matter for HHL}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item \key{Conjugate transpose}: $A^\dagger = \bar A^T$.
+        \item \key{Hermitian}: $A = A^\dagger$ (real symmetric is a special case).
+        \item \key{Unitary}: $U^\dagger U = I$ --- preserves lengths; all quantum gates are unitary.
+        \item \key{Invertible}: $\det A \neq 0$, no zero eigenvalue.
+        \item \key{Positive definite}: Hermitian with all eigenvalues $> 0$.
+        \item \key{Sparse}: at most $s \ll d$ non-zeros per row.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Quick checks}
+        \small
+        \begin{tabular}{@{}ll@{}}
+          $\begin{psmallmatrix}0&1\\1&0\end{psmallmatrix}$ & Hermitian \emph{and} unitary\\[4pt]
+          $\begin{psmallmatrix}1&i\\-i&2\end{psmallmatrix}$ & Hermitian, $\det = 1$\\[4pt]
+          $\begin{psmallmatrix}1&2\\2&4\end{psmallmatrix}$ & Hermitian, singular\\[4pt]
+          $\begin{psmallmatrix}1&2\\0&1\end{psmallmatrix}$ & not Hermitian
+        \end{tabular}
+      \end{exampleblock}
+      \small HHL needs a Hermitian, invertible $A$. Other matrices are \key{embedded} (next slides).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Eigenvalues and eigenvectors}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \[ A\ket{u_j} = \lambda_j\ket{u_j} \qquad \det(A - \lambda I) = 0 \]
+      For a \key{Hermitian} matrix (spectral theorem):
+      \begin{itemize}
+        \item all $\lambda_j$ are \key{real};
+        \item the $\ket{u_j}$ form an \key{orthonormal basis};
+        \item $A = \sum_j \lambda_j\ket{u_j}\!\bra{u_j} = V\Lambda V^\dagger$.
+      \end{itemize}
+      Proof of realness: $\lambda\braket{u|u} = \braket{u|A|u} = \braket{u|A^\dagger|u}^* = \bar\lambda\braket{u|u}$.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Example}
+        $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$:\; $\lambda^2 - 4\lambda + 3 = 0$
+        \begin{itemize}
+          \item $\lambda_1 = 3$, $\ket{u_1} = \tfrac{1}{\sqrt2}(1, 1)$
+          \item $\lambda_2 = 1$, $\ket{u_2} = \tfrac{1}{\sqrt2}(1, -1)$
+        \end{itemize}
+        Check: trace $4 = 3 + 1$, determinant $3 = 3\cdot1$.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Functions of a matrix --- and the inverse}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      With $A = \sum_j\lambda_j\ket{u_j}\!\bra{u_j}$, any function acts on the eigenvalues:
+      \[ f(A) = \sum_j f(\lambda_j)\ket{u_j}\!\bra{u_j}. \]
+      Two functions are central for HHL:
+      \begin{itemize}
+        \item $f(\lambda) = e^{i\lambda t}$: $\;U = e^{iAt}$ is \key{unitary} (a quantum gate!).
+        \item $f(\lambda) = 1/\lambda$: $\;A^{-1} = \sum_j\lambda_j^{-1}\ket{u_j}\!\bra{u_j}$.
+      \end{itemize}
+      HHL uses the first to \key{measure} the eigenvalues and then applies the second.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Solving in the eigenbasis}
+        \[ \vec b = \sum_j\beta_j\ket{u_j},\quad \beta_j = \braket{u_j|b} \]
+        \[ \boxed{\;\vec x = A^{-1}\vec b = \sum_j\frac{\beta_j}{\lambda_j}\ket{u_j}\;} \]
+        Example above with $\vec b = (1, 0)$: $\beta_1 = \beta_2 = \frac{1}{\sqrt2}$,
+        $\vec x = \frac16(1,1) + \frac12(1,-1) = (\frac23, -\frac13)$.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Sparse matrices}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item \key{Sparsity} $s$ = maximum number of non-zero entries in any row.
+        \item Example: 1-D Laplacian (heat equation, springs, circuits)
+          \[ L = \begin{pmatrix}2&-1&&\\-1&2&-1&\\&\ddots&\ddots&\ddots\\&&-1&2\end{pmatrix},\quad s = 3 \]
+          ($8\times8$: $22$ non-zeros instead of $64$).
+        \item Sparse $A$ $\Rightarrow$ $e^{iAt}$ can be simulated with $\mathrm{poly}(s, \log d)$ gates.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Why HHL wants sparsity}
+        HHL needs controlled $e^{iAt}$. For an $s$-sparse matrix given by an \emph{oracle} (``which entries are non-zero in row $i$, and what are they?''),
+        Hamiltonian simulation costs about $s^2$ (original HHL) or $s$ (modern methods) --- independent of $d$ up to $\log d$.
+      \end{block}
+      \small Dense matrices need other access models (block encodings / QRAM).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The condition number $\kappa$}
+  \begin{columns}[c]
+    \begin{column}{0.48\textwidth}
+      \[ \kappa(A) = \lVert A\rVert\,\lVert A^{-1}\rVert = \frac{\sigma_{\max}}{\sigma_{\min}} \overset{\text{Hermitian}}{=} \frac{|\lambda|_{\max}}{|\lambda|_{\min}} \]
+      \begin{itemize}
+        \item Sensitivity: $\dfrac{\lVert\delta\vec x\rVert}{\lVert\vec x\rVert} \le \kappa\,\dfrac{\lVert\delta\vec b\rVert}{\lVert\vec b\rVert}$
+        \item $\kappa = 1$: unitary (perfect); $\kappa = \infty$: singular.
+        \item Laplacian: $\kappa \approx 4(n+1)^2/\pi^2$ grows with the grid.
+        \item For HHL: run time $\propto\kappa^2$ (original), success probability $\sim 1/\kappa^2$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{conditioning.pdf}\\
+      \small Two lines meeting at a shallow angle: a small change of $\vec b$ (dashed) moves the solution far.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Two preparation tricks: Hermitian embedding and padding}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \key{Non-Hermitian $A$?} Solve the doubled system
+      \[ \begin{pmatrix}0 & A\\ A^\dagger & 0\end{pmatrix}\begin{pmatrix}\vec y\\ \vec z\end{pmatrix} = \begin{pmatrix}\vec b\\ \vec 0\end{pmatrix}
+         \;\Rightarrow\; A\vec z = \vec b,\ \vec y = \vec 0. \]
+      \begin{itemize}
+        \item The embedded matrix is Hermitian with eigenvalues $\pm\sigma_i(A)$.
+        \item Cost: \key{one extra qubit}; the solution is the second half.
+      \end{itemize}
+      Example: $A = \begin{psmallmatrix}1&2\\0&1\end{psmallmatrix}$: eigenvalues $\pm(\sqrt2\pm1)$, $\kappa = 3 + 2\sqrt2$.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \key{Dimension not a power of 2?} Pad with an identity block:
+      \[ \begin{pmatrix}A & 0\\ 0 & I\end{pmatrix}\begin{pmatrix}\vec x\\ \vec 0\end{pmatrix} = \begin{pmatrix}\vec b\\ \vec 0\end{pmatrix}. \]
+      \begin{exampleblock}{In \texttt{HHL.ipynb}}
+        Both are automatic: a non-Hermitian $5\times5$ matrix becomes $10\times10$, then $16\times16$: $n_b = 4$ system qubits.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================================================
+\section{Part 2: Quantum tools}
+\begin{frame}{Qubits and amplitude encoding}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item $n$ qubits hold $2^n$ complex amplitudes: $\ket\psi = \sum_{i=0}^{2^n-1}a_i\ket i$, $\ \sum|a_i|^2 = 1$.
+        \item \key{Amplitude encoding}: a vector $\vec b \in \mathbb C^d$ becomes
+          \[ \ket b = \frac{1}{\lVert\vec b\rVert}\sum_i b_i\ket i \]
+          on $n_b = \log_2 d$ qubits.
+        \item The \hl{norm is lost}: it must be remembered classically.
+        \item Measuring gives $i$ with probability $|b_i|^2/\lVert\vec b\rVert^2$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Example}
+        $\vec b = (3, 0, 4, 0)$, $\lVert\vec b\rVert = 5$:
+        \[ \ket b = 0.6\ket{00} + 0.8\ket{10} \]
+        $P(00) = 0.36$, $P(10) = 0.64$.
+      \end{exampleblock}
+      \small Convention here and in the notebook: \key{qubit 0 is written first} and is the most significant bit.
+      \begin{alertblock}{Assumption of HHL}
+        $\ket b$ can be prepared efficiently. A general $\vec b$ needs $O(d)$ gates.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Gates, rotations and controlled gates}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \[ H = \tfrac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix},\quad
+         R_Y(\theta) = \begin{pmatrix}\cos\frac\theta2&-\sin\frac\theta2\\ \sin\frac\theta2&\cos\frac\theta2\end{pmatrix} \]
+      \[ R_Y(\theta)\ket0 = \cos\tfrac\theta2\ket0 + \sin\tfrac\theta2\ket1 \]
+      \begin{itemize}
+        \item With $\theta = 2\arcsin c$ the amplitude of $\ket1$ is exactly $c$ --- this is how HHL writes $1/\lambda$ into an amplitude.
+        \item \key{Controlled-$U$}: $\ket0\ket\psi\mapsto\ket0\ket\psi$, $\ \ket1\ket\psi\mapsto\ket1U\ket\psi$.
+        \item \key{Multi-controlled} gates fire only on $\ket{1\dots1}$; $X$ gates around them select any other pattern.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \begin{quantikz}[row sep=0.35cm, column sep=0.45cm]
+        \lstick{$c_0$} & \gate{X} & \ctrl{1} & \gate{X} & \qw \\
+        \lstick{$c_1$} & \qw & \ctrl{1} & \qw & \qw \\
+        \lstick{$c_2$} & \gate{X} & \ctrl{1} & \gate{X} & \qw \\
+        \lstick{anc} & \qw & \gate{R_Y(\theta_2)} & \qw & \qw
+      \end{quantikz}\\[2mm]
+      \small Rotation applied only when the clock reads $c_0c_1c_2 = 010$ ($k = 2$).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Measurement, entanglement and post-selection}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item Born rule: outcome $k$ with probability $|a_k|^2$; the state collapses --- \hl{irreversible}.
+        \item \key{Entangled} states cannot be written as products, e.g.\ $\tfrac{1}{\sqrt2}(\ket{00} + \ket{11})$. Measuring one part changes the other.
+        \item \key{Post-selection}: run the circuit, measure a flag qubit and keep only the runs with the wanted outcome:
+          \[ \alpha\ket0\ket{\psi_0} + \beta\ket1\ket{\psi_1} \xrightarrow{\text{flag}=1} \ket{\psi_1} \]
+          with probability $P = |\beta|^2$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Why it matters for HHL}
+        \begin{itemize}
+          \item $1/\lambda$ is not unitary, so HHL cannot apply $A^{-1}$ directly.
+          \item It applies a unitary that puts $C A^{-1}\ket b$ into the ancilla-$1$ branch and \key{post-selects} it.
+          \item Price: success probability $P_{\text{success}} = C^2\lVert A^{-1}\ket b\rVert^2 < 1$.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Recap: the quantum Fourier transform}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \[ \mathrm{QFT}\ket k = \frac{1}{\sqrt{N}}\sum_{j=0}^{N-1}e^{2\pi i\,jk/N}\ket j,\quad N = 2^n \]
+      \begin{itemize}
+        \item A \key{phase gradient} (phase advancing by $2\pi k/N$ per step) is $\mathrm{QFT}\ket k$.
+        \item So the \key{inverse QFT} turns a phase gradient into the integer $k$.
+        \item Circuit: $n$ Hadamards, $n(n-1)/2$ controlled phases, $\lfloor n/2\rfloor$ SWAPs --- $O(n^2)$ gates.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Example ($n = 2$)}
+        $\tfrac12(1, i, -1, -i)$ advances by $\pi/2 = 2\pi\cdot1/4$ per step:
+        $\mathrm{QFT}^{-1}$ gives $\ket{01}$.\\[2mm]
+        $\tfrac12(1, -i, -1, i)$ advances by $3\cdot2\pi/4$: gives $\ket{11}$.
+      \end{exampleblock}
+      \small For the full derivation see the QFT lecture (\texttt{presentations/QFT\_Lecture.pdf}).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Quantum phase estimation (QPE)}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \resizebox{\linewidth}{!}{%
+      \begin{quantikz}[row sep=0.3cm, column sep=0.35cm]
+        \lstick{$c_0\ \ket0$} & \gate{H} & \qw & \qw & \ctrl{3} & \gate[3]{\mathrm{QFT}^{-1}} & \meter{} \\
+        \lstick{$c_1\ \ket0$} & \gate{H} & \qw & \ctrl{2} & \qw & & \meter{} \\
+        \lstick{$c_2\ \ket0$} & \gate{H} & \ctrl{1} & \qw & \qw & & \meter{} \\
+        \lstick{$\ket u$} & \qw & \gate{U} & \gate{U^2} & \gate{U^4} & \qw & \qw
+      \end{quantikz}}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      $U\ket u = e^{2\pi i\varphi}\ket u$. \key{Phase kickback}: controlled-$U^{2^j}$ on $\ket+\ket u$ gives $\frac{1}{\sqrt2}(\ket0 + e^{2\pi i\varphi2^j}\ket1)\ket u$.
+      All together:
+      \[ \frac{1}{\sqrt{2^{n_c}}}\sum_{k}e^{2\pi i\varphi k}\ket k\,\ket u \xrightarrow{\mathrm{QFT}^{-1}} \ket{\varphi\,2^{n_c}}\ket u \]
+      if $\varphi2^{n_c}$ is an integer. Otherwise the outcome is the nearest integer with probability $\ge 4/\pi^2$:
+      \[ P(k) = \frac{\sin^2(\pi2^{n_c}\delta)}{2^{2n_c}\sin^2(\pi\delta)},\ \delta = \varphi - \tfrac{k}{2^{n_c}}. \]
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{QPE examples}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Exact phase}
+        $\varphi = 0.375 = 0.011_2$, $n_c = 3$: clock $\to\ket{011}$ with probability $1$.\\[1mm]
+        $\varphi = \frac14$, $n_c = 2$: amplitudes $\frac12(1, i, -1, -i)$ $\to\ket{01}$.
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Non-representable phase}
+        $\varphi = \frac13$, $n_c = 3$: $8\varphi = 2.67$.\\
+        $P(3) = 0.688$, $P(2) = 0.175$, rest spread out.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vspace{3mm}
+  \begin{block}{QPE in HHL}
+    $U = e^{iAt}$ has eigenphases $\varphi_j = \lambda_jt/2\pi$, so QPE on $\ket{u_j}$ writes $k_j = \lambda_jt\,2^{n_c}/2\pi$ into the clock.
+    The \key{evolution time $t$} sets the scale; HHL is \key{exact} when every $k_j$ is an integer and \hl{approximate} otherwise.
+    $\ket b$ is not an eigenvector --- but QPE is linear, so each eigencomponent gets its own clock value.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Hamiltonian simulation: implementing $e^{iAt}$}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small QPE needs \key{controlled} $U^{2^j} = e^{iAt2^j}$ for $j = 0, \dots, n_c - 1$.
+      \begin{itemize}
+        \item \key{Exact} (small systems, simulators): compute $e^{iAt}$ classically and use it as a gate --- what \texttt{HHL.ipynb} does.
+        \item \key{Trotterisation}: $A = \sum_\ell A_\ell$ (easy pieces, e.g.\ Pauli strings):
+          \[ e^{iAt} \approx \Big(\prod_\ell e^{iA_\ell t/r}\Big)^r \]
+          with error $\approx\frac{t^2}{2r}\sum_{\ell<m}\lVert[A_\ell, A_m]\rVert$,
+          so $r = O(t^2/\epsilon)$ steps.
+        \item \key{Sparse-oracle methods}, quantum walks, qubitisation and QSVT: near-optimal $O(st + \log(1/\epsilon))$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{Hidden cost}
+        Total evolution time in QPE is $t(2^{n_c} - 1) \sim \kappa/\epsilon$. With $\kappa = 100$, $\epsilon = 0.01$ this is $\sim10^4$ units of $t$ --- deep circuits.
+      \end{alertblock}
+      \small A Hermitian $A$ is required: only then is $e^{iAt}$ unitary.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Quantum linear algebra: the idea}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item A quantum computer can apply some functions of a matrix to a state \key{without writing the matrix down}: $e^{iAt}$, polynomials of $A$, $A^{-1}$ (approximately).
+        \item Ingredients: an efficient \key{access model} for $A$ (sparse oracle, block encoding), \key{phase estimation} or polynomial transforms, \key{amplitude amplification}.
+        \item Output: a quantum state --- to be used by another quantum routine or measured for a few numbers.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Family tree}
+        \small
+        \begin{itemize}
+          \item HHL (2009): QPE + controlled rotation
+          \item Ambainis (2012): variable-time amplification, $\tilde O(\kappa)$
+          \item Childs--Kothari--Somma (2017): LCU, $\mathrm{polylog}(1/\epsilon)$
+          \item QSVT (2019): unified polynomial framework
+          \item Costa et al.\ (2022): optimal $O(\kappa\log\frac1\epsilon)$
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================================================
+\section{Part 3: The HHL algorithm}
+\begin{frame}{Problem formulation and assumptions}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \key{Input:} Hermitian $A$ ($d = 2^{n_b}$), vector $\vec b$. \key{Output:} the state
+      \[ \ket x = \frac{A^{-1}\ket b}{\lVert A^{-1}\ket b\rVert} = \frac{\sum_j(\beta_j/\lambda_j)\ket{u_j}}{\sqrt{\sum_j|\beta_j|^2/\lambda_j^2}}. \]
+      Normalise $A$ so that its eigenvalues lie in a known range, e.g.\ $|\lambda| \in [1/\kappa, 1]$, and choose $t$ accordingly.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{The assumptions (and why)}
+        \small
+        \begin{enumerate}
+          \item $A$ Hermitian --- $e^{iAt}$ must be unitary.
+          \item $A$ sparse / efficiently simulable --- cheap controlled $e^{iAt}$.
+          \item $\kappa$ small --- precision and success probability.
+          \item $\ket b$ efficiently preparable --- otherwise input costs $O(d)$.
+          \item Only a \emph{property} of $\ket x$ is needed --- read-out costs $O(d)$.
+          \item Eigenvalues resolvable by $n_c$ clock qubits.
+        \end{enumerate}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The algorithm in five steps}
+  \centering
+  \renewcommand{\arraystretch}{1.45}
+  \begin{tabular}{@{}clll@{}}
+    \toprule
+    & \textbf{Step} & \textbf{Operation} & \textbf{State (clock, system, ancilla)}\\ \midrule
+    0 & prepare & load $\ket b$ & $\ket{0}\ket b\ket0 = \sum_j\beta_j\ket0\ket{u_j}\ket0$\\
+    1 & estimate & QPE with $U = e^{iAt}$ & $\sum_j\beta_j\ket{k_j}\ket{u_j}\ket0$\\
+    2 & invert & controlled $R_Y(\theta_k)$ & $\sum_j\beta_j\ket{k_j}\ket{u_j}\big(\sqrt{1 - \tfrac{C^2}{\lambda_j^2}}\ket0 + \tfrac{C}{\lambda_j}\ket1\big)$\\
+    3 & uncompute & QPE$^{-1}$ & $\sum_j\beta_j\ket0\ket{u_j}\big(\sqrt{\cdot}\ket0 + \tfrac{C}{\lambda_j}\ket1\big)$\\
+    4 & measure & ancilla $= 1$ & $\ket0\otimes\dfrac{\sum_j(\beta_j/\lambda_j)\ket{u_j}}{\lVert\cdot\rVert} = \ket0\ket x$\\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small $k_j = \lambda_jt\,2^{n_c}/2\pi$ (assumed exact here), $C \le \min_j|\lambda_j|$, success probability $P = \sum_j|\beta_j|^2C^2/\lambda_j^2$.
+\end{frame}
+
+\begin{frame}[fragile]{HHL circuit architecture}
+  \centering
+  \resizebox{0.97\linewidth}{!}{%
+  \begin{quantikz}[row sep=0.32cm, column sep=0.3cm]
+    \lstick{ancilla $\ket0$} & \qw & \qw & \qw & \gate{R_Y(\theta_k)} & \qw & \qw & \qw & \meter{} \rstick{keep $1$}\\
+    \lstick{clock $\ket{0}^{\otimes n_c}$} & \gate{H^{\otimes n_c}}\qwbundle{} & \ctrl{1} & \gate{\mathrm{QFT}^{-1}} & \ctrl{-1} & \gate{\mathrm{QFT}} & \ctrl{1} & \gate{H^{\otimes n_c}} & \qw \rstick{$\ket{0}^{\otimes n_c}$}\\
+    \lstick{system $\ket0^{\otimes n_b}$} & \gate{U_b}\qwbundle{} & \gate{e^{iAt2^j}} & \qw & \qw & \qw & \gate{e^{-iAt2^j}} & \qw & \qw \rstick{$\ket x$}
+  \end{quantikz}}
+  \vspace{4mm}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \small\key{Clock} ($n_c$ qubits): binary eigenvalue estimates $k$. Precision $2\pi/(2^{n_c}t)$.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \small\key{System} ($n_b = \log_2 d$): starts as $\ket b$ ($U_b$ = state preparation), ends as $\ket x$.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \small\key{Ancilla} (1 qubit): carries $C/\lambda$; measuring $1$ = success.
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \small Qubits: $n_c + n_b + 1$. Notebook default: $4 + 2 + 1 = 7$. The middle part (QFT$^\dagger$, rotation, QFT, inverse powers, $H$) is drawn compactly.
+\end{frame}
+
+\begin{frame}{Step 0: state preparation}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item Load $\ket b = \vec b/\lVert\vec b\rVert$ into the system register; keep $\lVert\vec b\rVert$ classically.
+        \item Expand (only in our heads, never computed):
+          \[ \ket b = \sum_j\beta_j\ket{u_j},\quad \sum_j|\beta_j|^2 = 1. \]
+        \item Structured vectors are cheap: $(1, -1, 1, -1)/2 = \ket+\ket-$ needs $H\otimes H$ and one $Z$.
+        \item General vectors: $O(d)$ rotations (Grover--Rudolph / Möttönen), or QRAM in $O(\log d)$ depth with $O(d)$ hardware.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Notebook}
+        \texttt{HHL.ipynb} loads the whole initial state $\ket{0\dots0}_{\text{clock}}\ket b\ket0$ at once with \texttt{kernel.qalloc(vector)} --- exact amplitude initialisation, available on simulators only.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Step 1: phase estimation of the eigenvalues}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      For one eigencomponent: $e^{iAt}\ket{u_j} = e^{i\lambda_jt}\ket{u_j} = e^{2\pi i\varphi_j}\ket{u_j}$ with $\varphi_j = \frac{\lambda_jt}{2\pi}$.
+      \begin{enumerate}
+        \item Hadamards: $\frac{1}{\sqrt{2^{n_c}}}\sum_m\ket m\ket{u_j}$
+        \item controlled $e^{iAt2^\ell}$ by the clock bit of weight $2^\ell$:
+          $\frac{1}{\sqrt{2^{n_c}}}\sum_m e^{i\lambda_jtm}\ket m\ket{u_j}$
+        \item $\mathrm{QFT}^{-1}$: $\ket{k_j}\ket{u_j}$, $\ k_j = \dfrac{\lambda_jt\,2^{n_c}}{2\pi}$
+      \end{enumerate}
+      By linearity, for $\ket b = \sum_j\beta_j\ket{u_j}$:
+      \[ \ket0\ket b \;\longmapsto\; \sum_j\beta_j\ket{k_j}\ket{u_j}. \]
+      Clock and system are now \key{entangled}.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{block}{Choosing $t$}
+        \begin{itemize}
+          \item $|\lambda|t < \pi$ for all $\lambda$: no aliasing.
+          \item Notebook ``auto'': $t = \frac{2\pi}{2^{n_c}|\lambda|_{\min}}$ maps $|\lambda|_{\min}$ to $k = 1$ (if $\kappa \le 2^{n_c-1} - 1$).
+          \item Default: $n_c = 4$, $\lambda_{\min} = 1$ $\Rightarrow$ $t = \pi/8$ and $k_j = \lambda_j$.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Negative eigenvalues: two's complement}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item Phases are periodic: $e^{i\lambda t}$ with $\lambda < 0$ equals $e^{i(\lambda t + 2\pi)}$.
+        \item So $\lambda < 0$ lands on clock value $k = 2^{n_c} + \lambda t2^{n_c}/2\pi$, near the top.
+        \item Interpretation: $k \ge 2^{n_c-1}$ means the \key{signed} value $k - 2^{n_c}$.
+        \item Then $\tilde\lambda_k = kC$ (signed) and the rotation angle $2\arcsin(C/\tilde\lambda_k)$ is \key{negative}: the sign of $1/\lambda$ survives.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{Example ($n_c = 4$, $t = \pi/8$, $C = 1$)}
+        $\lambda = -2$: $e^{-2it} = e^{2\pi i\cdot14/16}$, so $k = 14 = 1110_2$.\\
+        Signed: $14 - 16 = -2$, $\ \theta = 2\arcsin(-\tfrac12) = -\pi/3$.
+      \end{exampleblock}
+      \small Needed for embedded non-Hermitian matrices, whose eigenvalues come in $\pm$ pairs. Positive range: $k = 1, \dots, 2^{n_c-1} - 1$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Step 2: eigenvalue inversion by a controlled rotation}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      For every clock value $k$ ($\tilde\lambda_k = kC$) rotate the ancilla:
+      \[ \ket{k}\ket0_a \mapsto \ket k\Big(\sqrt{1 - \tfrac{C^2}{\tilde\lambda_k^2}}\,\ket0 + \tfrac{C}{\tilde\lambda_k}\ket1\Big) \]
+      i.e.\ $R_Y(\theta_k)$ with $\theta_k = 2\arcsin(C/\tilde\lambda_k)$. Applied to the state of step 1:
+      \[ \sum_j\beta_j\ket{k_j}\ket{u_j}\Big(\sqrt{\cdot}\,\ket0 + \frac{C}{\lambda_j}\ket1\Big). \]
+      The \key{ancilla-1 branch carries $\beta_j C/\lambda_j$} --- exactly the coefficients of $C\,A^{-1}\ket b$.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{rotation.pdf}
+      \begin{block}{The constant $C$}
+        \small Need $|C/\tilde\lambda| \le 1$ $\Rightarrow$ $C \le \min|\lambda|$. Larger $C$ $\Rightarrow$ higher $P_{\text{success}} \propto C^2$. Notebook: $C = \frac{2\pi}{2^{n_c}t}$ (clock value 1); default $C = 1$.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{How the rotation is built (notebook version)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item ``Look-up table'': one multi-controlled $R_Y(\theta_k)$ per clock value $k = 1, \dots, 2^{n_c} - 1$.
+        \item $X$ gates on the clock qubits whose bit of $k$ is $0$ before and after (``polarity'').
+        \item $k = 0$ gets no rotation (it would mean $\lambda = 0$).
+        \item Default $n_c = 4$: $15$ rotations, each controlled by $4$ qubits, and $56$ $X$ gates.
+      \end{itemize}
+      \begin{alertblock}{Scaling}
+        $2^{n_c} - 1$ rotations is exponential in $n_c$. Scalable versions compute $1/\lambda$ with reversible arithmetic, or approximate $1/x$ by a polynomial (QSVT).
+      \end{alertblock}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{exampleblock}{Angles in the default run}
+        \centering\small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{@{}cccc@{}}
+          \toprule
+          $k$ & bits & $\tilde\lambda_k$ & $\theta_k$ \\ \midrule
+          1 & 0001 & $1$ & $\pi$ \\
+          2 & 0010 & $2$ & $\pi/3$ \\
+          3 & 0011 & $3$ & $2\arcsin\frac13 = 0.680$ \\
+          4 & 0100 & $4$ & $2\arcsin\frac14 = 0.505$ \\
+          14 & 1110 & $-2$ & $-\pi/3$ \\
+          \bottomrule
+        \end{tabular}
+      \end{exampleblock}
+      \small $\theta_1 = \pi$ flips the ancilla fully: amplitude $C/\lambda = 1$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Step 3: uncomputation}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      Apply phase estimation \key{in reverse} (QFT, inverse controlled powers $e^{-iAt2^\ell}$ in reverse order, Hadamards):
+      \[ \ket{k_j}\ket{u_j} \longmapsto \ket0\ket{u_j}. \]
+      Result:
+      \[ \ket0_{\text{clock}}\sum_j\beta_j\ket{u_j}\Big(\sqrt{1 - \tfrac{C^2}{\lambda_j^2}}\ket0 + \tfrac{C}{\lambda_j}\ket1\Big). \]
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{Why not just measure the clock?}
+        Measuring gives one $k_j$ and collapses the system to a \emph{single} eigenvector $\ket{u_j}$. Not uncomputing at all leaves the clock as a ``label'': the system is in a \emph{mixture}. Only coherent uncomputation lets the components interfere into $\ket x$.
+      \end{alertblock}
+      \small Rule: undo = reverse order and $\dagger$ every gate.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Step 4: measurement and post-selection}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      Measure the ancilla. Outcome $1$ with probability
+      \[ P_{\text{success}} = \sum_j|\beta_j|^2\frac{C^2}{\lambda_j^2} = C^2\lVert A^{-1}\ket b\rVert^2, \]
+      leaving
+      \[ \frac{\sum_j(\beta_j/\lambda_j)\ket{u_j}}{\sqrt{\sum_j|\beta_j|^2/\lambda_j^2}} = \ket x. \]
+      Outcome $0$: discard and repeat.
+      \begin{itemize}
+        \item Worst case $P \sim C^2/\lambda_{\max}^2 \sim 1/\kappa^2$: about $\kappa^2$ repetitions.
+        \item \key{Amplitude amplification}: $O(\kappa)$ instead.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{psuccess_kappa.pdf}\\
+      \small Success probability with $C = \lambda_{\min}$ (formula).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Extracting information from $\ket x$}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item \key{Sampling} the system: outcome $i$ with probability $|x_i|^2/\lVert\vec x\rVert^2$ --- magnitudes only.
+        \item All $d$ values to precision $\epsilon$: $\sim d/\epsilon^2$ runs (tomography), plus other bases for signs and phases. \hl{This cancels the speed-up.}
+        \item \key{Efficient outputs}: $\braket{x|M|x}$ for a measurable $M$ ($O(1/\epsilon^2)$ runs), overlaps $|\braket{y|x}|^2$ (swap test), the weight of a region of $\vec x$.
+        \item \key{Norm}: $\lVert\vec x\rVert = \frac{\lVert\vec b\rVert}{C}\sqrt{P_{\text{success}}}$ --- from the success rate.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{On a simulator}
+        The full state vector is available, so the notebook reads the post-selected amplitudes $\vec a$ directly and recovers
+        \[ \vec x = \frac{\lVert\vec b\rVert}{C}\,\vec a \]
+        including signs and norm. On hardware this is \hl{impossible}; only samples exist.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{HHL as pseudocode}
+\begin{lstlisting}[language={}, basicstyle=\ttfamily\footnotesize]
+input : Hermitian A (d = 2^n_b), vector b, clock qubits n_c, time t
+C     = 2*pi / (2^n_c * t)                  # smallest representable |eigenvalue|
+repeat
+    prepare |0...0>_clock |b>_system |0>_anc
+    H on every clock qubit
+    for l in 0..n_c-1: controlled-exp(i*A*t*2^l), control = clock bit of weight 2^l
+    inverse QFT on clock                     # clock now holds k_j = lambda_j t 2^n_c / 2pi
+    for k in 1..2^n_c-1:                     # eigenvalue inversion
+        lam_k = signed(k) * C
+        multi-controlled RY(2*asin(C/lam_k)) on anc, active when clock == k
+    QFT on clock; inverse controlled powers; H on clock      # uncompute
+    measure anc
+until anc == 1                               # expected ~ 1/P_success repetitions
+return system register  (= |x>, proportional to A^-1 b)
+\end{lstlisting}
+\end{frame}
+
+% =====================================================================================
+\section{Part 4: Worked examples}
+\begin{frame}{Worked $2\times2$ example: setting up}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \[ A = \begin{pmatrix}\frac32&\frac12\\[2pt] \frac12&\frac32\end{pmatrix},\qquad \vec b = \begin{pmatrix}1\\0\end{pmatrix}. \]
+      \begin{itemize}
+        \item $\lambda_1 = 1$, $\ket{u_1} = \tfrac{1}{\sqrt2}(\ket0 - \ket1)$
+        \item $\lambda_2 = 2$, $\ket{u_2} = \tfrac{1}{\sqrt2}(\ket0 + \ket1)$
+        \item $\kappa = 2$; $\ \ket b = \ket0 = \tfrac{1}{\sqrt2}(\ket{u_1} + \ket{u_2})$
+      \end{itemize}
+      Classical answer: $\vec x = A^{-1}\vec b = (\tfrac34, -\tfrac14)$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Parameters}
+        \begin{itemize}
+          \item $n_b = 1$, $n_c = 2$, one ancilla: $4$ qubits
+          \item $t = \pi/2$: $k = \lambda t\,2^{n_c}/2\pi = \lambda$
+          \item $C = 2\pi/(4\cdot\pi/2) = 1$
+          \item both eigenvalues positive: read $k$ unsigned here
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Worked $2\times2$ example: the four steps}
+  \begin{enumerate}
+    \item \key{After QPE}: $\ket{01}$ for $\lambda_1 = 1$, $\ket{10}$ for $\lambda_2 = 2$:
+      \[ \tfrac{1}{\sqrt2}\big(\ket{01}\ket{u_1} + \ket{10}\ket{u_2}\big)\ket0_a \]
+    \item \key{Rotation}: $k = 1$: $\theta = 2\arcsin1 = \pi$ (amplitude $1$); $k = 2$: $\theta = \pi/3$ (amplitude $\frac12$):
+      \[ \tfrac{1}{\sqrt2}\Big(\ket{01}\ket{u_1}\ket1 + \ket{10}\ket{u_2}\big(\tfrac{\sqrt3}{2}\ket0 + \tfrac12\ket1\big)\Big) \]
+    \item \key{Uncompute}: clock $\to\ket{00}$. Ancilla-1 branch:
+      $\tfrac{1}{\sqrt2}\big(\ket{u_1} + \tfrac12\ket{u_2}\big) = \tfrac12\big[(\ket0 - \ket1) + \tfrac12(\ket0 + \ket1)\big] = \tfrac34\ket0 - \tfrac14\ket1$
+    \item \key{Measure}: $P = (\frac34)^2 + (\frac14)^2 = \frac58$; state $\frac{1}{\sqrt{10}}(3\ket0 - \ket1)$.
+  \end{enumerate}
+  \begin{exampleblock}{Check}
+    With $\lVert\vec b\rVert = C = 1$ the branch \emph{is} $\vec x = (\frac34, -\frac14)$; $P = \lVert\vec x\rVert^2 = \frac{10}{16}$. Verified with CUDA-Q in \texttt{verify\_answers.py}.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Worked $4\times4$ example (the notebook default)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \[ A = \begin{psmallmatrix}2.5&-0.5&-1&0\\-0.5&2.5&0&-1\\-1&0&2.5&-0.5\\0&-1&-0.5&2.5\end{psmallmatrix} = H_4\operatorname{diag}(1, 2, 3, 4)\,H_4 \]
+      with $H_4 = \frac12\begin{psmallmatrix}1&1&1&1\\1&-1&1&-1\\1&1&-1&-1\\1&-1&-1&1\end{psmallmatrix}$, $H_4^2 = I$.
+      \begin{itemize}
+        \item Eigenvalues $1, 2, 3, 4$, $\kappa = 4$; dense ($s = 3$).
+        \item $\vec b = (1, 0, 0, 0)$: $\beta_j = \frac12$ for all $j$.
+        \item $n_c = 4$, $t = \pi/8$, $C = 1$: clock values $k = 1, 2, 3, 4$ exactly.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen_coeffs.pdf}\\
+      \small Inversion shrinks large-eigenvalue components.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Worked $4\times4$ example: the numbers}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      \begin{align*}
+        A^{-1}\vec b &= H_4\Lambda^{-1}H_4\vec b = H_4\cdot\tfrac12\big(1, \tfrac12, \tfrac13, \tfrac14\big)\\
+        &= \tfrac{1}{48}(25,\ 7,\ 11,\ 5)\\
+        &= (0.520833,\ 0.145833,\ 0.229167,\ 0.104167)
+      \end{align*}
+      \[ P_{\text{success}} = \tfrac14\Big(1 + \tfrac14 + \tfrac19 + \tfrac1{16}\Big) = \tfrac{205}{576} = 0.355903 \]
+      \[ \lVert\vec x\rVert = \sqrt{205}/24 = 0.5966 \]
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Expected measurement outcomes}
+        \small
+        \begin{itemize}
+          \item Ancilla $= 1$ in $35.6\,\%$ of the shots (with clock $0000$).
+          \item Among those: $\ket{00}$: $76.2\,\%$, $\ket{01}$: $6.0\,\%$, $\ket{10}$: $14.8\,\%$, $\ket{11}$: $3.0\,\%$ ($=|x_i|^2/\lVert\vec x\rVert^2$).
+          \item Signs of $x_i$ are \emph{not} visible in these counts.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================================================
+\section{Part 5: Complexity}
+\begin{frame}{Where the cost of HHL comes from}
+  \centering
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Source} & \textbf{Cost factor} & \textbf{Reason}\\ \midrule
+    qubits for the data & $\log d$ & amplitude encoding\\
+    simulating $e^{iAt}$ ($s$-sparse) & $s^2\,t$ (original) & sparse Hamiltonian simulation\\
+    phase-estimation precision & $t_{\text{total}} \sim \kappa/\epsilon$ & resolve $\lambda_{\min}$ to relative error $\epsilon$\\
+    repetitions & $\kappa^2$, or $\kappa$ with amplification & $P_{\text{success}} \gtrsim 1/\kappa^2$\\
+    \midrule
+    \textbf{total (HHL 2009)} & $\tilde O(\log(d)\,s^2\kappa^2/\epsilon)$ & \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+  \begin{itemize}
+    \item Exponential improvement in $d$ over $O(d\,s\sqrt\kappa)$ (conjugate gradient) --- \hl{only} if $s$, $\kappa$, $1/\epsilon$ are $\mathrm{polylog}(d)$.
+    \item Doubling $\kappa$ quadruples the HHL run time. Clock qubits: $n_c \approx \lceil\log_2(\kappa/\epsilon)\rceil$ (e.g.\ $\kappa = 100$, $\epsilon = 0.01$: $14$).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Theoretical speed-up vs.\ practical advantage}
+  \begin{columns}[c]
+    \begin{column}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{complexity.pdf}\\
+      \small Plots of the formulas only (constants unknown, not measurements).
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item The curves cross only at large $d$; real constants (error correction, Hamiltonian simulation depth) push the crossover further out.
+        \item The comparison is unfair to classical methods if they must output $\vec x$ and HHL does not.
+        \item Fair question: ``estimate $\braket{x|M|x}$''. Then classical methods still need $\sim d$, HHL $\sim\log d$.
+        \item Sparse, well-conditioned systems with efficient $\ket b$ are \key{BQP-complete}: there is a genuine quantum advantage in principle.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The fine print (Aaronson, 2015)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{enumerate}
+        \item \key{Input}: $\ket b$ must be prepared quickly --- arbitrary data costs $O(d)$ (or QRAM).
+        \item \key{Matrix}: $e^{iAt}$ must be simulable --- sparse or structured $A$.
+        \item \key{Conditioning}: $\kappa$ must be small --- many PDE discretisations have $\kappa \propto d^{2/D}$.
+        \item \key{Output}: only a property of $\ket x$ --- reading $\vec x$ costs $\Omega(d)$.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{alertblock}{Dequantisation}
+        If $A$ has \key{low rank} and the classical computer gets the same kind of access (sampling rows with probability $\propto$ norm$^2$),
+        classical algorithms also run in $\mathrm{polylog}(d)$ (Tang 2019, Chia et al.\ 2020). The quantum advantage is then at most polynomial.
+      \end{alertblock}
+      \small Advantage is expected for sparse, \emph{full-rank}, well-conditioned problems.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================================================
+\section{Part 6: CUDA-Q implementation}
+\begin{frame}{\texttt{HHL.ipynb} at a glance}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      \begin{itemize}
+        \item Generated by \texttt{dev/notebook\_builders/build\_hhl.py}; 10 sections like every notebook of the suite.
+        \item \key{Inputs} (Section 3): \texttt{MATRIX\_A}, \texttt{VECTOR\_B}, \texttt{NUM\_CLOCK\_QUBITS = 4}, \texttt{EVOLUTION\_TIME = "auto"}, \texttt{SHOTS = 20000}.
+        \item \key{Validation}: square, sizes match, $\vec b \neq 0$, $A$ non-singular; computes \texttt{np.linalg.solve} as reference.
+        \item \key{Preparation}: Hermitian embedding and padding; $\kappa$, $t$, $C$, ideal clock values, qubit count.
+        \item \key{Backends}: \texttt{statevector} or \texttt{density\_matrix} on CPU (\texttt{qpp-cpu}, \texttt{density-matrix-cpu}) or GPU (\texttt{nvidia}). Hardware targets are \hl{refused}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{What is \emph{not} implemented}
+        \small
+        \begin{itemize}
+          \item Hamiltonian simulation: $e^{iAt}$ is the \emph{exact} \texttt{scipy.linalg.expm}, registered as a custom gate.
+          \item Efficient state preparation: $\ket b$ is loaded by exact amplitude initialisation.
+          \item Amplitude amplification, noise models for HHL, hardware runs.
+        \end{itemize}
+        These keep the demonstration exact on small systems; they are the parts a real device would need.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Code walkthrough 1: preparation and phase estimation}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+U_step = expm(1j * A_work * t_evolution)                      # U = exp(i A t), exact (unitary)
+kernel = cudaq.make_kernel()
+initial = np.kron(np.kron(np.eye(2 ** nc)[0], b_work / b_norm), np.array([1.0, 0.0]))   # |0>_clock |b> |0>_anc
+reg = kernel.qalloc(bit_reverse_order(initial.astype(complex), n_tot))
+clock = [reg[i] for i in range(nc)]; system = [reg[nc + i] for i in range(n_b)]; ancilla = reg[n_tot - 1]
+# ---- 1) quantum phase estimation ----
+for q in clock:
+    kernel.h(q)                                                          # clock superposition
+for j in range(nc):
+    name = f"hhl_{gate_uid}_{nc}_u{j}"
+    cudaq.register_operation(name, np.linalg.matrix_power(U, 2 ** j))   # U^(2^j) = exp(i A t 2^j)
+    getattr(kernel, name)(clock[nc - 1 - j], *system)                    # controlled by the clock bit of weight 2^j
+for j in range(nc // 2):                                                 # inverse QFT on the clock register
+    kernel.swap(clock[j], clock[nc - 1 - j])
+for jj in range(nc):
+    j = nc - 1 - jj
+    for kk in range(nc - 1 - j):
+        k = nc - 1 - kk
+        kernel.cr1(-np.pi / 2 ** (k - j), clock[k], clock[j])
+    kernel.h(clock[j])
+\end{lstlisting}
+  \scriptsize Excerpt of \texttt{build\_hhl\_kernel} (Section 7a). \texttt{bit\_reverse\_order} converts to CUDA-Q's qubit ordering; the custom gate gets a control qubit simply by being called with one extra leading qubit.
+\end{frame}
+
+\begin{frame}[fragile]{Code walkthrough 2: inversion, uncomputation, read-out}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+# ---- 2) eigenvalue inversion: R_Y(2 arcsin(C / lambda_k)) on the ancilla for every clock value k ---
+for k_val in range(1, 2 ** nc):
+    signed = k_val - 2 ** nc if k_val >= 2 ** (nc - 1) else k_val       # two's complement: negative eigenvalues
+    lam_k = 2 * np.pi * signed / (2 ** nc * t_used)
+    theta = 2 * np.arcsin(np.clip(c_used / lam_k, -1.0, 1.0))
+    zero_bits = [i for i in range(nc) if not (k_val >> (nc - 1 - i)) & 1]   # clock[0] is the most significant bit
+    for i in zero_bits: kernel.x(clock[i])                               # select |k> with X "polarity" gates
+    kernel.cry(theta, clock, ancilla)                                    # multi-controlled rotation
+    for i in zero_bits: kernel.x(clock[i])
+# ---- 3) uncompute phase estimation (QFT, inverse controlled powers, H) ----
+...
+# ---- read-out (execution cell) ----
+amplitudes = postselected_amplitudes(state_vector)                       # clock = 0, ancilla = 1
+x_quantum_full = amplitudes * b_norm / C_constant                         # norm recovery
+for bits, c in counts.items():                                           # shots: bitstring = clock | system | ancilla
+    if bits[:n_c] == "0" * n_c and bits[-1] == "1": ...                  # post-selection
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Qubit layout and circuit resources}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \key{Register} (one \texttt{qalloc}): qubits $0$--$3$ clock, $4$--$5$ system, $6$ ancilla. Measured bit strings read clock $|$ system $|$ ancilla.
+      \vspace{2mm}
+
+      \key{Recorded statistics} of the full 7-qubit circuit (amplitude encoding not counted):
+      \begin{itemize}
+        \item $111$ gates, depth $67$, $39$ multi-qubit gates
+        \item \texttt{h}: 16, \texttt{cr1}: 12, \texttt{swap}: 4, \texttt{x}: 56
+        \item \texttt{ccccry}: 15 (inversion)
+        \item custom controlled $e^{\pm iAt2^j}$: 8
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Scaling with the clock}
+        \begin{itemize}
+          \item rotations $2^{n_c} - 1$; $\ $ controlled evolutions $2n_c$
+          \item $n_c = 5$: $31$ rotations, $10$ evolutions, $8$ qubits
+          \item QFT parts: $O(n_c^2)$ --- negligible
+        \end{itemize}
+      \end{block}
+      \begin{block}{Memory}
+        \small $16\times2^{n}$ bytes (fp64): $7$ qubits $= 2$\,KB. A $2^{20}\times2^{20}$ system with $n_c = 10$: $31$ qubits $= 34.4$\,GB --- and each dense $e^{iAt2^j}$ gate would need $17.6$\,TB.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CPU and GPU simulation}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      \centering
+      \renewcommand{\arraystretch}{1.25}
+      \scriptsize
+      \begin{tabular}{@{}lll@{}}
+        \toprule
+        \texttt{BACKEND} + method & target & status\\ \midrule
+        \texttt{cpu} + \texttt{statevector} & \texttt{qpp-cpu} & run (recorded) \\
+        \texttt{cpu} + \texttt{density\_matrix} & \texttt{density-matrix-cpu} & available \\
+        \texttt{gpu} + \texttt{statevector} & \texttt{nvidia} (fp32/fp64) & not executed \\
+        \texttt{multi-gpu} & \texttt{nvidia} \texttt{mgpu} & not executed \\
+        \texttt{hardware} & --- & refused \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \small
+      \begin{itemize}
+        \item \texttt{"auto"} picks a GPU when CUDA-Q sees one, else the CPU.
+        \item The test machine had no GPU: GPU and multi-GPU paths follow the CUDA-Q 0.16 API but were \hl{not executed}.
+        \item Timing of the recorded run: construction $0.006$\,s, compilation $0.05$\,s, state run $0.002$\,s, sampling $0.08$\,s.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Results of the default run}
+  \centering
+  \includegraphics[width=0.92\linewidth]{solution_default.pdf}\\[1mm]
+  \small
+  Fidelity \numdefFid, relative error $\approx$ \numdefErr\ (state read-out, $\vec x = \lVert\vec b\rVert\vec a/C$). Success probability \numdefP;
+  \numdefAcc\ of 20\,000 shots accepted (\numdefAccFrac, standard error $0.0034$). Re-computed for these slides with CUDA-Q 0.16 on \texttt{qpp-cpu};
+  identical to the outputs stored in \texttt{HHL.ipynb}.
+\end{frame}
+
+\begin{frame}{What the clock register sees}
+  \centering
+  \includegraphics[width=0.9\linewidth]{clock_qpe.pdf}\\[1mm]
+  \small
+  Clock measured right after phase estimation (CUDA-Q, 20\,000 shots). \key{Left}: $n_c = 4$, $t = \pi/8$ --- the four eigenvalues
+  land exactly on $k = 1, 2, 3, 4$ with probability $|\beta_j|^2 = \frac14$ each. \key{Right}: $n_c = 3$ --- $\kappa = 4$ exceeds the
+  $3$ positive levels, ``auto'' rescales $t = 3\pi/16$, the clock values $0.75, 1.5, 2.25, 3$ are rounded and the probability spreads.
+\end{frame}
+
+\begin{frame}{Precision: clock qubits vs.\ fidelity}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fidelity_vs_nc.pdf}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item Random $4\times4$ matrix with eigenvalues $1, 1.7, 2.9, 4.6$ (not multiples of $C$), $\vec b = (1, 1, 1, 1)$; notebook circuit in CUDA-Q.
+        \item $n_c = 3$: fidelity \numfidThree; $n_c = 8$: \numfidEight.
+        \item Rounded eigenvalues apply slightly wrong $1/\tilde\lambda$; more clock qubits reduce the rounding.
+        \item The default example is exact only because its eigenvalues were \emph{chosen} to be integers.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Try it yourself: \texttt{HHL.ipynb}}
+  \centering\footnotesize
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Setting in Section 3} (\texttt{MATRIX\_A}, \texttt{VECTOR\_B}, \dots) & \textbf{What you will see}\\ \midrule
+    defaults & $4\times4$, 7 qubits, fidelity $1$, $P = 0.3559$\\
+    \texttt{[[1, -1/3], [-1/3, 1]]}, \texttt{[1, 0]} & $2\times2$, eigenvalues $\frac23, \frac43$, $\vec x = (\frac98, \frac38)$\\
+    \texttt{NUM\_CLOCK\_QUBITS = 3} & $t$ rescaled, rounding, fidelity $< 1$\\
+    \texttt{"random"}, \texttt{RANDOM\_CONDITION\_NUMBER = 20} & $P_{\text{success}}$ drops, more clock qubits needed\\
+    \texttt{[[1, 2], [0, 1]]}, \texttt{[1, 1]} & automatic Hermitian embedding (+1 qubit)\\
+    \texttt{NUM\_CLOCK\_QUBITS = 8} & 11 qubits, $255$ inversion rotations\\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small Run: \texttt{jupyter lab HHL.ipynb}, edit only Section 3, \emph{Restart \& Run All}. Reports go to \texttt{exports/hhl/}.
+\end{frame}
+
+% =====================================================================================
+\section{Part 7: Noise, limitations, applications}
+\begin{frame}{Noise and error analysis}
+  \begin{columns}[c]
+    \begin{column}{0.54\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{noise.pdf}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \small
+      \begin{itemize}
+        \item \key{Clock phase errors} ($Z$ with probability $p$ per clock qubit, NumPy model): wrong eigenvalue labels, broken uncomputation. Fidelity \numnoiseFidTen\ at $p = 0.1$.
+        \item \key{Ancilla read-out flips}: failed runs are accepted; the good fraction of accepted shots falls fast because $P_{\text{success}}$ is only $0.36$.
+        \item \key{Algorithmic errors}: QPE rounding, Trotter error, finite $C$.
+        \item \key{Statistical}: $\sigma = \sqrt{p(1-p)/N_{\text{acc}}}$.
+      \end{itemize}
+      These are idealised models for illustration --- the notebook itself contains no HHL noise simulation.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Limitations}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item \key{Depth}: controlled $e^{iAt2^j}$ with $2^{n_c} \sim \kappa/\epsilon$ total time, plus the inversion --- far beyond today's noisy devices except for toy problems.
+        \item \key{Fault tolerance} needed for meaningful sizes.
+        \item \key{Input/output bottlenecks} (state preparation, read-out).
+        \item \key{$\kappa$-dependence}: real problems are often ill conditioned; preconditioning helps but costs.
+        \item \key{Dequantisation} for low-rank problems.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{alertblock}{About this implementation}
+        Exact $e^{iAt}$ matrices, exact amplitude loading and the $2^{n_c}$-rotation look-up table make the notebook an
+        \emph{exact educational simulation}. It shows that the mathematics works; it does not show a speed-up, and it cannot run on hardware.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Applications}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item \key{Differential equations}: discretised PDEs/ODEs (heat, wave, Poisson) as sparse systems; output = an averaged quantity of the solution.
+        \item \key{Electromagnetic scattering} cross-sections (Clader, Jacobs, Sprouse 2013).
+        \item \key{Machine learning}: least squares, quantum SVM, Gaussian processes (subject to dequantisation caveats).
+        \item \key{Network/graph problems}: effective resistance, hitting times.
+        \item Subroutine inside \key{quantum chemistry} and \key{optimisation} pipelines.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Recipe for a good application}
+        \begin{enumerate}
+          \item sparse, structured $A$
+          \item $\kappa = \mathrm{polylog}(d)$ (or good preconditioner)
+          \item $\ket b$ from a formula, not from a data file
+          \item answer = one number, e.g.\ $\braket{x|M|x}$
+        \end{enumerate}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Advanced quantum linear-system algorithms}
+  \centering\footnotesize
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Algorithm} & \textbf{Key idea} & \textbf{Query complexity}\\ \midrule
+    HHL (2009) & QPE + controlled rotation & $\tilde O(\kappa^2/\epsilon)$\\
+    Ambainis (2012) & variable-time amplification & $\tilde O(\kappa\log^3\kappa/\epsilon^3)$\\
+    Childs--Kothari--Somma (2017) & LCU series for $1/x$ & $\tilde O(\kappa\,\mathrm{polylog}(\kappa/\epsilon))$\\
+    QSVT (Gilyén et al.\ 2019) & polynomial of singular values & $\tilde O(\kappa\,\mathrm{polylog}(\kappa/\epsilon))$\\
+    Adiabatic (Suba\c{s}\i{} et al.\ 2019) & randomised adiabatic & $O(\kappa\log\kappa/\epsilon)$\\
+    Time-optimal adiabatic (An--Lin 2022) & optimised schedule & $\tilde O(\kappa\,\mathrm{polylog}(\kappa/\epsilon))$\\
+    Discrete adiabatic (Costa et al.\ 2022) & walk + adiabatic schedule & $O(\kappa\log(1/\epsilon))$, optimal\\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  \small Also: variational linear solvers (VQLS) for near-term devices --- heuristic, no proven speed-up. All share HHL's input/output caveats.
+\end{frame}
+
+% =====================================================================================
+\section{Part 8: Practice and summary}
+\begin{frame}{Exercises}
+  \begin{enumerate}
+    \item Find the eigenvalues and $\kappa$ of $\begin{psmallmatrix}5&2\\2&2\end{psmallmatrix}$.
+    \item $\vec b = (3, 0, 4, 0)$ is amplitude-encoded. What is $P(\ket{10})$?
+    \item With $n_c = 4$ and $t = \pi/8$: which bit string encodes $\lambda = 3$? Which $\lambda$ does $1110$ encode (two's complement)?
+    \item With $C = 1$, what ancilla amplitude and success probability does the component with $\lambda = 4$ get?
+    \item $A = \operatorname{diag}(1, 2)$, $\ket b = \frac{1}{\sqrt2}(\ket0 + \ket1)$, $C = 1$. Compute $P_{\text{success}}$ and $\ket x$.
+    \item How many qubits does HHL need for an $8\times8$ Hermitian matrix with $n_c = 5$?
+    \item Why must the clock register be uncomputed instead of measured?
+    \item For the default run, derive $P_{\text{success}} = 205/576$ and $\lVert\vec x\rVert$.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Answers}
+  \begin{enumerate}
+    \item $\lambda^2 - 7\lambda + 6 = 0$: $\lambda = 1, 6$; $\kappa = 6$.
+    \item $\ket b = 0.6\ket{00} + 0.8\ket{10}$: $P = 0.64$.
+    \item $k = 3 \to 0011$; $1110 = 14 \to 14 - 16 = -2$, so $\lambda = -2$.
+    \item Amplitude $C/\lambda = \frac14$, probability $\frac1{16}$.
+    \item $P = \frac12(1 + \frac14) = \frac58$; branch $\propto\ket0 + \frac12\ket1$, $\ket x = \frac{1}{\sqrt5}(2\ket0 + \ket1)$.
+    \item $3 + 5 + 1 = 9$.
+    \item Measuring collapses to one eigenvector; leaving it entangled gives a mixed state. Only uncomputation lets the components interfere into $\ket x$.
+    \item $P = \frac14(1 + \frac14 + \frac19 + \frac1{16}) = \frac{205}{576}$; $\lVert\vec x\rVert = \frac{\lVert\vec b\rVert}{C}\sqrt P = \frac{\sqrt{205}}{24} \approx 0.597$.
+  \end{enumerate}
+  \small More practice: the 80-question test \texttt{assessments/HHL\_Question\_Paper.pdf} with full solutions in \texttt{HHL\_Answer\_Book.pdf}.
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{enumerate}
+        \item $A^{-1}\vec b = \sum_j(\beta_j/\lambda_j)\ket{u_j}$: invert every eigenvalue.
+        \item \key{QPE} with $e^{iAt}$ writes $\lambda_j$ into a clock register.
+        \item A \key{controlled $R_Y$} puts $C/\lambda_j$ on an ancilla.
+        \item \key{Uncomputation} erases the clock; \key{post-selection} on ancilla $=1$ leaves $\ket x$.
+        \item $P_{\text{success}} = C^2\lVert A^{-1}\ket b\rVert^2 \gtrsim 1/\kappa^2$.
+        \item Cost $\tilde O(\log(d)s^2\kappa^2/\epsilon)$ --- under strong assumptions.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Take home}
+        HHL turns linear algebra into \emph{state preparation}. Its power is real but conditional: sparse, well-conditioned
+        $A$, cheap $\ket b$, and a question about $\vec x$ that one number can answer.
+      \end{block}
+      \begin{exampleblock}{In CUDA-Q}
+        The notebook reproduces $\vec x = \frac1{48}(25, 7, 11, 5)$ with fidelity $1$ on a CPU simulator --- an exact demonstration, not a speed-up.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\end{document}
