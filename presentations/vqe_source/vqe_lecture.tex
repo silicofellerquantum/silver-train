@@ -72,7 +72,7 @@
 \begin{frame}{What you will learn today}
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
-      \small
+      \footnotesize
       \begin{enumerate}\itemsep0pt
         \item Eigenvalue problems and why ground states matter
         \item Quantum chemistry: Schr\"odinger equation, molecular Hamiltonians, second quantisation
@@ -495,6 +495,7 @@
 \begin{frame}{Ansatz design: three families}
   \small
   \begin{center}
+  \resizebox{\textwidth}{!}{%
   \begin{tabular}{p{2.6cm}p{4.1cm}p{4.1cm}p{3.2cm}}
     \toprule & \textbf{Chemically motivated (UCC)} & \textbf{Hardware-efficient (HEA)} & \textbf{Adaptive}\\ \midrule
     idea & $e^{T - T^\dagger}$ on top of Hartree--Fock & layers of native rotations + entanglers & grow the circuit operator by operator\\
@@ -503,7 +504,7 @@
     symmetries & conserves electron number & usually not & by construction\\
     trainability & good start (HF), structured & barren plateaus when deep/random & good\\
     in the notebook & \texttt{ucc\_ansatz} (H$_2$) & \texttt{hea\_ansatz} (default) & --- \\ \bottomrule
-  \end{tabular}
+  \end{tabular}}
   \end{center}
   The ansatz decides what VQE can reach: the best VQE energy is $\min_{\bt}E(\bt)$ over the circuit's states, not $E_0$.
 \end{frame}
@@ -595,7 +596,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{VQE in pseudocode}
-\begin{lstlisting}[language={}]
+\begin{lstlisting}[language={}, basicstyle=\ttfamily\tiny]
 input : Hamiltonian H = sum_k c_k P_k (Pauli strings), ansatz U(theta), initial angles theta0
 define energy(theta):
     prepare |psi(theta)> = U(theta)|0...0>                  # e.g. X X on q0,q1 + exp_pauli, or RY + CNOT layers
@@ -758,7 +759,7 @@ def ucc_ansatz(theta: list[float]):
 \end{frame}
 
 \begin{frame}[fragile]{The energy function and the optimiser (Section 8)}
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
 def energy(theta):
     kernel, args = ansatz_call(kernels, theta)                 # HEA or UCC with its arguments
     result = cudaq.observe(kernel, hamiltonian, *args, **observe_kwargs)   # exact, or shots_count=...
@@ -808,15 +809,16 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
     \toprule & \textbf{previously recorded} & \textbf{re-executed notebook} & \textbf{this lecture's script}\\ \midrule
     machine & 4 vCPU Xeon & laptop, WSL Ubuntu & laptop, WSL Ubuntu\\
     CUDA-Q / target & 0.16.0 / \texttt{qpp-cpu} & 0.16.0 / \texttt{qpp-cpu} & 0.16.0 / \texttt{qpp-cpu}\\
-    evaluations & 300 (budget) & RERUNEVALS & \numtfevals\\
-    $E_{\mathrm{VQE}}$ & $-15.0533898284$ & RERUNE & $\numtfbest$\\
-    error vs.\ $E_0 = -15.0825179883$ & $2.913\times10^{-2}$ ($0.193\,\%$) & RERUNERR & $\numtferr$ ($\numtfrel\,\%$)\\
-    $P(\ket{0\dots0})$ (4000 shots) & 0.7005 & RERUNPZERO & \numtfpzero\\
-    execution cell / loop & 70.1 s & RERUNTIME & \numtftime{} s\\ \bottomrule
+    evaluations & 300 (budget) & 300 (budget) & \numtfevals\\
+    $E_{\mathrm{VQE}}$ & $-15.0533898284$ & $-15.0533898284$ & $\numtfbest$\\
+    error vs.\ $E_0 = -15.0825179883$ & $2.913\times10^{-2}$ ($0.193\,\%$) & $2.913\times10^{-2}$ ($0.193\,\%$) & $\numtferr$ ($\numtfrel\,\%$)\\
+    $P(\ket{0\dots0})$ (4000 shots) & 0.7005 & 0.7005 & \numtfpzero\\
+    execution cell / loop & 70.1 s & 721.6 s$^{*}$ & \numtftime{} s\\ \bottomrule
   \end{tabular}}
   \end{center}
   \begin{itemize}
     \item Same seed, same initial angles, same COBYLA settings; differences in the last digits come from floating-point summation order.
+    \item $^{*}$The re-execution shared the CPU with the lecture's figure script, so its time is not a benchmark.
     \item Only the CPU state-vector path was executed; GPU, multi-GPU and hardware paths are implemented but \hl{not validated}.
   \end{itemize}
 \end{frame}
@@ -909,7 +911,7 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
 \begin{frame}{Noise, error mitigation and hardware}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      \footnotesize
+      \scriptsize
       \begin{itemize}
         \item Noise turns pure states into mixtures; the variational bound still holds ($\operatorname{tr}\rho H \ge E_0$), but energies rise.
         \item Complete depolarisation: $E = \operatorname{tr}H/2^n = c_{I\dots I} = -0.0971$ Ha for H$_2$.
@@ -931,7 +933,7 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
 \begin{frame}{Limitations}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      \small
+      \footnotesize
       \begin{itemize}
         \item \key{Measurement cost}: $O(N^4)$ terms, $(\sigma/\varepsilon)^2$ shots each evaluation, hundreds of evaluations.
         \item \key{Barren plateaus}: for deep random (hardware-efficient) circuits the gradient variance decays exponentially with $n$.
@@ -951,7 +953,7 @@ final_counts = cudaq.sample(kernel_s, *args_s, shots_count=SHOTS)   # dominant b
 \end{frame}
 
 \begin{frame}{Advanced VQE and applications}
-  \footnotesize
+  \scriptsize
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \begin{block}{Better ansätze and fewer qubits}
