@@ -22,3 +22,6 @@ presentations/qft_source/qft_lecture.pdf
 assessments/qft_test_source/build/*
 !assessments/qft_test_source/build/*.tex
 book/qft_chapter_source/qft_chapter.pdf
+assessments/grover_test_source/build/*
+!assessments/grover_test_source/build/*.tex
+book/grover_chapter_source/grover_chapter.pdf
