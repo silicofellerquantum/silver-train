@@ -39,6 +39,23 @@ report built only from real measurements.
   "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
+* [`presentations/Grover_Lecture.pdf`](presentations/Grover_Lecture.pdf) - a 78-slide lecture in the same style as the QFT
+  lecture: search problems, the math toolkit, qubits, oracle and diffusion, the geometric derivation, circuits for 2, 3 and
+  4 qubits, the CUDA-Q notebook, results, noise and limits, exercises with answers. Source: `presentations/grover_source/`
+  (`python make_figures.py` regenerates the figures with CUDA-Q on Linux, then `latexmk -pdf grover_lecture.tex`). Quantum
+  results were run on CUDA-Q's CPU simulators; GPU, multi-GPU and hardware options were not run.
+* [`book/Grover_Chapter.pdf`](book/Grover_Chapter.pdf) - book chapter "Grover": a 21-page step-by-step course from
+  reflections in the plane to amplitude amplification and quantum counting, in the same format as the QFT chapter.
+  Source: `book/grover_chapter_source/grover_chapter.tex` (`latexmk -pdf grover_chapter.tex`; needs TeX with pgfplots
+  and tcolorbox).
+* [`assessments/Grover_Question_Paper.pdf`](assessments/Grover_Question_Paper.pdf) and the separate
+  [`assessments/Grover_Answer_Book.pdf`](assessments/Grover_Answer_Book.pdf) - an 80-question test in the same format
+  as the QFT test: A Mathematics and Search Foundations, B Quantum Computing Foundations, C Grover's Algorithm
+  Fundamentals, D Advanced Grover and Implementation; +3 / 0 / -1, 3 hours, 240 marks. Every answer lists the concepts
+  required, relevant formulae, a step-by-step explanation, why each other option is incorrect, and a key takeaway.
+  Source: `assessments/grover_test_source/` - edit the questions in `bank_*.py`, check them with
+  `python verify_answers.py --cudaq` (NumPy, a gate-by-gate simulation, and the notebook's own kernels in CUDA-Q) and
+  rebuild both PDFs with `python generate_papers.py` (needs `latexmk`; also writes `answer_key.csv`).
 
 ## Structure of the notebooks
 
