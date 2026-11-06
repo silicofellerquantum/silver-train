@@ -38,3 +38,7 @@ presentations/vqe_source/vqe_lecture.pdf
 book/vqe_chapter_source/vqe_chapter.pdf
 assessments/vqe_test_source/build/*
 !assessments/vqe_test_source/build/*.tex
+presentations/shor_source/shor_lecture.pdf
+book/shor_chapter_source/shor_chapter.pdf
+assessments/shor_test_source/build/*
+!assessments/shor_test_source/build/*.tex
