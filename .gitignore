@@ -26,3 +26,6 @@ presentations/qaoa_source/qaoa_lecture.pdf
 book/qaoa_chapter_source/qaoa_chapter.pdf
 assessments/qaoa_test_source/build/*
 !assessments/qaoa_test_source/build/*.tex
+presentations/hhl_source/hhl_lecture.pdf
+assessments/hhl_test_source/build/*
+!assessments/hhl_test_source/build/*.tex
