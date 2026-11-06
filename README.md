@@ -39,16 +39,6 @@ report built only from real measurements.
   "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
-* [`book/Grover_Chapter.pdf`](book/Grover_Chapter.pdf) - book chapter "Grover": a 19-page step-by-step course from
-  reflections in the plane to amplitude amplification and quantum counting, in the same format as the QFT chapter.
-  Source: `book/grover_chapter_source/grover_chapter.tex` (`latexmk -pdf grover_chapter.tex`; needs TeX with pgfplots
-  and tcolorbox).
-* [`assessments/Grover_Question_Paper.pdf`](assessments/Grover_Question_Paper.pdf) and the separate
-  [`assessments/Grover_Answer_Book.pdf`](assessments/Grover_Answer_Book.pdf) - an 80-question test in the same format
-  as the QFT test: A Mathematics for Grover, B Quantum Mechanics, C Grover Basics, D Advanced Grover; +3 / 0 / -1,
-  3 hours, 240 marks. Source: `assessments/grover_test_source/` - edit the questions in `bank_*.py`, check them with
-  `python verify_answers.py` (NumPy, including a gate-by-gate simulation of the Grover circuit) and rebuild both PDFs
-  with `python generate_papers.py` (needs `latexmk`; also writes `answer_key.csv`).
 
 ## Structure of the notebooks
 
