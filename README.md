@@ -55,6 +55,25 @@ report built only from real measurements.
   each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
   `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
   `python generate_papers.py`.
+* [`presentations/QML_Lecture.pdf`](presentations/QML_Lecture.pdf) - a 74-slide lecture on Quantum Machine Learning in
+  the same style, from classical ML (losses, gradient descent, neural networks, evaluation) through qubits, gates and
+  entanglement to data encoding, quantum kernels, variational circuits, the parameter-shift rule, VQC / QSVM / QNN / QCNN /
+  QGAN / qPCA / clustering / quantum RL, barren plateaus, noise, a line-by-line walkthrough of `QML.ipynb`, recorded and
+  re-executed results, classical baselines, limits and research directions, exercises with answers, and a syllabus map.
+  Every slide on an algorithm is tagged *in repository*, *theory only* or *illustrative experiment*. Source:
+  `presentations/qml_source/` (`python make_figures.py` re-executes the notebook's pipeline and the illustrative
+  experiments with CUDA-Q - about 10 minutes on a 4-core CPU - then `latexmk -pdf qml_lecture.tex`).
+* [`book/QML_Chapter.pdf`](book/QML_Chapter.pdf) - book chapter "QML" with worked examples, common traps, a map from every
+  assessment question to its section, and practice problems with answers. Source: `book/qml_chapter_source/`.
+* [`assessments/QML_Question_Paper.pdf`](assessments/QML_Question_Paper.pdf) and
+  [`assessments/QML_Answer_Book.pdf`](assessments/QML_Answer_Book.pdf) - an 80-question QML test in the QFT format
+  (A Classical Machine Learning and Mathematics, B Quantum Computing Foundations, C Quantum Machine Learning
+  Fundamentals, D Advanced QML and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
+  response sheet). The Answer Book has the key, a topic-wise map, a quick-marking grid and, for every question, the
+  concepts required, relevant formulae, a step-by-step explanation, why each wrong option is wrong and a key takeaway.
+  Source: `assessments/qml_test_source/` - check with `python verify_answers.py --cudaq` (280 checks, including a rebuild
+  of the notebook's QCNN kernel in CUDA-Q, exact parameter-shift gradients and gate counts) and rebuild with
+  `python generate_papers.py`.
 
 ## Structure of the notebooks
 

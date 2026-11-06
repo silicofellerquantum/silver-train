@@ -1,0 +1,430 @@
+% Chapter "QML" -- build with:  latexmk -pdf qml_chapter.tex
+% Companion of book/qft_chapter_source/qft_chapter.tex (same layout and box styles).
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[a4paper, top=22mm, bottom=22mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{braket}
+\usepackage{array, tabularx, booktabs}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{quantikz2, arrows.meta, calc}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{needspace}
+
+\definecolor{brand}{HTML}{1F4E79}
+\definecolor{okgreen}{HTML}{1B7F3B}
+\definecolor{warn}{HTML}{B5551B}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\allowdisplaybreaks
+
+\newtcolorbox{defn}[1]{enhanced, breakable, colback=brand!5, colframe=brand, fonttitle=\bfseries, title={Definition: #1}}
+\newtcolorbox{keyres}[1]{enhanced, breakable, colback=okgreen!5, colframe=okgreen!70!black, fonttitle=\bfseries, title={Key result: #1}}
+\newtcolorbox{trap}{enhanced, breakable, colback=warn!6, colframe=warn, fonttitle=\bfseries, title={Common trap}}
+\newtcolorbox{method}[1]{enhanced, breakable, colback=black!3, colframe=black!55, fonttitle=\bfseries, title={Method: #1}}
+\newcounter{wex}[chapter]
+\newtcolorbox{wexample}[1]{enhanced, breakable, colback=white, colframe=brand!60, coltitle=black, colbacktitle=brand!15,
+  fonttitle=\bfseries, title={\refstepcounter{wex}Worked example \thesection.\arabic{wex}: #1}}
+\newenvironment{steps}{\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=4.2em, itemsep=2pt]}{\end{enumerate}}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{black!70}Chapter: QML}
+\fancyhead[R]{\small\color{black!70}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+\newcommand{\bt}{\boldsymbol\theta}
+\newcommand{\bx}{\mathbf x}
+
+\begin{document}
+\begin{titlepage}
+\centering
+{\color{brand}\rule{\linewidth}{1.5pt}}\\[10pt]
+{\Huge\bfseries\color{brand} QML}\\[8pt]
+{\LARGE Quantum Machine Learning}\\[6pt]
+{\large A step-by-step chapter: from gradient descent to a QCNN in CUDA-Q}\\[6pt]
+{\color{brand}\rule{\linewidth}{1.5pt}}
+\vspace{18mm}
+
+\begin{minipage}{0.86\linewidth}
+\large
+\textbf{What you will be able to do after this chapter}
+\begin{itemize}[itemsep=3pt]
+\item compute losses, gradients, metrics and their statistical uncertainty quickly and reliably;
+\item work with qubit states, Pauli operators, rotation and controlled gates, tensor products and entanglement;
+\item encode classical data (basis, angle, amplitude), evaluate quantum kernels and the outputs of small variational circuits;
+\item derive and apply the parameter-shift rule, and count the cost of exact gradients for shared and controlled parameters;
+\item read the QCNN of \texttt{QML.ipynb} line by line, count its layers, parameters and gates, and interpret its results honestly;
+\item reason about barren plateaus, noise, shots, simulators, GPUs, classical baselines and the limits of QML;
+\item solve every type of question in the accompanying 80-question QML assessment.
+\end{itemize}
+\end{minipage}
+\vfill
+{\small Companion material in the same repository: \texttt{presentations/QML\_Lecture.pdf} (slides),
+\texttt{QML.ipynb} (CUDA-Q notebook) and \texttt{assessments/} (question paper and answer book).}
+\end{titlepage}
+
+\tableofcontents
+\setcounter{chapter}{0}
+\chapter*{QML --- Quantum Machine Learning}
+\addcontentsline{toc}{chapter}{QML --- Quantum Machine Learning}
+\markboth{QML}{QML}
+
+\section*{How to use this chapter}
+The chapter is built as a staircase. Sections~1--3 are \emph{classical machine learning and its mathematics}. Sections~4--5
+are \emph{quantum computing} (states, measurement, gates, entanglement). Sections~6--10 are \emph{QML itself} (encoding,
+kernels, variational models, gradients, the QCNN of the notebook). Sections~11--14 are the \emph{advanced} material and the
+\emph{implementation} (trainability, noise, other algorithms, CUDA-Q, benchmarking). Section~15 collects strategies and a map
+from every assessment question to the section that teaches it; Section~16 has practice problems with answers.
+
+Statements are marked as \emph{implemented in the repository}, \emph{theory only}, or \emph{illustrative experiment} (run for the
+lecture with \texttt{presentations/qml\_source/make\_figures.py}). ``Previously recorded'' results are the outputs stored in
+\texttt{QML.ipynb}; ``re-executed'' results come from running the same code again (they agree exactly).
+
+\begin{defn}{Conventions used everywhere in this chapter}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item Qubit 0 is written first: $\ket{q_0q_1\dots}$; two-qubit matrices use the basis order $\ket{00}, \ket{01}, \ket{10}, \ket{11}$.
+\item $R_P(\theta) = e^{-i\theta P/2} = \cos\frac\theta2I - i\sin\frac\theta2P$ for $P \in \{X, Y, Z\}$; $R_Y(\theta)\ket0 = \cos\frac\theta2\ket0 + \sin\frac\theta2\ket1$.
+\item $\langle M\rangle = \braket{\psi|M|\psi}$; $\langle Z\rangle = P(0) - P(1)$; Bloch vector $(\langle X\rangle, \langle Y\rangle, \langle Z\rangle)$.
+\item Labels $y = \pm1$ with prediction $\operatorname{sign}f$ (or $y \in \{0, 1\}$ with probabilities); MSE $\mathcal L = \frac1M\sum(f_m - y_m)^2$.
+\item \texttt{QML.ipynb}: $2\times4$ images, 8 qubits, $R_Y(\pi x_i)$ encoding, QCNN with 3 layers $\times$ 4 shared parameters,
+      readout $\langle Z_7\rangle$, COBYLA with 100 loss evaluations, 20 training and 20 test images, seed 42.
+\end{itemize}
+\end{defn}
+
+%=====================================================================================================
+\section{Learning from data: losses, gradients and neural networks}
+\subsection{The four ingredients}
+A supervised learning problem has data $(\bx_m, y_m)_{m=1}^M$, a model $f(\bx;\bt)$, an optimizer, and a loss
+\[ \mathcal L(\bt) = \frac1M\sum_{m=1}^{M}\ell\big(f(\bx_m;\bt), y_m\big). \] \emph{Classification} predicts a class, \emph{regression} a number; \emph{unsupervised} learning has no labels
+(clustering, PCA); \emph{reinforcement} learning learns from rewards.
+
+\begin{defn}{common losses}
+MSE $(f - y)^2$; binary cross-entropy $-[y\ln p + (1 - y)\ln(1 - p)]$; cross-entropy $-\ln p_{\text{true}}$ with
+$p_k = e^{z_k}/\sum_je^{z_j}$; hinge $\max(0, 1 - yf)$.
+\end{defn}
+
+\subsection{Gradient descent and the chain rule}
+$\bt \leftarrow \bt - \eta\nabla\mathcal L$. For $\mathcal L = \frac12\bt^{\mathsf T}H\bt$ the iteration is $\bt \leftarrow (I - \eta H)\bt$ and converges
+iff $0 < \eta < 2/\lambda_{\max}$. Momentum: $v \leftarrow \beta v + g$, $\bt \leftarrow \bt - \eta v$. For linear regression
+$\nabla\frac1M\|X\mathbf w - \mathbf y\|^2 = \frac2MX^{\mathsf T}(X\mathbf w - \mathbf y)$.
+
+\begin{wexample}{one step and one neuron}
+\begin{steps}
+\item $\mathcal L = (w_1 - 3)^2 + 2(w_2 + 1)^2$, $\mathbf w = (0,0)$, $\eta = 0.1$: $\nabla\mathcal L = (-6, 4)$, new $\mathbf w = (0.6, -0.4)$, $\mathcal L$: $11 \to 6.48$.
+\item $f = \sigma(wx + b)$, $L = (f - y)^2$, $x = 2$, $w = 0.5$, $b = -1$, $y = 1$: $z = 0$, $f = \frac12$,
+$\partial_wL = 2(f - y)\sigma'(z)x = 2(-\frac12)(\frac14)(2) = -\frac12$.
+\item Sigmoid + cross-entropy: $\partial L/\partial z = p - y$ (the $\sigma'$ cancels). A ReLU with negative input passes no gradient.
+\end{steps}
+\end{wexample}
+
+\begin{keyres}{activation derivatives}
+$\sigma' = \sigma(1 - \sigma)$, $\tanh' = 1 - \tanh^2$, $\operatorname{ReLU}' = [z > 0]$, $\frac{d}{dz}\ln(1 + e^z) = \sigma(z)$.
+A dense layer $n_{\text{in}} \to n_{\text{out}}$ has $n_{\text{in}}n_{\text{out}} + n_{\text{out}}$ parameters ($8 \to 4 \to 1$: 41).
+\end{keyres}
+
+\begin{trap}
+Moving \emph{along} the gradient; forgetting the factor 2 of a square or the inner derivative $x$; dividing by $\log_{10}$ instead of $\ln$;
+summing instead of averaging; using the wrong class's probability in a cross-entropy.
+\end{trap}
+
+\subsection{Non-linearity}
+XOR is not linearly separable: from $g(0,1), g(1,0) > 0$ and $g(0,0), g(1,1) < 0$ one gets both $w_1 + w_2 + 2b > 0$ and $< 0$.
+The same argument shows that the clean line images of \texttt{QML.ipynb} are not linearly separable: the horizontal pairs in
+columns 1--2 of both rows light exactly the same four pixels as the vertical lines in columns 1 and 2.
+
+%=====================================================================================================
+\section{Linear algebra and probability for QML}
+\begin{keyres}{toolkit}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item Eigen-decomposition: PCA directions are eigenvectors of the covariance; explained fraction $\lambda_1/\operatorname{tr}C$.
+\item Kronecker product $A\otimes B = (a_{ij}B)$; $(A\otimes B)(C\otimes D) = AC\otimes BD$; $\operatorname{tr}(A\otimes B) = \operatorname{tr}A\operatorname{tr}B$; not commutative.
+\item Kernels: $k(\mathbf u, \mathbf v) = e^{-\|\mathbf u - \mathbf v\|^2/(2\sigma^2)}$; a valid kernel has PSD Gram matrices.
+\item Bayes: $P(D\mid +) = P(+\mid D)P(D)/P(+)$. Binomial standard error $\sqrt{a(1 - a)/M}$.
+\end{itemize}
+\end{keyres}
+\begin{wexample}{PCA and Bayes}
+$C = \begin{psmallmatrix}2&1\\1&2\end{psmallmatrix}$: $\lambda = 3, 1$; first component $(1,1)/\sqrt2$ explains $75\,\%$.
+Recall $0.9$, false-positive rate $0.05$, prevalence $0.01$: $P(D\mid+) = 0.009/0.0585 = 15\,\%$.
+\end{wexample}
+
+%=====================================================================================================
+\section{Evaluating models honestly}
+\begin{defn}{metrics}
+Accuracy $\frac{TP + TN}{\text{all}}$; precision $\frac{TP}{TP + FP}$; recall $\frac{TP}{TP + FN}$; $F_1 = \frac{2PR}{P + R} = \frac{2TP}{2TP + FP + FN}$.
+\end{defn}
+\begin{method}{a trustworthy evaluation}
+\begin{enumerate}[itemsep=1pt]
+\item split first; fit preprocessing on the training split only; tune on a validation split; touch the test set once;
+\item report the test-set size and $\mathrm{SE} = \sqrt{a(1 - a)/M}$ (20 images, $a = 0.85$: $\pm8$ points);
+\item compare with strong classical baselines on the same data; diagnose gap (overfitting) vs.\ both-high (underfitting).
+\end{enumerate}
+\end{method}
+\begin{wexample}{the re-executed QCNN on 20 test images}
+TP 9, FN 1, FP 2, TN 8: accuracy $0.85$, precision $9/11 = 0.818$, recall $0.900$, $F_1 = 18/21 = 0.857$
+(the arithmetic mean $0.859$ is \emph{not} F1).
+\end{wexample}
+\begin{trap}
+Reporting accuracy on imbalanced data; choosing hyper-parameters on the test set; confusing training MSE with accuracy
+(the recorded run has MSE $0.67$ at $90\,\%$ accuracy because its outputs are small, $|\langle Z_7\rangle| \approx 0.2$).
+\end{trap}
+
+%=====================================================================================================
+\section{Qubits, measurement and the Bloch sphere}
+$\ket\psi = \alpha\ket0 + \beta\ket1$, $|\alpha|^2 + |\beta|^2 = 1$. Measurement gives $0$ with probability $|\alpha|^2$.
+\begin{keyres}{expectation values of one qubit}
+$\langle Z\rangle = |\alpha|^2 - |\beta|^2$, $\langle X\rangle = 2\operatorname{Re}(\alpha^*\beta)$, $\langle Y\rangle = 2\operatorname{Im}(\alpha^*\beta)$.
+For $\cos\frac\vartheta2\ket0 + e^{i\varphi}\sin\frac\vartheta2\ket1$: $\vec r = (\sin\vartheta\cos\varphi, \sin\vartheta\sin\varphi, \cos\vartheta)$.
+\end{keyres}
+\begin{wexample}{a phase changes $\langle X\rangle$, not $\langle Z\rangle$}
+$\frac12\ket0 + \frac{\sqrt3}2e^{i\pi/4}\ket1$: $\langle Z\rangle = -\frac12$, $\langle X\rangle = \frac{\sqrt3}{2}\cos\frac\pi4 = \frac{\sqrt6}4$.
+\end{wexample}
+\begin{keyres}{shots}
+$S$ shots estimate $\langle Z\rangle$ with standard error $\sqrt{(1 - \langle Z\rangle^2)/S}$. 620 zeros in 1000 shots: $0.24 \pm 0.031$.
+\end{keyres}
+\begin{trap}
+Forgetting the half angle ($\vartheta = \frac\pi4$ means amplitudes $\cos\frac\pi8$, $\sin\frac\pi8$); treating a global phase as observable;
+concluding that $R_X(\theta)\ket0$ and $R_X(-\theta)\ket0$ are equal because their $Z$-statistics agree.
+\end{trap}
+
+%=====================================================================================================
+\section{Gates, tensor products and entanglement}
+\begin{keyres}{gate facts}
+$X^2 = Y^2 = Z^2 = I$; $XY = iZ = -YX$ (cyclic); $(aX + bY + cZ)^2 = (a^2 + b^2 + c^2)I$. $HZH = X$, $SXS^\dagger = Y$,
+$R_P(\pi) = -iP$. $R_Y(\theta)^\dagger ZR_Y(\theta) = \cos\theta Z - \sin\theta X$. CNOT: $Z_t \to Z_cZ_t$, $X_t \to X_t$, $X_c \to X_cX_t$.
+Controlled-$R_Z(\theta)$ $= \operatorname{diag}(1, 1, e^{-i\theta/2}, e^{i\theta/2})$ (control qubit 0).
+\end{keyres}
+\begin{defn}{product state and entanglement}
+$\sum c_{ab}\ket{ab}$ is a product state iff $c_{00}c_{11} - c_{01}c_{10} = 0$. Purity of the reduced state $\operatorname{tr}\rho_1^2 = 1$
+(product) down to $\frac12$ (maximally entangled).
+\end{defn}
+\begin{wexample}{$R_Y(\theta)$ then CNOT}
+$\cos\frac\theta2\ket{00} + \sin\frac\theta2\ket{11}$: $\langle Z_1\rangle = \cos\theta$, $\langle Z_0Z_1\rangle = 1$, $\operatorname{tr}\rho_1^2 = \frac{1 + \cos^2\theta}2$,
+maximal entanglement at $\theta = \frac\pi2$. A local $R_Y(\theta)$ on half of $\ket{\Phi^+}$ leaves $\langle Z_1\rangle = 0$ for every $\theta$.
+\end{wexample}
+\begin{wexample}{a two-parameter circuit}
+$R_X(\theta_2)R_Y(\theta_1)\ket0$: $(0,0,1) \to (\sin\theta_1, 0, \cos\theta_1) \to z = \cos\theta_1\cos\theta_2$. A parameter in a single
+rotation gate gives $f = a + b\cos\theta + c\sin\theta$ (period $2\pi$).
+\end{wexample}
+\begin{keyres}{memory}
+$n$ qubits: $2^n$ amplitudes, $16\cdot2^n$ bytes (fp64). 30 qubits: 16 GiB; 80 GB GPU: 32 qubits; four of them: 34.
+\end{keyres}
+
+%=====================================================================================================
+\section{Encoding classical data}
+\begin{center}\small
+\begin{tabular}{lllll}\toprule
+encoding & state & qubits & gates & remark\\ \midrule
+basis & $\ket{b_1\dots b_n}$ & 1 per bit & $\le n$ & binary only\\
+angle & $\bigotimes R_Y(x_i)\ket0$ & $d$ & $d$, depth 1 & \texttt{QML.ipynb}: $R_Y(\pi x_i)$\\
+amplitude & $\sum_jx_j\ket j/\|\bx\|$ & $\lceil\log_2d\rceil$ & $O(d)$ generic & norm lost\\
+ZZ map & $U_\Phi(\bx)H^{\otimes n}\cdots$ & $d$ & entangling & theory only\\ \bottomrule
+\end{tabular}
+\end{center}
+\begin{wexample}{the three encodings}
+Pixel $x = \frac13$: $P(1) = \sin^2\frac\pi6 = \frac14$, $\langle Z\rangle = \cos\frac\pi3 = \frac12$.
+$\bx = (1, 2, 4, 2)$: norm 5, amplitudes $(0.2, 0.4, 0.8, 0.4)$, $P(q_0 = 1) = 0.80$, $P(q_1 = 1) = 0.32$.
+256 features of 8 bits: basis 2048, angle 256, amplitude 8 qubits.
+\end{wexample}
+\begin{keyres}{data re-uploading}
+With $L$ encoding gates $e^{-ixP/2}$, $f(x)$ is a Fourier series with frequencies $0, \dots, L$.
+\end{keyres}
+
+%=====================================================================================================
+\section{Quantum kernels}
+$k(\bx, \bx') = |\braket{\psi(\bx)|\psi(\bx')}|^2 = \operatorname{tr}[\rho(\bx)\rho(\bx')]$ is symmetric and PSD; estimates from shots may not be.
+Estimate it by compute--uncompute ($P(0\dots0)$) or by the swap test, $P(0) = \frac12(1 + k)$.
+\begin{keyres}{the notebook's encoding gives a classical kernel}
+$k(\bx, \bx') = \prod_i\cos^2\frac{\pi(x_i - x'_i)}2$. Example $\bx = (1, 0.5)$, $\bx' = (0.5, 0)$: $k = \frac14$.
+For independent uniform features $\mathbb E[k] = (\frac12 + \frac2{\pi^2})^n \approx 0.70^n$: kernel values concentrate exponentially.
+\end{keyres}
+\begin{wexample}{kernel SVM on the notebook's data (illustrative experiment)}
+A soft-margin SVM with this kernel, trained on the same 20 images, classifies all 20 test images correctly and $95.2\,\%$ of 2000
+fresh ones (QCNN: $80.2\,\%$). The kernel was computed from CUDA-Q states and agrees with the formula to $10^{-15}$ --- a classical
+computation, so this is no quantum advantage. Training needs $\binom M2$ kernel circuits (190 for $M = 20$).
+\end{wexample}
+
+%=====================================================================================================
+\section{Variational models and hybrid training}
+$f(\bx;\bt) = \braket{\psi(\bx)|U(\bt)^\dagger MU(\bt)|\psi(\bx)}$, prediction $\operatorname{sign}f$, loss computed classically, parameters
+updated by a classical optimizer: \emph{classical input $\to$ encoding $\to$ PQC $\to$ measurement $\to$ classical loss $\to$ optimizer $\to$ update}.
+\begin{wexample}{a two-qubit VQC (Heisenberg picture)}
+$R_Y(x_0)\otimes R_Y(x_1)$, CNOT$_{0\to1}$, $R_Y(\theta)$ on qubit 1, $f = \langle Z_1\rangle$:
+$Z_1 \to \cos\theta Z_1 - \sin\theta X_1 \to \cos\theta Z_0Z_1 - \sin\theta X_1$, so $f = \cos\theta\cos x_0\cos x_1 - \sin\theta\sin x_1$.
+At $\bx = (0, \frac\pi3)$, $\theta = \frac\pi6$: $f = 0$, $f(\theta\pm\frac\pi2) = \mp1$, $f' = -1$, and with $y = 1$: $\partial_\theta(f - y)^2 = 2$.
+\end{wexample}
+\begin{keyres}{cost of training in the notebook}
+One loss evaluation runs one circuit per training image: $100\times20 + 20 = 2020$ circuits, $\approx1.7$ ms each on \texttt{qpp-cpu}:
+$\approx3.4$ s (recorded). MSE $0.505$ and accuracy $75\,\%$ for outputs $(0.6, -0.2, 0.9, 0.1)$, labels $(+,-,+,-)$.
+\end{keyres}
+
+%=====================================================================================================
+\section{The parameter-shift rule}
+\begin{keyres}{two-term rule}
+For a parameter in exactly one gate $e^{-i\theta P/2}$ ($P^2 = I$): $f = a + b\cos\theta + c\sin\theta$ and
+$f'(\theta) = \frac12[f(\theta + \frac\pi2) - f(\theta - \frac\pi2)]$ exactly.
+\end{keyres}
+\begin{trap}
+\emph{Shared parameters}: $\theta_{1,1}$ of the QCNN appears in 7 gates; shifting it once is wrong --- shift every occurrence and add.
+\emph{Controlled rotations}: generator eigenvalues $0, \pm\frac12$; use
+$f' = d_+[f(\theta + \frac\pi2) - f(\theta - \frac\pi2)] - d_-[f(\theta + \frac{3\pi}2) - f(\theta - \frac{3\pi}2)]$, $d_\pm = \frac{\sqrt2\pm1}{4\sqrt2}$.
+For $f = \cos\frac\theta2$ at $\theta = \pi$ the two-term rule gives $-0.707$, the truth is $-0.5$.
+\end{trap}
+\begin{keyres}{cost of one exact QCNN gradient}
+Per image $4n_{\text{conv}} + 8n_{\text{pool}} = 44 + 56 = 100$ circuits; for 20 images 2000 --- the size of the whole COBYLA run.
+\end{keyres}
+
+%=====================================================================================================
+\section{The QCNN of \texttt{QML.ipynb}}
+\begin{defn}{layout and blocks}
+\texttt{qcnn\_layout(n)}: in each layer, convolution blocks on pairs $(0,1), (2,3), \dots$ then $(1,2), (3,4), \dots$ of the active qubits; pooling
+blocks (source $a$, sink $b$) on $(0,1), (2,3), \dots$; sinks survive; an odd last qubit moves on. Convolution:
+$\mathrm{CNOT}_{a\to b}(R_Y(\theta_{\ell,1})\otimes R_Y(\theta_{\ell,2}))$. Pooling: $\ket1\!\bra1_a\otimes R_Z(\theta_{\ell,3}) + \ket0\!\bra0_a\otimes R_X(\theta_{\ell,4})$
+(code: \texttt{rz.ctrl; x; rx.ctrl; x}), then $a$ is discarded (deferred measurement).
+\end{defn}
+\begin{keyres}{counts}
+Layers $\lceil\log_2N\rceil$, parameters $4\lceil\log_2N\rceil$, gates $N + 3n_{\text{conv}} + 4n_{\text{pool}}$.
+$N = 8$: 11 conv, 7 pool, 69 gates, depth 21, output qubit 7. $N = 16$: 26, 15, 154 gates. $N = 20$: 5 layers, 20 parameters.
+\end{keyres}
+\begin{wexample}{the recorded run}
+CUDA-Q 0.16.0, \texttt{qpp-cpu}, no GPU: loss $1.1214 \to 0.6704$, training accuracy $90\,\%$, test accuracy $85\,\%$, 3.4 s. Re-executed:
+identical; independent NumPy simulation agrees to $7\times10^{-16}$.
+\end{wexample}
+
+%=====================================================================================================
+\section{Trainability, shots and noise}
+\begin{keyres}{barren plateaus}
+Deep random circuits: $\operatorname{Var}[\partial_kC] \sim 2^{-n}$, so $\sim2^n$ shots are needed per gradient component (20 qubits: $10^6$).
+Shallow circuits with local costs: polynomial decay; global costs: exponential. Gradient-free optimizers do not escape.
+The QCNN is provably free of barren plateaus (Pesah et al.\ 2021).
+\end{keyres}
+\begin{keyres}{noise}
+Depolarising noise shrinks $\langle Z\rangle$ roughly by $(1 - p)^G$ ($0.99^{69} \approx 0.50$); signs survive longer than margins.
+Measured (illustrative): the trained QCNN keeps $85\,\%$ accuracy up to $p = 0.1$ per gate, but its mean $|\langle Z\rangle|$ falls from
+$0.171$ to $0.003$, which would need $\sim10^5$ shots per image to read.
+\end{keyres}
+
+%=====================================================================================================
+\section{Other QML algorithms (theory only in this repository)}
+\begin{itemize}[itemsep=2pt]
+\item \textbf{QSVM}: classical convex dual with a quantum kernel; $O(M^2)$ kernel circuits; no barren plateaus; concentration risk.
+\item \textbf{QGAN}: generator PQC vs.\ discriminator; equilibrium value $-\ln4$.
+\item \textbf{qPCA}: density-matrix exponentiation + phase estimation; needs many copies, low rank, efficient state access; dequantized classically.
+\item \textbf{Clustering}: distances from overlaps, $\|\mathbf a - \mathbf b\|^2 = 2 - 2\mathbf a\cdot\mathbf b$; swap test $P(0) = 0.9 \Rightarrow 0.46$.
+\item \textbf{Quantum RL}: PQC policies or Q-functions; Q-learning update $Q \leftarrow Q + \alpha(r + \gamma\max Q' - Q)$ (e.g.\ $2 \to 3.3$).
+\item \textbf{Quantum data}: the strongest known advantages concern learning from quantum states, not small classical datasets.
+\end{itemize}
+
+%=====================================================================================================
+\section{CUDA-Q, simulation targets and performance}
+\begin{keyres}{targets}
+\texttt{qpp-cpu} (recorded run), \texttt{nvidia} (one GPU, chosen by \texttt{"auto"} if visible), \texttt{nvidia}+\texttt{mgpu} (one state vector over
+several GPUs via MPI), \texttt{nvidia}+\texttt{mqpu} (many circuits in parallel --- the natural fit for QML), \texttt{density-matrix-cpu} (noise,
+$16\cdot4^N$ bytes). \texttt{QML.ipynb} uses neither \texttt{mgpu} nor \texttt{mqpu}; no GPU path was executed.
+\end{keyres}
+\begin{wexample}{reading counts}
+\texttt{\{00:400, 01:100, 10:300, 11:200\}} (qubit 0 first): $\langle Z_0\rangle = 0$, $\langle Z_1\rangle = 0.4$, $\langle Z_0Z_1\rangle = 0.2$.
+\end{wexample}
+\begin{wexample}{time}
+15 qubits, 0.35 s per circuit (README), 16 images $\times$ 60 evaluations: $960\times0.35$ s $\approx 5.6$ min.
+\end{wexample}
+
+%=====================================================================================================
+\section{Benchmarks and the question of advantage}
+On the same 20 training images (illustrative experiments): logistic regression on pixels $45\,\%$ test ($46.5\,\%$ on 2000 fresh
+images --- not linearly separable), hand-made rule $100\,\%$, angle-kernel SVM $100\,\%$ ($95.2\,\%$), QCNN $85\,\%$ ($80.2\,\%$).
+\begin{trap}
+Claiming quantum advantage from an accuracy above chance, from beating a weak baseline, or from a kernel that is classically
+computable. Advantage needs strong baselines, equal budgets, error bars and all costs counted (encoding, shots, optimizer steps).
+\end{trap}
+
+%=====================================================================================================
+\section{Problem-solving strategies and question map}
+\begin{method}{five habits}
+\begin{enumerate}[itemsep=1pt]
+\item \textbf{Convention first}: which qubit is written first? Which half-angle? Which positive class?
+\item \textbf{Bloch or Heisenberg}: follow the Bloch vector for one qubit; push observables back through gates for small circuits.
+\item \textbf{Products factorise}: product states give product kernels and product expectation values.
+\item \textbf{Count occurrences}, not parameters, for gradients; count blocks from the layout for gates.
+\item \textbf{Separate} recorded from re-executed from illustrative results; attach an error bar to every accuracy.
+\end{enumerate}
+\end{method}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule Section & Assessment questions\\ \midrule
+1 Losses, gradients, networks & 1, 2, 6, 7, 8, 13, 14, 15, 17, 18, 19, 20\\
+2 Linear algebra, probability & 4, 5, 9, 10, 11, 22, 29\\
+3 Evaluation & 3, 11, 12, 16, 68, 79, 80\\
+4 Qubits, measurement, Bloch & 21, 23, 27, 30, 33, 36, 37\\
+5 Gates, entanglement & 24, 25, 26, 28, 31, 32, 34, 35, 38, 39, 40\\
+6 Encoding & 41, 42, 43, 54, 55\\
+7 Quantum kernels & 9, 44, 45, 46, 58, 70, 74\\
+8 Variational models, hybrid training & 34, 52, 53, 56, 59, 60\\
+9 Parameter shift & 47, 48, 57, 60, 63, 66\\
+10 QCNN of \texttt{QML.ipynb} & 48, 49, 50, 51, 53, 66, 68\\
+11 Trainability, shots, noise & 26, 27, 61, 62, 64\\
+12 Other algorithms & 56, 70, 71, 72, 73, 74\\
+13 CUDA-Q, performance & 33, 65, 67, 69, 75, 78\\
+14 Benchmarks, advantage & 44, 76, 77, 79, 80\\ \bottomrule
+\end{tabularx}
+\end{center}
+
+%=====================================================================================================
+\section{Practice problems}
+Try each before looking at the answers on the next page. They use the same ideas as the assessment but different numbers.
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item One gradient step on $\mathcal L = 2(w - 1)^2$ from $w = 3$ with $\eta = 0.2$: new $w$ and $\mathcal L$.
+\item Mean binary cross-entropy for $(p, y) = (0.7, 1)$ and $(0.4, 0)$.
+\item $TP = 30$, $FP = 20$, $FN = 10$: precision, recall, F1.
+\item $\langle Z\rangle$ and $\langle X\rangle$ of $\frac{\sqrt3}2\ket0 + \frac12\ket1$.
+\item Angle-encode the pixel $x = 0.5$ with $R_Y(\pi x)$: $P(1)$ and $\langle Z\rangle$.
+\item Amplitude-encode $(2, 1, 2, 0, 0, 0, 0, 4)$: number of qubits and $P(q_0 = 1)$ (qubit 0 first).
+\item The notebook's kernel for $\bx = (0.2, 0.6)$, $\bx' = (0.2, 0.1)$.
+\item $f(\theta + \frac\pi2) = -0.2$, $f(\theta - \frac\pi2) = 0.6$ for a single $R_Y(\theta)$: $f'(\theta)$.
+\item The notebook's QCNN for $N = 6$: layers, parameters, conv and pool blocks, gates.
+\item Circuits per image for one exact gradient of the $N = 6$ QCNN (two-term per $R_Y$, four-term per controlled rotation).
+\item Standard error of an accuracy of $0.75$ on 40 test images.
+\item Largest fp64 state vector on a 40 GB GPU.
+\item Swap test with $P(0) = 0.6$: the fidelity kernel.
+\item Depolarising factor $(1 - p)^G$ for $p = 0.005$ and the 15-qubit QCNN ($G = 146$).
+\end{enumerate}
+
+\newpage
+\subsection*{Answers to the practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $\mathcal L' = 4(w - 1) = 8$; $w = 3 - 1.6 = 1.4$; $\mathcal L = 2(0.4)^2 = 0.32$.
+\item $\frac12(-\ln0.7 - \ln0.6) = \frac12(0.357 + 0.511) = 0.434$.
+\item $P = 0.6$, $R = 0.75$, $F_1 = 60/90 = 0.667$.
+\item $\langle Z\rangle = \frac34 - \frac14 = \frac12$; $\langle X\rangle = 2\cdot\frac{\sqrt3}2\cdot\frac12 = \frac{\sqrt3}2$.
+\item $P(1) = \sin^2\frac\pi4 = \frac12$; $\langle Z\rangle = \cos\frac\pi2 = 0$.
+\item Norm 5, 3 qubits; $q_0 = 1$ for indices 4--7: $P = 16/25 = 0.64$.
+\item $\cos^20\cdot\cos^2\frac\pi4 = \frac12$.
+\item $\frac12(-0.2 - 0.6) = -0.4$.
+\item $6 \to 3 \to 2 \to 1$: 3 layers, 12 parameters; conv $5 + 2 + 1 = 8$, pool $3 + 1 + 1 = 5$; gates $6 + 24 + 20 = 50$.
+\item $4\cdot8 + 8\cdot5 = 72$.
+\item $\sqrt{0.75\cdot0.25/40} = 0.068$.
+\item $2^{31}\cdot16 = 34.4$ GB fits, $2^{32}\cdot16 = 68.7$ GB does not: 31 qubits.
+\item $2(0.6) - 1 = 0.2$.
+\item $0.995^{146} = e^{146\ln0.995} \approx 0.48$.
+\end{enumerate}
+
+\subsection*{Summary of the chapter in ten lines}
+\begin{enumerate}[itemsep=1pt]
+\item Learning = data + model + loss + optimizer; $\bt \leftarrow \bt - \eta\nabla\mathcal L$; chain rule for gradients.
+\item Evaluate on untouched test data, with error bars ($\sqrt{a(1 - a)/M}$) and strong baselines; use P/R/F1 for imbalance.
+\item Qubits: $\langle Z\rangle = |\alpha|^2 - |\beta|^2$; half angles; global phases invisible; shots give $\pm1/\sqrt S$.
+\item $R_Y^\dagger ZR_Y = \cos\theta Z - \sin\theta X$; CNOT moves $Z_t \to Z_cZ_t$; $\det C = 0$ $\iff$ product state.
+\item Encodings: basis (bits), angle ($d$ qubits, depth 1), amplitude ($\log_2d$ qubits, deep).
+\item Fidelity kernels are PSD; product encodings give classical product kernels that concentrate like $0.70^n$.
+\item Hybrid loop: encode $\to$ PQC $\to$ measure $\to$ classical loss $\to$ optimizer $\to$ update.
+\item Parameter shift is exact for single Pauli rotations; shared parameters per occurrence; controlled rotations four terms.
+\item QCNN: $\lceil\log_2N\rceil$ layers, 4 shared parameters each; $N = 8$: 12 parameters, 69 gates, $90/85\,\%$ recorded.
+\item Barren plateaus, noise, shots and data loading limit QML; no quantum advantage is claimed or shown here.
+\end{enumerate}
+\end{document}
