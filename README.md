@@ -74,6 +74,25 @@ report built only from real measurements.
   Source: `assessments/qml_test_source/` - check with `python verify_answers.py --cudaq` (280 checks, including a rebuild
   of the notebook's QCNN kernel in CUDA-Q, exact parameter-shift gradients and gate counts) and rebuild with
   `python generate_papers.py`.
+* [`presentations/Noise_Lecture.pdf`](presentations/Noise_Lecture.pdf) - a 59-slide lecture on quantum noise simulation
+  in the same style: ideal vs noisy computing, sources of noise, decoherence and fidelity, density matrices, Kraus operators
+  and CPTP maps, bit / phase / bit-phase flip, depolarizing, amplitude and phase damping, two-qubit and readout noise, T1/T2,
+  error rates, CUDA-Q noise models and simulation methods, a line-by-line walkthrough of `Noise_Simulation.ipynb`, recorded
+  and re-executed results, noise on small QFT / QAOA / VQE circuits, ZNE, readout mitigation, dynamical decoupling, the
+  bit-flip code, hardware considerations, exercises and a syllabus map. Slides are tagged *in repository*, *theory only* or
+  *illustrative experiment*. Source: `presentations/noise_source/` (`python make_figures.py` re-executes the notebook's
+  sweep - identical to the recorded outputs - and all experiments with CUDA-Q in about 5 minutes on a CPU, then
+  `latexmk -pdf noise_lecture.tex`).
+* [`book/Noise_Chapter.pdf`](book/Noise_Chapter.pdf) - book chapter "Quantum Noise Simulation" with worked examples, common
+  traps, a map from every assessment question to its section, and practice problems with answers. Source:
+  `book/noise_chapter_source/`.
+* [`assessments/Noise_Question_Paper.pdf`](assessments/Noise_Question_Paper.pdf) and
+  [`assessments/Noise_Answer_Book.pdf`](assessments/Noise_Answer_Book.pdf) - an 80-question test in the QFT format
+  (A Mathematical and Quantum Foundations, B Quantum Noise Fundamentals, C Noise Models and Simulation, D Advanced Noise
+  Analysis and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet), with
+  key, topic map, quick-marking grid and full solutions. Source: `assessments/noise_test_source/` - check with
+  `python verify_answers.py --cudaq` (283 checks, including CUDA-Q's channel conventions, the notebook's own noise model and
+  an exact re-run of the recorded sweep) and rebuild with `python generate_papers.py`.
 
 ## Structure of the notebooks
 

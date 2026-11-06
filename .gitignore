@@ -30,3 +30,7 @@ presentations/qml_source/qml_lecture.pdf
 book/qml_chapter_source/qml_chapter.pdf
 assessments/qml_test_source/build/*
 !assessments/qml_test_source/build/*.tex
+presentations/noise_source/noise_lecture.pdf
+book/noise_chapter_source/noise_chapter.pdf
+assessments/noise_test_source/build/*
+!assessments/noise_test_source/build/*.tex
