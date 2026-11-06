@@ -93,6 +93,22 @@ report built only from real measurements.
   key, topic map, quick-marking grid and full solutions. Source: `assessments/noise_test_source/` - check with
   `python verify_answers.py --cudaq` (283 checks, including CUDA-Q's channel conventions, the notebook's own noise model and
   an exact re-run of the recorded sweep) and rebuild with `python generate_papers.py`.
+* [`presentations/VQE_Lecture.pdf`](presentations/VQE_Lecture.pdf) - a lecture on the Variational Quantum Eigensolver in the
+  same style: eigenvalue problems, molecular Hamiltonians and second quantisation, Jordan-Wigner / Bravyi-Kitaev, Pauli
+  decomposition and measurement, the variational principle, Hartree-Fock / UCC / hardware-efficient ansaetze, optimizers,
+  worked H$_2$ and Ising examples, a line-by-line walkthrough of `VQE.ipynb`, recorded and re-executed results, shots, noise
+  and current research. Source: `presentations/vqe_source/` (`python make_figures.py` recomputes every figure and number
+  with CUDA-Q; the H$_2$ dissociation curve also needs PySCF + OpenFermion).
+* [`book/VQE_Chapter.pdf`](book/VQE_Chapter.pdf) - book chapter "VQE" with worked examples, common traps, a question map and
+  practice problems. Source: `book/vqe_chapter_source/`.
+* [`assessments/VQE_Question_Paper.pdf`](assessments/VQE_Question_Paper.pdf) and
+  [`assessments/VQE_Answer_Book.pdf`](assessments/VQE_Answer_Book.pdf) - an 80-question VQE test in the QFT format
+  (A Mathematical and Quantum Chemistry Foundations, B Quantum Computing Foundations, C VQE Fundamentals, D Advanced VQE and
+  Implementation; +3 / 0 / -1, 3 hours, 240 marks, OMR sheet; Answer Book with key, topic map, quick-marking grid and full
+  explanations). Source: `assessments/vqe_test_source/` - check with `python verify_answers.py --chem --cudaq` (157 checks:
+  NumPy, PySCF/OpenFermion and the notebook's CUDA-Q kernels) and rebuild with `python generate_papers.py`.
+  Note: the notebook's H$_2$ coefficients correspond to a bond length of 0.740 Angstrom (verified with PySCF); the notebook
+  text, which previously said 0.7414 Angstrom, has been corrected.
 
 ## Structure of the notebooks
 

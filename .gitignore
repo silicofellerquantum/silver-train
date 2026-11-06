@@ -34,3 +34,7 @@ presentations/noise_source/noise_lecture.pdf
 book/noise_chapter_source/noise_chapter.pdf
 assessments/noise_test_source/build/*
 !assessments/noise_test_source/build/*.tex
+presentations/vqe_source/vqe_lecture.pdf
+book/vqe_chapter_source/vqe_chapter.pdf
+assessments/vqe_test_source/build/*
+!assessments/vqe_test_source/build/*.tex
