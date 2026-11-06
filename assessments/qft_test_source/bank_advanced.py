@@ -2,7 +2,7 @@
 approximate and semiclassical QFT, spectral properties, applications).
 
 For 'mcq', 'match' and 'para' questions the CORRECT option is listed FIRST; the generator moves it to a balanced
-position. 'ar' and 'stmt' questions use the fixed JEE option order and give the correct index explicitly.
+position. 'ar' and 'stmt' questions use the fixed option order and give the correct index explicitly.
 """
 from bank_common import AR_OPTIONS, STATEMENT_OPTIONS
 

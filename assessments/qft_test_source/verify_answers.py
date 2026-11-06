@@ -1,4 +1,4 @@
-"""Recompute every numerical / structural answer of the QFT JEE paper and assert it matches the key.
+"""Recompute every numerical / structural answer of the QFT paper and assert it matches the key.
 
 Run:  python verify_answers.py          (numpy only)
       python verify_answers.py --cudaq  (additionally cross-checks the QFT matrices with CUDA-Q state vectors)

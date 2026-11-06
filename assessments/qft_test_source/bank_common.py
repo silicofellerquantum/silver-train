@@ -1,4 +1,4 @@
-"""Shared option texts for Assertion-Reason and Statement questions (JEE pattern, fixed order)."""
+"""Shared option texts for Assertion-Reason and Statement questions (fixed order)."""
 
 AR_OPTIONS = [
     r"Both Assertion (A) and Reason (R) are true, and R is the correct explanation of A",

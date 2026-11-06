@@ -19,5 +19,5 @@ __pycache__/
 *.synctex.gz
 presentations/qft_source/qft_lecture.pdf
 # Assessment build folder: keep only the generated .tex sources
-assessments/qft_jee_source/build/*
-!assessments/qft_jee_source/build/*.tex
+assessments/qft_test_source/build/*
+!assessments/qft_test_source/build/*.tex

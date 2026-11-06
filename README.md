@@ -27,13 +27,13 @@ report built only from real measurements.
   qubits, the QFT definition, the circuit derived step by step, worked examples, CUDA-Q results and exercises with
   answers. Source: `presentations/qft_source/` (`python make_figures.py` regenerates the figures with CUDA-Q, then
   `latexmk -pdf qft_lecture.tex` builds the slides; needs TeX Live with beamer and quantikz).
-* [`assessments/QFT_JEE_Advanced_Question_Paper.pdf`](assessments/QFT_JEE_Advanced_Question_Paper.pdf) and the separate
-  [`assessments/QFT_JEE_Advanced_Answer_Book.pdf`](assessments/QFT_JEE_Advanced_Answer_Book.pdf) - an 80-question test
-  in the JEE (Advanced) pattern: 4 sections x 20 questions (A Mathematics for the QFT, B Quantum Mechanics, C QFT
+* [`assessments/QFT_Question_Paper.pdf`](assessments/QFT_Question_Paper.pdf) and the separate
+  [`assessments/QFT_Answer_Book.pdf`](assessments/QFT_Answer_Book.pdf) - an 80-question test
+  on the QFT algorithm: 4 sections x 20 questions (A Mathematics for the QFT, B Quantum Mechanics, C QFT
   Basics, D Advanced QFT), every question single-correct with 4 options, marking +3 / 0 / -1, 3 hours, 240 marks.
   Formats: single-correct MCQ, matching lists, Assertion-Reason, Statement I/II and paragraph questions. The paper
   ends with an OMR-style response sheet; the Answer Book has the key, topic map, quick-marking grid and the
-  "Answer Bank" with full derivations. Source: `assessments/qft_jee_source/` - edit the questions in `bank_*.py`,
+  "Answer Bank" with full derivations. Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
 
