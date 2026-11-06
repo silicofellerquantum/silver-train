@@ -27,6 +27,9 @@ report built only from real measurements.
   qubits, the QFT definition, the circuit derived step by step, worked examples, CUDA-Q results and exercises with
   answers. Source: `presentations/qft_source/` (`python make_figures.py` regenerates the figures with CUDA-Q, then
   `latexmk -pdf qft_lecture.tex` builds the slides; needs TeX Live with beamer and quantikz).
+* [`book/QFT_Chapter.pdf`](book/QFT_Chapter.pdf) - book chapter "QFT": a 23-page step-by-step course from roots of
+  unity to Shor's algorithm, with worked examples, common traps, strategies, a map from every assessment question to
+  the section that teaches it, and practice problems with answers. Source: `book/qft_chapter_source/qft_chapter.tex`.
 * [`assessments/QFT_Question_Paper.pdf`](assessments/QFT_Question_Paper.pdf) and the separate
   [`assessments/QFT_Answer_Book.pdf`](assessments/QFT_Answer_Book.pdf) - an 80-question test
   on the QFT algorithm: 4 sections x 20 questions (A Mathematics for the QFT, B Quantum Mechanics, C QFT

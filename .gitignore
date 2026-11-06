@@ -21,3 +21,4 @@ presentations/qft_source/qft_lecture.pdf
 # Assessment build folder: keep only the generated .tex sources
 assessments/qft_test_source/build/*
 !assessments/qft_test_source/build/*.tex
+book/qft_chapter_source/qft_chapter.pdf

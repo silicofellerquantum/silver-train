@@ -1,0 +1,863 @@
+% Chapter "QFT" -- build with:  latexmk -pdf qft_chapter.tex
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[a4paper, top=22mm, bottom=22mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{braket}
+\usepackage{array, tabularx, booktabs}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{quantikz2, arrows.meta, calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{needspace}
+
+\definecolor{brand}{HTML}{1F4E79}
+\definecolor{okgreen}{HTML}{1B7F3B}
+\definecolor{warn}{HTML}{B5551B}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\allowdisplaybreaks
+
+\newtcolorbox{defn}[1]{enhanced, breakable, colback=brand!5, colframe=brand, fonttitle=\bfseries, title={Definition: #1}}
+\newtcolorbox{keyres}[1]{enhanced, breakable, colback=okgreen!5, colframe=okgreen!70!black, fonttitle=\bfseries, title={Key result: #1}}
+\newtcolorbox{trap}{enhanced, breakable, colback=warn!6, colframe=warn, fonttitle=\bfseries, title={Common trap}}
+\newtcolorbox{method}[1]{enhanced, breakable, colback=black!3, colframe=black!55, fonttitle=\bfseries, title={Method: #1}}
+\newcounter{wex}[chapter]
+\newtcolorbox{wexample}[1]{enhanced, breakable, colback=white, colframe=brand!60, coltitle=black, colbacktitle=brand!15,
+  fonttitle=\bfseries, title={\refstepcounter{wex}Worked example \thesection.\arabic{wex}: #1}}
+\newenvironment{steps}{\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=4.2em, itemsep=2pt]}{\end{enumerate}}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{black!70}Chapter: QFT}
+\fancyhead[R]{\small\color{black!70}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+
+\newcommand{\QFT}{\mathrm{QFT}}
+
+\begin{document}
+\begin{titlepage}
+\centering
+{\color{brand}\rule{\linewidth}{1.5pt}}\\[10pt]
+{\Huge\bfseries\color{brand} QFT}\\[8pt]
+{\LARGE The Quantum Fourier Transform}\\[6pt]
+{\large A step-by-step chapter: from roots of unity to Shor's algorithm}\\[6pt]
+{\color{brand}\rule{\linewidth}{1.5pt}}
+\vspace{18mm}
+
+\begin{minipage}{0.86\linewidth}
+\large
+\textbf{What you will be able to do after this chapter}
+\begin{itemize}[itemsep=3pt]
+\item compute sums, products and phases of roots of unity quickly and without a calculator;
+\item manipulate qubit states, measurements, gates and tensor products with confidence;
+\item write down the QFT of any small state, both from the definition and from the product formula;
+\item build, count and invert the QFT circuit, and trace it gate by gate;
+\item analyse periodic states, quantum phase estimation and Shor's algorithm, including their failure modes;
+\item reason about the approximate and semiclassical QFT and the algorithms that use the QFT;
+\item solve every type of question in the accompanying 80-question QFT assessment.
+\end{itemize}
+\end{minipage}
+\vfill
+{\small Companion material in the same repository: \texttt{presentations/QFT\_Lecture.pdf} (slides),
+\texttt{QFT.ipynb} (CUDA-Q notebook) and \texttt{assessments/} (question paper and answer book).}
+\end{titlepage}
+
+\tableofcontents
+\setcounter{chapter}{0}
+\chapter*{QFT --- The Quantum Fourier Transform}
+\addcontentsline{toc}{chapter}{QFT --- The Quantum Fourier Transform}
+\markboth{QFT}{QFT}
+
+\section*{How to use this chapter}
+The chapter is built as a staircase. Sections~1--4 are the \emph{mathematics} you need (complex numbers, binary
+fractions, matrices, the discrete Fourier transform). Sections~5--6 are the \emph{quantum mechanics} (states,
+measurement, gates). Sections~7--11 are the \emph{QFT itself}. Sections~12--14 are the \emph{advanced} material:
+phase estimation, Shor's algorithm, approximate QFT and applications. Section~15 collects problem-solving strategies
+and Section~16 has practice problems with answers.
+
+Each section has: the idea in words, the precise statement, a derivation, \textbf{worked examples} solved step by step,
+\textbf{common traps} (the wrong answers examiners like to offer) and a short checklist. Do the worked examples with a
+pencil before reading the solution.
+
+\begin{defn}{Conventions used everywhere in this chapter}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item $n$ qubits, $N = 2^n$, $\omega = \omega_N = e^{2\pi i/N}$.
+\item $\ket{x} = \ket{x_1x_2\dots x_n}$ with $x = x_1 2^{n-1} + x_2 2^{n-2} + \dots + x_n 2^0$: \textbf{qubit 1 is the most significant bit}.
+\item $\QFT\ket{x} = \frac{1}{\sqrt N}\sum_{y=0}^{N-1}\omega^{xy}\ket{y}$ and $\QFT^{-1}\ket{y} = \frac{1}{\sqrt N}\sum_{x}\omega^{-xy}\ket{x}$.
+\item $R_k = \operatorname{diag}(1, e^{2\pi i/2^k})$; so $R_1 = Z$, $R_2 = S$, $R_3 = T$.
+\item Two-qubit matrices use the basis order $\ket{00},\ket{01},\ket{10},\ket{11}$; $\log$ means $\log_2$.
+\end{itemize}
+\end{defn}
+
+%=====================================================================================================
+\section{Complex numbers and roots of unity}
+\subsection{Complex numbers as arrows}
+A complex number $z = a + ib$ is an arrow in the plane. In polar form $z = r e^{i\theta}$ with $r = |z|$ and angle
+$\theta$. Euler's formula $e^{i\theta} = \cos\theta + i\sin\theta$ gives the three facts we use all the time:
+\[ |e^{i\theta}| = 1, \qquad e^{i\alpha}e^{i\beta} = e^{i(\alpha+\beta)}, \qquad \overline{e^{i\theta}} = e^{-i\theta} = \frac{1}{e^{i\theta}}. \]
+So \emph{multiplying by $e^{i\theta}$ rotates by $\theta$} and never changes the length. Also $e^{2\pi i k} = 1$ for every
+integer $k$: a whole number of turns does nothing. This single fact will explain most of the QFT.
+
+Useful values: $e^{i\pi/2} = i$, $e^{i\pi} = -1$, $e^{3i\pi/2} = -i$, $e^{i\pi/4} = \frac{1+i}{\sqrt2}$, $\;i^2 = -1$, $i^3 = -i$, $i^4 = 1$.
+
+\begin{wexample}{Reducing a large phase}
+Find $e^{2\pi i\cdot 29/8}$.
+\begin{steps}
+\item Split off whole turns: $\frac{29}{8} = 3 + \frac58$.
+\item $e^{2\pi i\cdot 3} = 1$, so $e^{2\pi i\cdot 29/8} = e^{2\pi i\cdot 5/8} = e^{i\,5\pi/4} = -\frac{1+i}{\sqrt2}$.
+\end{steps}
+\textbf{Rule:} only the \emph{fractional part} of the number of turns matters.
+\end{wexample}
+
+\subsection{The $N$-th roots of unity}
+\begin{defn}{Roots of unity}
+The solutions of $z^N = 1$ are $1, \omega, \omega^2, \dots, \omega^{N-1}$ with $\omega = e^{2\pi i/N}$. They are the vertices of a regular
+$N$-gon on the unit circle. Exponents may be reduced modulo $N$: $\omega^{k} = \omega^{k \bmod N}$, and $\omega^{-k} = \overline{\omega^{k}} = \omega^{N-k}$.
+\end{defn}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.6]
+\draw[->, black!50] (-1.4,0) -- (1.5,0) node[right] {\small Re};
+\draw[->, black!50] (0,-1.3) -- (0,1.4) node[above] {\small Im};
+\draw[black!40] (0,0) circle (1);
+\foreach \k in {0,...,7} {
+  \fill[brand] ({cos(45*\k)}, {sin(45*\k)}) circle (1.6pt);
+  \node[font=\small] at ({1.25*cos(45*\k)}, {1.25*sin(45*\k)}) {$\omega^{\k}$};
+}
+\draw[->, thick, okgreen] (0,0) -- ({cos(45)}, {sin(45)});
+\node[font=\footnotesize, okgreen] at (0.35,0.12) {$45^\circ$};
+\end{tikzpicture}\\
+{\small The eight 8th roots of unity, $\omega = e^{2\pi i/8} = e^{i\pi/4}$. Note $\omega^2 = i$, $\omega^4 = -1$, $\omega^6 = -i$.}
+\end{center}
+
+\subsection{Geometric series --- the most important formula}
+For any $z \neq 1$,
+\[ \sum_{k=0}^{M-1} z^k = 1 + z + \dots + z^{M-1} = \frac{1 - z^M}{1 - z}. \]
+\emph{Proof:} call the sum $S$; then $zS = z + \dots + z^M$, so $S - zS = 1 - z^M$.
+
+\begin{keyres}{Orthogonality of roots of unity}
+\[ \sum_{j=0}^{N-1}\omega^{jk} = \begin{cases} N & \text{if } N \mid k,\\ 0 & \text{otherwise.}\end{cases} \]
+\emph{Proof.} If $N \mid k$ every term is $1$. Otherwise $z = \omega^k \neq 1$ and $z^N = e^{2\pi i k} = 1$, so the geometric series
+gives $\frac{1 - 1}{1 - z} = 0$.
+\end{keyres}
+Geometrically: the arrows $\omega^{jk}$ are spread symmetrically round the circle and cancel. This is \emph{destructive
+interference}; when they all point the same way ($N \mid k$) we get \emph{constructive interference}.
+
+\begin{trap}
+``The numbers $\omega^{jk}$, $j = 0, \dots, N-1$, are always $N$ \emph{distinct} vertices.'' False when $g = \gcd(k, N) > 1$: for
+$N = 8$, $k = 2$ you get $1, i, -1, -i$ twice. The sum is still $0$ (a square traversed twice), but the ``distinct
+vertices'' explanation is wrong. Assertion--Reason questions love this distinction.
+\end{trap}
+
+\begin{wexample}{Counting pairs with a non-zero sum}
+How many pairs $(x, y)$ with $x, y \in \{0, \dots, 7\}$ make $\sum_{z=0}^{7} e^{2\pi i (x+y) z/8} \neq 0$?
+\begin{steps}
+\item By orthogonality the sum is non-zero exactly when $8 \mid (x + y)$.
+\item $x + y \in \{0, \dots, 14\}$, so we need $x + y = 0$ or $x + y = 8$.
+\item $x + y = 0$: only $(0,0)$. $x + y = 8$: $x = 1, \dots, 7$ (7 pairs). Total $8$.
+\end{steps}
+Shortcut: for each $x$ there is exactly one $y \equiv -x \pmod 8$, so the answer is always $N$.
+\end{wexample}
+
+\subsection{Weighted sums: differentiate the geometric series}
+Differentiating $\sum_{k=0}^{M-1} z^k = \frac{1 - z^M}{1 - z}$ and multiplying by $z$ gives
+\[ \sum_{k=0}^{M-1} k z^k = \frac{z\big(1 - M z^{M-1} + (M-1) z^M\big)}{(1 - z)^2}. \]
+\begin{wexample}{$\sum_k k\,\omega^k$ for $N = 4$}
+Let $\omega = i$ ($N = 4$). Directly: $0 + i + 2(-1) + 3(-i) = -2 - 2i$. Formula with $z = i$, $M = 4$, $z^4 = 1$, $z^3 = -i$:
+$\frac{i(1 - 4(-i) + 3)}{(1-i)^2} = \frac{i(4 + 4i)}{-2i} = -2 - 2i$. \checkmark\ In general, for $z = \omega_N$:
+$\sum_{k=0}^{N-1} k\,\omega^k = \frac{\omega(1 - N\omega^{-1} + N - 1)}{(1-\omega)^2} = \frac{N(\omega - 1)}{(1-\omega)^2} = \frac{N}{\omega - 1}$.
+(Check: $\frac{4}{i - 1} = \frac{4(-i-1)}{2} = -2 - 2i$ \checkmark.)
+\end{wexample}
+
+\subsection{Products of roots of unity}
+Since the roots of $z^N - 1$ are exactly $\omega^0, \dots, \omega^{N-1}$:
+\[ z^N - 1 = \prod_{k=0}^{N-1}(z - \omega^k) \quad\Longrightarrow\quad 1 + z + \dots + z^{N-1} = \prod_{k=1}^{N-1}(z - \omega^k). \]
+Putting $z = 1$: $\prod_{k=1}^{N-1}(1 - \omega^k) = N$, hence $\prod_{k=1}^{N-1}|1 - \omega^k| = N$.
+\emph{Example:} $N = 4$: $|1 - i|\,|1 + 1|\,|1 + i| = \sqrt2\cdot2\cdot\sqrt2 = 4$. \checkmark
+
+\subsection{Interference patterns: $|\sum e^{ij\theta}|^2$}
+\begin{keyres}{The Fourier peak shape}
+\[ \Big|\sum_{j=0}^{K-1} e^{ij\theta}\Big| = \left|\frac{\sin(K\theta/2)}{\sin(\theta/2)}\right|, \qquad
+   \Big|\sum_{j=0}^{K-1} e^{ij\theta}\Big|^2 = \frac{\sin^2(K\theta/2)}{\sin^2(\theta/2)}. \]
+Maximum $K^2$ at $\theta = 0$ (all arrows aligned); zeros at $\theta = \frac{2\pi m}{K}$, $m = 1, \dots, K-1$.
+\end{keyres}
+\emph{Derivation:} $\sum_j e^{ij\theta} = \frac{1 - e^{iK\theta}}{1 - e^{i\theta}}$ and $1 - e^{i\phi} = e^{i\phi/2}(e^{-i\phi/2} - e^{i\phi/2}) = -2i\,e^{i\phi/2}\sin(\phi/2)$,
+so the ratio has modulus $|\sin(K\theta/2)/\sin(\theta/2)|$.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[width=0.8\linewidth, height=5cm, xlabel={$\theta$}, ylabel={$|\sum_{j=0}^{7} e^{ij\theta}|^2$},
+  xmin=-3.1416, xmax=3.1416, ymin=0, ymax=70, samples=400, domain=-3.1416:3.1416,
+  xtick={-3.1416,-1.5708,0,1.5708,3.1416}, xticklabels={$-\pi$,$-\pi/2$,$0$,$\pi/2$,$\pi$}, axis lines=left]
+\addplot[brand, thick] {(abs(x)<1e-4) ? 64 : (sin(deg(4*x)))^2/(sin(deg(x/2)))^2};
+\end{axis}
+\end{tikzpicture}\\
+{\small $K = 8$: a tall central peak of height $64$, first zeros at $\pm 2\pi/8 = \pm\pi/4$, small side lobes. Every QFT
+output peak has this shape.}
+\end{center}
+
+\begin{wexample}{Maximum and first zero}
+For $f(\theta) = |1 + e^{i\theta} + e^{2i\theta}|^2$: $K = 3$, maximum $9$, first positive zero at $\theta = 2\pi/3$ (three arrows at
+$120^\circ$ cancel). Check: $1 + e^{2\pi i/3} + e^{4\pi i/3} = 0$. \checkmark
+\end{wexample}
+
+\subsection{Gauss sums (traces of Fourier matrices)}
+$\sum_{x=0}^{N-1}\omega^{x^2}$ is a \emph{Gauss sum}. For small $N$ just list the squares mod $N$.
+\emph{Example $N = 8$:} $x^2 \bmod 8 = 0,1,4,1,0,1,4,1$, so the sum is $2\cdot1 + 4\omega + 2\omega^4 = 2 + 4\omega - 2 = 4\omega$. \emph{($\omega^4 = -1$.)}
+
+\textbf{Checklist 1.} Reduce exponents mod $N$; use the geometric series; for sums of roots of unity first ask ``does
+$N$ divide the exponent?''; remember $|\text{phase}| = 1$.
+
+%=====================================================================================================
+\section{Binary numbers and binary fractions}
+\subsection{Integers in binary}
+$x = x_1x_2\dots x_n$ (qubit 1 first) means $x = \sum_{j=1}^{n} x_j 2^{n-j}$. Example: $1101_2 = 8 + 4 + 0 + 1 = 13$.
+
+\begin{defn}{Binary fraction}
+$0.x_lx_{l+1}\dots x_m = \frac{x_l}{2} + \frac{x_{l+1}}{4} + \dots + \frac{x_m}{2^{m-l+1}}$. Examples: $0.1_2 = \frac12$, $0.01_2 = \frac14$,
+$0.11_2 = \frac34$, $0.101_2 = \frac58$, $0.011_2 = \frac38$.
+\end{defn}
+
+\subsection{Shifting the binary point}
+Dividing by $2^l$ moves the binary point $l$ places to the left; multiplying moves it right:
+\[ \frac{x}{2^l} = (\text{integer}) + 0.x_{n-l+1}\dots x_n, \qquad 2^k\cdot 0.\varphi_1\varphi_2\varphi_3\dots = \varphi_1\dots\varphi_k.\varphi_{k+1}\varphi_{k+2}\dots \]
+
+\begin{keyres}{Only the last bits survive in a phase}
+\[ e^{2\pi i\,x/2^l} = e^{2\pi i\,0.x_{n-l+1}\dots x_n}, \qquad e^{2\pi i\,2^k\varphi} = e^{2\pi i\,0.\varphi_{k+1}\varphi_{k+2}\dots} \]
+because the integer part is a whole number of turns.
+\end{keyres}
+
+\begin{wexample}{A phase from a 6-bit number}
+$x = 27 = 011011_2$. Find $e^{2\pi i x/2^3}$.
+\begin{steps}
+\item $27/8 = 011.011_2 = 3 + 0.011_2 = 3 + \frac38$.
+\item Drop the 3 turns: $e^{2\pi i\cdot 3/8} = e^{3\pi i/4}$.
+\end{steps}
+Only the last three bits $011$ mattered.
+\end{wexample}
+
+\begin{wexample}{The bit carried by $U^{2^k}$}
+$\varphi = 0.\varphi_1\varphi_2\varphi_3$. Then $e^{2\pi i\,2\varphi} = e^{2\pi i\,0.\varphi_2\varphi_3}$ and $e^{2\pi i\,4\varphi} = e^{2\pi i\,0.\varphi_3} = (-1)^{\varphi_3}$.
+So in phase estimation the qubit controlling $U^4$ carries only the last bit. (Recall $e^{2\pi i\cdot\frac12} = -1$.)
+\end{wexample}
+
+\subsection{Fractions that never terminate}
+$\frac{p}{q}$ (in lowest terms) has a terminating binary expansion iff $q$ is a power of 2. So $\frac13 = 0.010101\ldots_2$ and
+$\frac15 = 0.00110011\ldots_2$ never terminate: \emph{no finite register can represent them exactly}.
+Long division in base 2 for $\frac13$: $1\cdot2 = 2 < 3 \to 0$; $2\cdot2 = 4 \ge 3 \to 1$, remainder $1$; repeat $\Rightarrow 0.\overline{01}$.
+
+%=====================================================================================================
+\section{Linear algebra for quantum computing}
+\subsection{Vectors, inner products, unitary matrices}
+$\braket{u|v} = \sum_k \overline{u_k}v_k$ (conjugate the \emph{first} vector). $\|v\|^2 = \braket{v|v}$.
+A matrix $U$ is \textbf{unitary} if $U^\dagger U = I$, where $U^\dagger = \overline{U}^T$. Equivalent tests:
+\begin{itemize}[itemsep=1pt]
+\item the columns are orthonormal (each has length 1, different columns have inner product 0);
+\item equivalently the rows are orthonormal;
+\item $U$ preserves lengths: $\|Uv\| = \|v\|$ for all $v$.
+\end{itemize}
+Consequences: $U^{-1} = U^\dagger$; $|\det U| = 1$; every eigenvalue has $|\lambda| = 1$.
+\emph{Proof of $|\det U| = 1$:} $|\det U|^2 = \overline{\det U}\det U = \det(U^\dagger U) = \det I = 1$.
+
+\begin{wexample}{Completing a unitary matrix}
+Find $a, b$ such that $V = \frac{1}{\sqrt2}\begin{pmatrix}1 & a\\ i & b\end{pmatrix}$ is unitary with $a = 1$.
+\begin{steps}
+\item Columns $c_1 = \frac{1}{\sqrt2}(1, i)$, $c_2 = \frac{1}{\sqrt2}(1, b)$.
+\item $\braket{c_1|c_2} = \frac12(\bar1\cdot1 + \bar i\, b) = \frac12(1 - ib) = 0 \Rightarrow b = \frac1i = -i$.
+\item Check $\|c_2\|^2 = \frac12(1 + |{-i}|^2) = 1$. \checkmark\ So $V = \frac{1}{\sqrt2}\begin{psmallmatrix}1&1\\ i&-i\end{psmallmatrix}$.
+\end{steps}
+\textbf{Do not forget the complex conjugate} in the inner product --- it is the most common error.
+\end{wexample}
+
+\begin{trap}
+A matrix with two \emph{equal} (or proportional) columns, such as $\frac{1}{\sqrt2}\begin{psmallmatrix}1&1\\ i&i\end{psmallmatrix}$, has determinant 0 and can never be a gate:
+it would send two different inputs to the same output and destroy information.
+\end{trap}
+
+\subsection{Eigenvalues from a polynomial identity}
+If $U^m = I$ and $Uv = \lambda v$ then $v = U^m v = \lambda^m v$, so $\lambda^m = 1$. Example: $Z^2 = I \Rightarrow \lambda = \pm1$.
+The trace is the sum and the determinant the product of the eigenvalues --- use these to identify which roots
+occur.
+
+\subsection{Tensor products}
+For $a = (a_0, a_1)$, $b = (b_0, b_1)$: $a\otimes b = (a_0b_0, a_0b_1, a_1b_0, a_1b_1)$ in the order $\ket{00},\ket{01},\ket{10},\ket{11}$.
+For matrices, $(A\otimes B)(a\otimes b) = Aa\otimes Bb$ and
+$A\otimes B = \begin{psmallmatrix}a_{11}B & a_{12}B\\ a_{21}B & a_{22}B\end{psmallmatrix}$.
+\emph{Example:} $I\otimes Z = \operatorname{diag}(1,-1,1,-1)$ and $Z\otimes I = \operatorname{diag}(1,1,-1,-1)$ --- the position matters.
+
+\subsection{Commuting matrices}
+Diagonal matrices always commute with each other. A permutation $P$ commutes with a diagonal $D$ iff $D$ has equal
+entries on the positions that $P$ swaps. A gate that mixes two basis states (like $H$) commutes with a diagonal $D$
+only if $D$ has equal entries on the states it mixes.
+
+\textbf{Checklist 3.} Conjugate in inner products; test unitarity by columns; use $U^m = I$ to get eigenvalues; respect the order in tensor products.
+
+%=====================================================================================================
+\section{The discrete Fourier transform}
+\subsection{Definition and matrix}
+\begin{defn}{Unitary DFT}
+For a vector $\alpha = (\alpha_0, \dots, \alpha_{N-1})$: $\beta_y = \frac{1}{\sqrt N}\sum_{x=0}^{N-1}\alpha_x\,\omega^{xy}$, i.e.\ $\beta = F\alpha$ with
+$F_{yx} = \frac{\omega^{xy}}{\sqrt N}$.
+\end{defn}
+For $N = 2$: $F = \frac{1}{\sqrt2}\begin{psmallmatrix}1&1\\1&-1\end{psmallmatrix} = H$. For $N = 4$ ($\omega = i$):
+\[ F_4 = \frac12\begin{pmatrix}1&1&1&1\\ 1&i&-1&-i\\ 1&-1&1&-1\\ 1&-i&-1&i\end{pmatrix}. \]
+\textbf{Memory aid:} row $y$, column $x$ holds $i^{xy}$; row 3 is $i^{0}, i^{3}, i^{6}, i^{9} = 1, -i, -1, i$.
+
+$F$ is unitary: $(F^\dagger F)_{x'x} = \frac1N\sum_y\omega^{y(x - x')} = \delta_{xx'}$ by orthogonality.
+
+\subsection{Parseval and special inputs}
+\begin{keyres}{Parseval}
+$\sum_y|\beta_y|^2 = \sum_x|\alpha_x|^2$ (unitarity). For the \emph{un-normalised} transform $A_y = \sum_x a_x\omega^{xy} = \sqrt N\,\beta_y$:
+$\sum_y|A_y|^2 = N\sum_x|a_x|^2$.
+\end{keyres}
+\begin{itemize}[itemsep=1pt]
+\item $\beta_0 = \frac{1}{\sqrt N}\sum_x\alpha_x$ (the ``average'' or DC component);
+\item a delta $\alpha = e_x$ gives $|\beta_y| = \frac{1}{\sqrt N}$ for every $y$ (flat spectrum);
+\item a constant vector gives a delta at $y = 0$.
+\end{itemize}
+
+\begin{wexample}{All four coefficients and a sanity check}
+$\alpha = \frac{1}{\sqrt{10}}(1, 0, 3, 0)$, $N = 4$, so $\beta_y = \frac12\sum_x\alpha_x i^{xy}$ and only $x = 0, 2$ contribute: $\beta_y = \frac{1 + 3\,i^{2y}}{2\sqrt{10}} = \frac{1 + 3(-1)^y}{2\sqrt{10}}$.
+\begin{steps}
+\item $y = 0, 2$: $\beta_y = \frac{4}{2\sqrt{10}} = \frac{2}{\sqrt{10}}$, probability $\frac{4}{10}$ each.
+\item $y = 1, 3$: $\beta_y = \frac{-2}{2\sqrt{10}} = -\frac{1}{\sqrt{10}}$, probability $\frac1{10}$ each.
+\item Parseval: $\frac{4 + 4 + 1 + 1}{10} = 1$. \checkmark
+\end{steps}
+\end{wexample}
+
+\subsection{Shift theorem}
+\begin{keyres}{Shift $\leftrightarrow$ phase ramp}
+If $\alpha'_x = \alpha_{x - s}$ (indices mod $N$), then $\beta'_y = \omega^{sy}\beta_y$. Magnitudes $|\beta_y|$ are unchanged.
+\end{keyres}
+\emph{Proof:} $\beta'_y = \frac{1}{\sqrt N}\sum_x\alpha_{x-s}\omega^{xy} = \frac{1}{\sqrt N}\sum_{u}\alpha_u\omega^{(u+s)y} = \omega^{sy}\beta_y$ ($u = x - s$).
+
+\subsection{Periodic sequences: peaks}
+\begin{keyres}{Period $r$ dividing $N$}
+If $\alpha$ is $\frac{1}{\sqrt{N/r}}$ on $x_0, x_0 + r, x_0 + 2r, \dots$ and 0 elsewhere, and $r \mid N$, then
+$\beta_y = \frac{1}{\sqrt r}\,\omega^{x_0y}$ for $y \in \{0, \tfrac Nr, \tfrac{2N}{r}, \dots\}$ and $0$ otherwise: exactly $r$ peaks, each with probability $\frac1r$.
+\end{keyres}
+\emph{Derivation:} with $K = N/r$ terms, $\beta_y = \frac{\omega^{x_0y}}{\sqrt{NK}}\sum_{j=0}^{K-1}\omega^{rjy}$ and $\omega^{r y} = e^{2\pi i\,y/K}$; the sum is $K$ if
+$K \mid y$ and 0 otherwise. Then $|\beta_y| = \frac{K}{\sqrt{NK}} = \sqrt{K/N} = \frac{1}{\sqrt r}$.
+
+\begin{wexample}{Period 4 in 16}
+$\alpha = \frac12(\ket1 + \ket5 + \ket9 + \ket{13})$ ($N = 16$, $r = 4$, $x_0 = 1$). Peaks at $y = 0, 4, 8, 12$ with probability $\frac14$ each; the
+phase of $\beta_4$ is $\omega^{1\cdot4} = e^{2\pi i\,4/16} = i$, i.e.\ $90^\circ$. Halving the period doubles the spacing:
+period $r$ in $x$ $\Leftrightarrow$ spacing $N/r$ in $y$.
+\end{wexample}
+
+\subsection{When the period does not divide $N$: leakage}
+If $r \nmid N$ the number of terms $K$ is $\lfloor N/r\rfloor$ or $\lceil N/r\rceil$ and the peaks sit near (not at) the non-integer
+points $kN/r$. Using the peak-shape formula with $\theta = 2\pi r y/N$:
+\[ |A_y| = \left|\frac{\sin(\pi K r y/N)}{\sin(\pi r y/N)}\right| . \]
+The peak is \textbf{highest when $ry/N$ is closest to an integer}.
+
+\begin{wexample}{Which $y$ gives the largest peak?}
+$N = 16$, $a_x = 1$ for $x \equiv 0 \pmod 3$ ($x = 0, 3, \dots, 15$: $K = 6$). Near $y \approx 16k/3 = 5.33, 10.67$:
+$3\cdot5/16 = 0.9375$ (distance $0.0625$ from 1) and $3\cdot 11/16 = 2.0625$ (distance $0.0625$), $3\cdot 6/16 = 1.125$ (distance $0.125$).
+So $y = 5$ and $y = 11$ tie for the largest peak: $|A_5| = |\sin(6\cdot0.9375\pi)/\sin(0.9375\pi)| = 0.9239/0.1951 \approx 4.74$, while $|A_6| \approx 1.85$ and $|A_8| = 0$.
+Distances decide; compute the formula only to break ties.
+\end{wexample}
+
+\begin{trap}
+NumPy's \texttt{fft} uses $e^{-2\pi i xy/N}$ without normalisation, \texttt{ifft} uses $\frac1N e^{+2\pi i xy/N}$. With our sign,
+$\beta = \sqrt N\,\texttt{ifft}(\alpha)$ (equivalently \texttt{ifft(alpha, norm="ortho")}). $\texttt{fft}(\alpha)/\sqrt N$ is the \emph{inverse} QFT.
+\end{trap}
+
+\subsection{Cost: FFT versus QFT}
+The classical FFT needs $\approx N\log N = n2^n$ operations; the QFT circuit needs $\frac{n(n+1)}{2} + \lfloor n/2\rfloor$ gates.
+For $n = 10$: $10\cdot1024 = 10\,240$ versus $55 + 5 = 60$, a ratio $\approx 170$. But the comparison is misleading: the
+QFT acts on amplitudes that cannot be read out (Section~10).
+
+%=====================================================================================================
+\section{Qubits, states and measurement}
+\subsection{States and the Born rule}
+A qubit state is $\ket\psi = \alpha\ket0 + \beta\ket1$ with $|\alpha|^2 + |\beta|^2 = 1$. $n$ qubits need $2^n$ amplitudes:
+$\ket\psi = \sum_x c_x\ket x$. \textbf{Born rule:} measuring all qubits gives $x$ with probability $|c_x|^2$.
+
+\begin{method}{Partial measurement}
+To measure only qubit $j$: (1) group the basis states by the value of bit $j$; (2) the probability of value $b$ is the
+sum of $|c_x|^2$ over the group; (3) the post-measurement state is that group alone, \emph{re-normalised}.
+\end{method}
+
+\begin{wexample}{Normalise, then measure one qubit}
+$\ket\psi = c(2\ket{00} - i\ket{01} + \ket{10} + \sqrt3\ket{11})$, $c > 0$. Find $P(\text{qubit 2} = 1)$ and the state afterwards.
+\begin{steps}
+\item $c^2(4 + 1 + 1 + 3) = 9c^2 = 1 \Rightarrow c = \frac13$.
+\item Qubit 2 is the \emph{second} bit: group $\{\ket{01}, \ket{11}\}$. $P = \frac{1 + 3}{9} = \frac49$.
+\item Post-state: $\frac{-i\ket{01} + \sqrt3\ket{11}}{2} = \frac{-i\ket0 + \sqrt3\ket1}{2}\otimes\ket1$.
+\end{steps}
+\end{wexample}
+
+\subsection{Global versus relative phase}
+\begin{keyres}{Phases}
+$e^{i\gamma}\ket\psi$ and $\ket\psi$ are \textbf{the same physical state} (global phase): all probabilities in every basis agree.
+A \textbf{relative phase}, as in $\ket0 + e^{i\phi}\ket1$, is physical: it changes results after an interfering gate such as $H$.
+\end{keyres}
+To test whether two vectors are the same state, divide one by the other component-wise: the ratio must be the
+\emph{same} complex number for every component. Example: $(1, i)$ and $(-i, 1)$: ratios $-i/1 = -i$ and $1/i = -i$ --- same
+state. $(1, i)$ and $(1, -i)$: ratios $1$ and $-1$ --- different states (they are orthogonal!).
+
+\subsection{The Bloch sphere}
+Every qubit state is (up to global phase) $\cos\frac\theta2\ket0 + e^{i\phi}\sin\frac\theta2\ket1$, the point $(\sin\theta\cos\phi, \sin\theta\sin\phi, \cos\theta)$.
+Then $\langle X\rangle = \sin\theta\cos\phi$, $\langle Y\rangle = \sin\theta\sin\phi$, $\langle Z\rangle = \cos\theta$.
+\emph{Derivation:} with $a = \cos\frac\theta2$, $b = e^{i\phi}\sin\frac\theta2$: $\langle X\rangle = 2\mathrm{Re}(\bar a b)$, $\langle Y\rangle = 2\mathrm{Im}(\bar ab)$, $\langle Z\rangle = |a|^2 - |b|^2$, and
+$2\cos\frac\theta2\sin\frac\theta2 = \sin\theta$, $\cos^2\frac\theta2 - \sin^2\frac\theta2 = \cos\theta$. The QFT rotations $R_k$ change only $\phi$ (rotation about $z$).
+
+\subsection{Superposition versus mixture}
+A coin that prepares $\ket0$ or $\ket1$ with probability $\frac12$ each is a \emph{mixture}: average the probabilities of the
+two cases, never add amplitudes. After $H$: each case gives $P(0) = \frac12$, so $P(0) = \frac12$. The superposition
+$\ket+$ gives $H\ket+ = \ket0$, $P(0) = 1$. Interference needs coherence.
+
+\subsection{Repetition and confidence}
+If one run succeeds with probability $p$, then $k$ independent runs succeed at least once with probability $1 - (1-p)^k$.
+To exceed $1 - \delta$ choose the smallest $k$ with $(1-p)^k < \delta$. \emph{Example:} $p = \frac12$, $\delta = 0.01$: $2^{-k} < 0.01 \Rightarrow k = 7$
+($2^7 = 128$).
+
+\subsection{Memory of a state-vector simulation}
+$2^n$ amplitudes $\times$ bytes per amplitude: complex single precision $= 8$ B, double $= 16$ B. $n = 30$ in single
+precision: $2^{30}\cdot 8$ B $= 8$ GiB; each extra qubit doubles it.
+
+%=====================================================================================================
+\section{Quantum gates}
+\subsection{The single-qubit gates of the QFT}
+\[ X = \begin{pmatrix}0&1\\1&0\end{pmatrix},\quad H = \frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix},\quad
+   R_k = \begin{pmatrix}1&0\\0&e^{2\pi i/2^k}\end{pmatrix}. \]
+$H\ket0 = \ket+$, $H\ket1 = \ket-$; compactly $H\ket{x} = \frac{1}{\sqrt2}(\ket0 + (-1)^x\ket1) = \frac{1}{\sqrt2}(\ket0 + e^{2\pi i\,0.x}\ket1)$.
+That last form is the seed of the whole QFT. Also $R_k^2 = R_{k-1}$, $R_k^\dagger = \operatorname{diag}(1, e^{-2\pi i/2^k})$.
+
+\begin{keyres}{$H$ turns relative phase into probability}
+$H\frac{\ket0 + e^{i\phi}\ket1}{\sqrt2} = \frac{1 + e^{i\phi}}{2}\ket0 + \frac{1 - e^{i\phi}}{2}\ket1$, so $P(0) = \cos^2\frac\phi2$, $P(1) = \sin^2\frac\phi2$.
+\end{keyres}
+(Use $|1 \pm e^{i\phi}|^2 = 2 \pm 2\cos\phi$.)
+
+On $n$ qubits: $H^{\otimes n}\ket{x} = \frac{1}{\sqrt N}\sum_y(-1)^{x\cdot y}\ket y$ with $x\cdot y = \sum_j x_jy_j$. For any $x \ne 0$ exactly half the signs
+are negative.
+
+\subsection{Controlled gates}
+Controlled-$U$ applies $U$ to the target only in the branch where the control is $\ket1$:
+$CU = \ket0\!\bra0\otimes I + \ket1\!\bra1\otimes U$. For a phase gate, only $\ket{11}$ is changed:
+$CR_k = \operatorname{diag}(1, 1, 1, e^{2\pi i/2^k})$ --- \textbf{symmetric}: control and target can be swapped.
+
+\begin{wexample}{Which gates commute with $CR_2 = \operatorname{diag}(1,1,1,i)$?}
+\begin{itemize}[itemsep=1pt]
+\item $T\otimes T$: diagonal $\Rightarrow$ commutes.
+\item SWAP: exchanges $\ket{01}\leftrightarrow\ket{10}$, both have entry $1$ $\Rightarrow$ commutes.
+\item CNOT (control 1): exchanges $\ket{10}\leftrightarrow\ket{11}$, entries $1$ and $i$ differ $\Rightarrow$ does \emph{not} commute.
+\item $I\otimes H$: mixes $\ket{10}$ and $\ket{11}$ (entries $1$, $i$) $\Rightarrow$ does not commute.
+\end{itemize}
+\end{wexample}
+
+\subsection{Phase kickback}
+\begin{keyres}{Kickback}
+If $U\ket u = e^{2\pi i\varphi}\ket u$, then $CU^{m}\big(\ket+\ket u\big) = \frac{1}{\sqrt2}\big(\ket0 + e^{2\pi i\,m\varphi}\ket1\big)\ket u$.
+The target is unchanged; the eigenvalue becomes a \emph{relative} phase on the control.
+\end{keyres}
+\emph{Example:} $X\ket- = -\ket-$, so CNOT$\ket+\ket- = \ket-\ket-$. \emph{Example:} $U = T$, $\ket u = \ket1$, $\varphi = \frac18$, $m = 2$:
+control becomes $\frac{1}{\sqrt2}(\ket0 + i\ket1)$.
+
+\subsection{Entanglement}
+\begin{keyres}{Product test for two qubits}
+$\sum c_{jk}\ket{jk}$ is a product state $\iff c_{00}c_{11} = c_{01}c_{10}$ (the $2\times2$ coefficient matrix has determinant 0).
+\end{keyres}
+Examples: $\frac12(1, 1, 1, -1)$: $-1 \ne 1$ $\Rightarrow$ entangled (it is $CZ\ket+\ket+$). $\frac12(1, -1, i, -i)$: $-i = -i$ $\Rightarrow$ product
+$\frac12(\ket0 + i\ket1)(\ket0 - \ket1)$. To factor, read the first row $(c_{00}, c_{01})$ as the second qubit's state and the
+ratio of rows as the first qubit's.
+
+\subsection{Bell states in another basis}
+Apply $H\otimes H$ term by term using $H^{\otimes2}\ket{x} = \frac12\sum_y(-1)^{x\cdot y}\ket y$. \emph{Example:}
+$H^{\otimes 2}\frac{\ket{01} + \ket{10}}{\sqrt2}$: for $\ket{01}$ signs $(+,-,+,-)$, for $\ket{10}$ signs $(+,+,-,-)$; adding gives
+$\frac{1}{2\sqrt2}(2\ket{00} - 2\ket{11}) = \frac{\ket{00} - \ket{11}}{\sqrt2}$.
+
+%=====================================================================================================
+\section{The QFT: definition and first calculations}
+\begin{defn}{Quantum Fourier transform}
+$\QFT\ket{x} = \frac{1}{\sqrt N}\sum_{y=0}^{N-1}\omega^{xy}\ket y$, extended linearly: $\QFT\sum_x\alpha_x\ket x = \sum_y\beta_y\ket y$ with $\beta = F\alpha$.
+It is the DFT of Section~4 applied to the amplitude vector.
+\end{defn}
+
+\begin{method}{Amplitude of $\ket y$ in $\QFT\ket x$}
+(1) Convert both bit strings to integers. (2) Compute $xy \bmod N$. (3) Amplitude $= \omega^{xy}/\sqrt N$; phase in degrees
+$= 360^\circ\cdot\frac{xy \bmod N}{N}$.
+\end{method}
+
+\begin{wexample}{Three quick amplitudes}
+\begin{enumerate}[itemsep=1pt]
+\item $n = 2$, $x = \ket{10} = 2$, $y = \ket{11} = 3$: $\omega = i$, $i^{6} = -1$, amplitude $-\frac12$.
+\item $n = 3$, $x = 5$, $y = 6$: $30 \bmod 8 = 6$, $\omega^6 = e^{2\pi i\cdot 6/8} = -i$, amplitude $-\frac{i}{\sqrt8}$; phase $270^\circ$.
+\item $n = 4$, $x = 7$, $y = 3$: $21 \bmod 16 = 5$, phase $360^\circ\cdot\frac{5}{16} = 112.5^\circ$.
+\end{enumerate}
+\end{wexample}
+
+\begin{wexample}{Full output for $n = 2$}
+$\QFT\ket{01} = \frac12(\ket0 + i\ket1 + i^2\ket2 + i^3\ket3) = \frac12(\ket{00} + i\ket{01} - \ket{10} - i\ket{11})$. Probability of each outcome
+$\frac14$: the information about $x$ is entirely in the phases.
+\end{wexample}
+
+\begin{keyres}{Special inputs}
+\begin{itemize}[itemsep=1pt]
+\item $\QFT\ket0 = \frac{1}{\sqrt N}\sum_y\ket y = \ket+^{\otimes n}$ (uniform).
+\item $\QFT\big(\frac{1}{\sqrt N}\sum_x\ket x\big) = \ket0$ (orthogonality).
+\item $\QFT\ket{2^{n-1}} = \QFT\ket{10\dots0}$: amplitudes $\frac{(-1)^y}{\sqrt N}$ depend only on the last bit $y_n$: $\ket+^{\otimes(n-1)}\ket-$.
+\item $\QFT\ket{1} = \QFT\ket{0\dots01}$: amplitudes $\omega^y$: the slowest ``rotating'' signal.
+\end{itemize}
+\end{keyres}
+
+%=====================================================================================================
+\section{The product formula}
+This is the single most useful result about the QFT.
+\begin{keyres}{Product formula}
+\[ \QFT\ket{x_1\dots x_n} = \frac{1}{\sqrt N}\big(\ket0 + e^{2\pi i\,0.x_n}\ket1\big)\big(\ket0 + e^{2\pi i\,0.x_{n-1}x_n}\ket1\big)\cdots\big(\ket0 + e^{2\pi i\,0.x_1x_2\dots x_n}\ket1\big). \]
+Output qubit $l$ (counting from the left) carries the phase $0.x_{n-l+1}\dots x_n$: the last $l$ bits of $x$.
+\end{keyres}
+\textbf{Derivation.}
+\begin{steps}
+\item Write $y = \sum_{l=1}^{n} y_l 2^{n-l}$. Then $\frac{xy}{2^n} = \sum_l \frac{x y_l}{2^{l}}$, so $\omega^{xy} = \prod_{l=1}^{n} e^{2\pi i\,x y_l/2^l}$.
+\item The sum over $y$ is a sum over independent bits, so it factorises:
+      \[ \sum_{y_1,\dots,y_n}\prod_l e^{2\pi i\,xy_l/2^l}\ket{y_l} = \prod_l\sum_{y_l\in\{0,1\}} e^{2\pi i\,xy_l/2^l}\ket{y_l} = \prod_l\big(\ket0 + e^{2\pi i\,x/2^l}\ket1\big). \]
+\item By Section~2, $e^{2\pi i\,x/2^l} = e^{2\pi i\,0.x_{n-l+1}\dots x_n}$.
+\end{steps}
+
+\begin{wexample}{$\QFT\ket{101}$ with the product formula}
+$x_1x_2x_3 = 101$.
+\begin{steps}
+\item Qubit 1: $0.x_3 = 0.1_2 = \frac12$: $e^{i\pi} = -1$: $(\ket0 - \ket1)$.
+\item Qubit 2: $0.x_2x_3 = 0.01_2 = \frac14$: $e^{i\pi/2} = i$: $(\ket0 + i\ket1)$.
+\item Qubit 3: $0.x_1x_2x_3 = 0.101_2 = \frac58$: $e^{5i\pi/4}$: $(\ket0 + e^{5i\pi/4}\ket1)$.
+\end{steps}
+$\QFT\ket{101} = \frac{1}{\sqrt8}(\ket0 - \ket1)(\ket0 + i\ket1)(\ket0 + e^{5i\pi/4}\ket1)$.
+\emph{Check one amplitude:} $y = \ket{110} = 6$: product formula gives $(-1)(i)(1) = -i$; definition gives $\omega^{30} = \omega^{6} = -i$. \checkmark
+\end{wexample}
+
+\begin{keyres}{Consequence}
+$\QFT\ket x$ is \textbf{always a product state} for a basis input $x$ --- never entangled. (Superposition inputs can give
+entangled outputs.)
+\end{keyres}
+
+\begin{trap}
+Writing the factors in reverse order (qubit 1 with phase $0.x_1\dots x_n$) is exactly the state \emph{before} the final
+SWAPs of the circuit. Always check one amplitude with the definition.
+\end{trap}
+
+%=====================================================================================================
+\section{The QFT circuit}
+\subsection{From the product formula to gates}
+Look at the last factor $\ket0 + e^{2\pi i\,0.x_1x_2\dots x_n}\ket1$. Build it on qubit 1:
+\begin{steps}
+\item $H$ on qubit 1: $\frac{1}{\sqrt2}(\ket0 + e^{2\pi i\,0.x_1}\ket1)$, because $(-1)^{x_1} = e^{2\pi i\,x_1/2}$.
+\item Controlled-$R_2$ from qubit 2: if $x_2 = 1$ multiply the $\ket1$ part by $e^{2\pi i/4}$: phase becomes $0.x_1x_2$.
+\item Controlled-$R_k$ from qubit $k$ appends bit $x_k$ at position $k$; after all of them: $0.x_1x_2\dots x_n$.
+\item Repeat for qubit 2 (using qubits $3, \dots, n$), and so on. Qubit $j$ ends with $0.x_j\dots x_n$.
+\item The order is reversed with respect to the product formula, so finish with SWAPs of qubits $j \leftrightarrow n+1-j$.
+\end{steps}
+Why must qubit 1 be processed first? Its rotations are controlled by qubits $2, \dots, n$, which must still hold the
+original bits $x_2, \dots, x_n$; qubit 2 is only changed afterwards.
+
+\begin{center}
+\begin{quantikz}[row sep=0.35cm, column sep=0.35cm]
+\lstick{$\ket{x_1}$} & \gate{H} & \gate{R_2} & \gate{R_3} & \qw & \qw & \qw & \swap{2} & \rstick{$\ket0 + e^{2\pi i\,0.x_3}\ket1$}\\
+\lstick{$\ket{x_2}$} & \qw & \ctrl{-1} & \qw & \gate{H} & \gate{R_2} & \qw & \qw & \rstick{$\ket0 + e^{2\pi i\,0.x_2x_3}\ket1$}\\
+\lstick{$\ket{x_3}$} & \qw & \qw & \ctrl{-2} & \qw & \ctrl{-1} & \gate{H} & \targX{} & \rstick{$\ket0 + e^{2\pi i\,0.x_1x_2x_3}\ket1$}
+\end{quantikz}\\[3pt]
+{\small The 3-qubit textbook QFT (normalisation $\frac{1}{\sqrt8}$ omitted on the right).}
+\end{center}
+
+\subsection{Gate counts}
+\begin{keyres}{Counting}
+Hadamards: $n$. Controlled rotations: $(n-1) + (n-2) + \dots + 0 = \frac{n(n-1)}{2}$. SWAPs: $\lfloor n/2\rfloor$.
+Total gates $\frac{n(n+1)}{2} + \lfloor n/2\rfloor$. Gate $R_k$ appears $n - k + 1$ times ($k = 2, \dots, n$); the smallest angle is
+$\frac{360^\circ}{2^n}$ (gate $R_n$).
+\end{keyres}
+\begin{wexample}{Counting for $n = 9$}
+$CR$: $\frac{9\cdot8}{2} = 36$. SWAPs: $4$. Two-qubit gates if a SWAP costs 3 CNOTs: $36 + 12 = 48$. Smallest angle
+$360^\circ/512 \approx 0.703^\circ$. Number of $R_3$ gates: $9 - 3 + 1 = 7$.
+\end{wexample}
+
+\subsection{The inverse QFT}
+\begin{method}{Inverting any circuit}
+$(G_m\cdots G_2G_1)^{-1} = G_1^{-1}G_2^{-1}\cdots G_m^{-1}$: \textbf{reverse the order} and \textbf{invert each gate}. $H^{-1} = H$, SWAP$^{-1}$ = SWAP,
+$R_k^{-1} = R_k^\dagger$ (negative angle).
+\end{method}
+For 3 qubits the QFT applies: $H_1, CR_2^{(2\to1)}, CR_3^{(3\to1)}, H_2, CR_2^{(3\to2)}, H_3, \mathrm{SWAP}_{13}$. So $\QFT^{-1}$ applies:
+SWAP$_{13}$, $H_3$, $CR_2^{\dagger(3\to2)}$, $H_2$, $CR_3^{\dagger(3\to1)}$, $CR_2^{\dagger(2\to1)}$, $H_1$. The first non-SWAP gate is $H$ on the \emph{last}
+qubit.
+
+\subsection{Tracing the circuit gate by gate}
+\begin{wexample}{Input $\ket{110}$, phases in degrees}
+$x_1 = 1$, $x_2 = 1$, $x_3 = 0$.
+\begin{steps}
+\item $H_1$: phase $180^\circ\cdot x_1 = 180^\circ$. $CR_2$ (control $x_2 = 1$): $+90^\circ \to 270^\circ$. $CR_3$ (control $x_3 = 0$): unchanged, $270^\circ$.
+      Check: $0.110_2 = \frac34 \to 270^\circ$. \checkmark
+\item $H_2$: $180^\circ\cdot x_2 = 180^\circ$. $CR_2$ from $x_3 = 0$: unchanged. Qubit 2: $180^\circ$ ($0.10_2 = \frac12$).
+\item $H_3$: $x_3 = 0 \to 0^\circ$.
+\item SWAP$_{13}$: qubit 1 now has $0^\circ$, qubit 2 $180^\circ$, qubit 3 $270^\circ$.
+\item Amplitude of, say, $\ket{011}$: sum of phases of the qubits that are 1: $180^\circ + 270^\circ = 450^\circ \equiv 90^\circ$, so $\frac{i}{\sqrt8}$.
+      Definition: $x = 6$, $y = 3$, $18 \bmod 8 = 2$, $\omega^2 = i$. \checkmark
+\end{steps}
+Without the SWAP the same register $\ket{011}$ would collect $180^\circ + 0^\circ = 180^\circ$ --- a different (wrong) answer.
+\end{wexample}
+
+%=====================================================================================================
+\section{Algebraic properties of the QFT}
+\begin{keyres}{$\QFT^2$ and $\QFT^4$}
+$\QFT^2\ket x = \ket{-x \bmod N}$ and therefore $\QFT^4 = I$.
+\end{keyres}
+\emph{Derivation:} $\QFT^2\ket x = \frac1N\sum_z\big(\sum_y\omega^{y(x+z)}\big)\ket z$; the inner sum is $N\delta_{z,-x}$. Not to be confused with the
+bit complement $\ket{N-1-x}$: for $x = 0$, $\QFT^2\ket0 = \ket0$ but the complement is $\ket{N-1}$.
+
+\textbf{Eigenvalues.} From $\QFT^4 = I$ every eigenvalue satisfies $\lambda^4 = 1$: $\lambda \in \{1, -1, i, -i\}$. Use trace and
+determinant to see which occur. For $N = 4$: $\operatorname{tr}F_4 = \frac12\sum_x i^{x^2} = \frac12(1 + i + 1 + i) = 1 + i$ and
+$\det F_4 = -i$; eigenvalues $1, 1, -1, i$ (sum $1 + i$ \checkmark, product $-i$ \checkmark). For $N = 2$: $H$ has $\pm1$.
+For $N \ge 8$ all four values occur. So $\det F_N$ need not be $\pm1$ although $|\det F_N| = 1$.
+
+\textbf{Other matrices:} $F_4^2$ is the permutation $0\to0$, $1\leftrightarrow3$, $2\to2$; $H\otimes H$ is real, symmetric and self-inverse
+but not a permutation; $CR_k$ is diagonal with $\det = e^{2\pi i/2^k}$.
+
+%=====================================================================================================
+\section{What the QFT can and cannot do}
+\begin{keyres}{Measuring right after a QFT on a basis state}
+Every outcome has probability $\frac1N$, independent of $x$: \textbf{no information}. The reason is that all amplitudes have
+the same magnitude $\frac{1}{\sqrt N}$.
+\end{keyres}
+\begin{itemize}[itemsep=2pt]
+\item \textbf{Fast:} $O(n^2)$ gates transform $2^n$ amplitudes.
+\item \textbf{Not a fast classical FFT:} loading an arbitrary vector costs up to $\Omega(2^n)$ gates, and a measurement returns a
+      single $y$ with probability $|\beta_y|^2$; estimating all coefficients needs exponentially many runs.
+\item \textbf{Useful as a subroutine} when only a few large peaks must be found: phase estimation, period finding, Shor.
+\end{itemize}
+Assertion--Reason tip: ``all magnitudes equal'' \emph{explains} ``no information''; ``$O(n^2)$ gates'' does \emph{not} imply ``all
+coefficients quickly''.
+
+%=====================================================================================================
+\section{Quantum phase estimation}
+\subsection{One counting qubit: the Hadamard test}
+Circuit: control in $\ket0$, $H$, controlled-$U$ on eigenstate $\ket u$ ($U\ket u = e^{2\pi i\varphi}\ket u$), $H$, measure.
+\begin{steps}
+\item After $H$ and kickback: $\frac{1}{\sqrt2}(\ket0 + e^{2\pi i\varphi}\ket1)\ket u$.
+\item After the second $H$ (Section~6, $\phi = 2\pi\varphi$): $P(0) = \cos^2(\pi\varphi)$, $P(1) = \sin^2(\pi\varphi)$.
+\end{steps}
+Example: $\varphi = \frac14$: $P(1) = \sin^2\frac\pi4 = \frac12$; $\varphi = \frac16$: $P(1) = \frac14$.
+
+\subsection{$t$ counting qubits}
+Counting qubit $j$ controls $U^{2^{t-j}}$. By kickback the register becomes
+\[ \frac{1}{\sqrt{2^t}}\sum_{k=0}^{2^t-1} e^{2\pi i\varphi k}\ket{k}. \]
+If $\varphi = \frac{b}{2^t}$ exactly, this is $\QFT\ket b$, so the inverse QFT returns $\ket b$ \textbf{with certainty}.
+
+\begin{keyres}{Outcome distribution in general}
+With $\delta = \varphi - \frac{y}{2^t}$:
+\[ P(y) = \frac{1}{2^{2t}}\left|\sum_{k=0}^{2^t-1}e^{2\pi i k\delta}\right|^2 = \frac{\sin^2(\pi 2^t\delta)}{2^{2t}\sin^2(\pi\delta)}. \]
+\end{keyres}
+\begin{wexample}{$t = 2$, $\varphi = \frac15$}
+\begin{steps}
+\item Grid points $y/4$: $0, 0.25, 0.5, 0.75$. Closest to $0.2$ is $y = 1$, $\delta = 0.2 - 0.25 = -0.05$.
+\item $P(1) = \frac{\sin^2(4\pi\cdot0.05)}{16\sin^2(\pi\cdot0.05)} = \frac{\sin^2(0.2\pi)}{16\sin^2(0.05\pi)} = \frac{0.3455}{16\cdot0.02447} \approx 0.883$.
+\item $y = 0$: $\delta = 0.2$: $\frac{\sin^2(0.8\pi)}{16\sin^2(0.2\pi)} = \frac{0.3455}{16\cdot0.3455} = \frac{1}{16}$.
+\end{steps}
+Exact surds: write $\sin^2 a = \frac{1 - \cos 2a}{2}$ to simplify, e.g.\ $\sin^2\frac{\pi}{12} = \frac{2 - \sqrt3}{4}$, then rationalise.
+\end{wexample}
+
+\subsection{The $4/\pi^2$ guarantee}
+For the closest grid point $|\delta| \le 2^{-(t+1)}$, so $x = \pi2^t|\delta| \le \frac\pi2$. Use $\sin x \ge \frac{2x}{\pi}$ on $[0, \frac\pi2]$ and $\sin\pi|\delta| \le \pi|\delta|$:
+\[ \sqrt{P} \ge \frac{2\cdot2^t|\delta|}{2^t\pi|\delta|} = \frac2\pi \quad\Rightarrow\quad P(\text{closest}) \ge \frac{4}{\pi^2} \approx 0.405. \]
+The probability of getting one of the \emph{two} closest grid points is at least $\frac{8}{\pi^2} \approx 0.81$.
+
+\subsection{How many counting qubits?}
+To get $n$ correct bits with probability $\ge 1 - \varepsilon$: $t = n + \lceil\log_2(2 + \frac{1}{2\varepsilon})\rceil$.
+\emph{Example:} $n = 4$, $\varepsilon = 0.05$: $2 + 10 = 12$, $\lceil\log_2 12\rceil = 4$, $t = 8$.
+
+\begin{trap}
+If $\varphi$ has no terminating binary expansion (e.g.\ $\frac13$), no finite $t$ gives it exactly; the outcome is always an
+integer $y$ and $y/2^t \neq \varphi$. The distribution is only \emph{peaked} near $2^t\varphi$.
+\end{trap}
+
+%=====================================================================================================
+\section{Period finding and Shor's algorithm}
+\subsection{From factoring to order finding}
+For $N$ odd composite and $a$ coprime to $N$, the \textbf{order} $r$ is the least $r > 0$ with $a^r \equiv 1 \pmod N$. If $r$ is even
+and $a^{r/2} \not\equiv -1$, then $\gcd(a^{r/2} \pm 1, N)$ are non-trivial factors.
+\begin{wexample}{Classical part for $N = 33$, $a = 5$}
+Powers of 5 mod 33: $5, 25, 26, 31, 23, 16, 14, 4, 20, 1$, so $r = 10$. $5^5 \equiv 23 \not\equiv 32$. $\gcd(22, 33) = 11$, $\gcd(24, 33) = 3$.
+$33 = 3\times11$. \checkmark\ Tip: $r$ divides $\varphi(N)$ ($\varphi(33) = 20$), which limits the candidates.
+\end{wexample}
+
+\subsection{The quantum part}
+Registers: $t$ counting qubits (usually $t = 2n$ with $n = \lceil\log_2N\rceil$) and $n$ work qubits: total $3n$ qubits.
+\begin{steps}
+\item $H^{\otimes t}$, then $\ket x\ket1 \mapsto \ket x\ket{a^x \bmod N}$: $\frac{1}{\sqrt M}\sum_x\ket x\ket{a^x}$, $M = 2^t$.
+\item Group by work value: $x = x_0 + rj$. Different work values are orthogonal, so each branch $x_0$ is a periodic
+      state in the counting register (Section~4) and they do not interfere.
+\item Inverse QFT: peaks near $y \approx kM/r$, $k = 0, \dots, r-1$. If $r \mid M$ the peaks are exact with probability $\frac1r$ each.
+\item Continued fractions turn $y/M$ into $k/r$.
+\end{steps}
+
+\subsection{Continued fractions}
+\begin{method}{Expanding $y/M$}
+Repeat: write the integer part, invert the remainder. Convergents $h_j/k_j$ from $h_j = a_jh_{j-1} + h_{j-2}$,
+$k_j = a_jk_{j-1} + k_{j-2}$ ($h_{-1} = 1, h_{-2} = 0, k_{-1} = 0, k_{-2} = 1$). Keep the last convergent with denominator $< N$.
+\end{method}
+\begin{wexample}{Continued fractions for $N = 33$, $a = 5$ ($r = 10$), $M = 2048$}
+The peaks are near $y \approx k\cdot\frac{2048}{10} = 204.8k$.
+\begin{steps}
+\item $k = 3$: measured $y = 614$. $\frac{614}{2048}$: $2048 = 3\cdot614 + 206$; $614 = 2\cdot206 + 202$; $206 = 1\cdot202 + 4$; $202 = 50\cdot4 + 2$; $4 = 2\cdot2$.
+      So $[0; 3, 2, 1, 50, 2]$ with convergents $\frac13, \frac27, \frac{3}{10}, \frac{152}{507}, \dots$ The last with denominator $< 33$ is $\frac{3}{10}$: $r = 10$, and
+      $5^{10} \equiv 1 \pmod{33}$ \checkmark.
+\item $k = 2$: measured $y = 410$. $\frac{410}{2048} = [0; 4, 1, 204]$, convergents $\frac14, \frac15, \frac{205}{1024}$: candidate $r' = 5$. But $5^5 \equiv 23 \not\equiv 1$:
+      rejected. Because $\gcd(2, 10) = 2$ the fraction $\frac{2}{10}$ reduced to $\frac15$.
+\item $k = 6$: $y = 1229$: $[0;1,1,1,1,409]$, convergents $1, \frac12, \frac23, \frac35$: again $r' = 5$ (divisor). lcm$(5, \dots)$ with a later
+      candidate $2$ would give $10$.
+\end{steps}
+\end{wexample}
+Two real phenomena: (1) outcomes far from a peak give garbage, rejected by checking $a^{r'} \equiv 1$;
+(2) when $\gcd(k, r) > 1$ (above: $k = 2, 6$ with $r = 10$) the fraction reduces and only a \textbf{divisor} $r/\gcd(k,r)$ appears. Fix: repeat
+and take the lcm of the candidates, or test small multiples. The fraction of good $k$ is $\varphi(r)/r$.
+
+\begin{wexample}{An exact case: $a = 2$, $N = 15$, $t = 8$}
+Order: $2, 4, 8, 1 \Rightarrow r = 4$, and $4 \mid 256$. Outcomes $\{0, 64, 128, 192\}$, each $\frac14$. Fractions: $0 \to$ no information;
+$64/256 = \frac14 \to 4$ \checkmark; $128/256 = \frac12 \to 2$ (divisor, $2^2 = 4 \not\equiv 1$, rejected); $192/256 = \frac34 \to 4$ \checkmark.
+\end{wexample}
+
+\subsection{Peak probability when $r \nmid M$}
+Count the terms in each branch: $M = qr + s$ ($0 \le s < r$): $s$ branches have $q + 1$ terms, $r - s$ have $q$.
+At an exact grid point $y$ with $ry/M$ an integer every phase is 1 and $P(y) = \frac{\sum_{x_0}K_{x_0}^2}{M^2}$.
+\emph{Example:} $r = 6$, $M = 64$: $64 = 10\cdot 6 + 4$: four branches with 11, two with 10. $y = 32$ ($6\cdot 32/64 = 3$):
+$P = \frac{4\cdot121 + 2\cdot100}{4096} = \frac{684}{4096} \approx 0.167 \approx \frac16$.
+
+%=====================================================================================================
+\section{Approximate QFT, semiclassical QFT and applications}
+\subsection{Approximate QFT}
+Drop every $CR_k$ with $k > m$. Kept gates: $\sum_{k=2}^{m}(n - k + 1)$; dropped: $\frac{n(n-1)}{2} - $ kept.
+\emph{Example:} $n = 12$, $m = 4$: kept $11 + 10 + 9 = 30$, total $66$, dropped $36$.
+\textbf{Error bound:} $\|CR_k - I\| = |e^{2\pi i/2^k} - 1| \le \frac{2\pi}{2^k}$; errors of a product of unitaries add, so the total error is at
+most $\sum_{k > m} n\frac{2\pi}{2^k} < \frac{2\pi n}{2^m}$. With $m = \log_2 n + c$ the error is $\le 2\pi/2^c$, independent of $n$.
+
+\subsection{Semiclassical QFT (measure as you go)}
+When the inverse QFT is immediately followed by measurement, measure each qubit as soon as its last gate is done.
+Because controlled-phase gates are symmetric, the already-measured qubit can be the control; a control that is a
+classical bit means ``apply $R_k^\dagger$ if the bit is 1''. \textbf{No two-qubit gates remain}; only measurements and
+classically controlled single-qubit rotations.
+
+\subsection{Where the QFT is used}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Algorithm} & \textbf{Role of the QFT}\\ \midrule
+Phase estimation & inverse QFT converts phases $e^{2\pi i 2^j\varphi}$ into the binary digits of $\varphi$\\
+Shor / order finding & phase estimation of $\ket{x}\mapsto\ket{ax \bmod N}$; continued fractions give $r$\\
+Draper adder & in the Fourier basis, adding $a$ is the phase ramp $\omega^{ay}$ (shift theorem): controlled rotations, then $\QFT^{-1}$\\
+HHL linear solver & phase estimation writes eigenvalues $\lambda$; an ancilla rotation $\propto 1/\lambda$ performs $A^{-1}$\\
+Hidden subgroup problems & QFT over the group reveals the subgroup's ``frequencies''\\
+\bottomrule
+\end{tabularx}
+
+%=====================================================================================================
+\section{Problem-solving strategies}
+\subsection{Strategy by question format}
+\begin{itemize}[itemsep=3pt]
+\item \textbf{Single-correct numerical:} compute fully, then sanity-check (probabilities in $[0,1]$, sum to 1; phases mod
+      $360^\circ$; Parseval). Many distractors are ``forgot normalisation'', ``amplitude instead of probability'', ``wrong sign
+      of exponent'', ``bit order reversed''.
+\item \textbf{Matching lists:} solve the easiest row first; often one row fixes the option. Eliminate options as you go.
+\item \textbf{Assertion--Reason:} decide A and R \emph{independently} first. Only if both are true ask: does R \emph{cause} A?
+      Watch for over-general reasons (``always distinct'', ``global phase'').
+\item \textbf{Statement I/II:} judge each statement alone; one counterexample kills a ``for every'' statement.
+\item \textbf{Paragraph:} the first question usually sets up a quantity reused in the second; write it down clearly.
+\end{itemize}
+
+\subsection{Fast checks that catch most mistakes}
+\begin{enumerate}[itemsep=2pt]
+\item Is the state normalised? Is the matrix unitary?
+\item For a QFT amplitude: $|{\rm amplitude}| = 1/\sqrt N$ for basis inputs.
+\item Compute one amplitude both from the definition and from the product formula / circuit.
+\item Is the period dividing $N$? If yes, exact peaks $\frac1r$; if no, leakage.
+\item Does $\gcd(k, r) > 1$? Then continued fractions give a divisor.
+\end{enumerate}
+
+\subsection{Map: assessment questions $\to$ sections of this chapter}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Questions} & \textbf{Where to learn it}\\ \midrule
+Q.1--Q.6, Q.12, Q.15, Q.17 & Section 1 (roots of unity, geometric series, products, peak shape, Gauss sums)\\
+Q.3, Q.14, Q.78 & Section 2 (binary fractions)\\
+Q.4, Q.5, Q.16, Q.18, Q.30, Q.31, Q.73 & Sections 3 and 10 (unitary matrices, determinants, eigenvalues)\\
+Q.11, Q.13, Q.19, Q.20, Q.53, Q.63, Q.72 & Section 4 (DFT, Parseval, shift theorem, leakage, NumPy)\\
+Q.7, Q.8, Q.68--Q.70, Q.79, Q.80 & Section 13 (orders, continued fractions, Shor)\\
+Q.9, Q.21--Q.24, Q.29, Q.32, Q.34, Q.37, Q.40 & Section 5 (states, measurement, phases, mixtures, memory)\\
+Q.10, Q.25--Q.28, Q.33, Q.35, Q.36, Q.38 & Section 6 (gates, kickback, entanglement)\\
+Q.39 & Section 12 (Hadamard test)\\
+Q.41--Q.43, Q.49, Q.50, Q.52, Q.54, Q.56 & Sections 7--8 (definition, product formula)\\
+Q.44--Q.47, Q.51, Q.55, Q.59, Q.60 & Section 9 (circuit, counts, inverse, gate-by-gate tracing)\\
+Q.48, Q.57, Q.58 & Sections 10--11 (algebra, limits of the QFT)\\
+Q.61, Q.62, Q.76 & Section 4 (periodic states)\\
+Q.64--Q.67 & Section 12 (phase estimation)\\
+Q.71, Q.74, Q.75, Q.77 & Section 14 (approximate / semiclassical QFT, applications)\\
+\bottomrule
+\end{tabularx}
+{\small (Section numbers: 1 roots of unity, 2 binary, 3 linear algebra, 4 DFT, 5 states, 6 gates, 7 QFT definition,
+8 product formula, 9 circuit, 10 algebraic properties, 11 limits, 12 phase estimation, 13 Shor, 14 approximate QFT.)}
+
+%=====================================================================================================
+\section{Practice problems}
+Try each before looking at the answers on the next page. They use the same ideas as the assessment but different
+numbers.
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item Compute $\sum_{k=0}^{5} e^{2\pi i\,3k/6}$ and $\sum_{k=0}^{5} e^{2\pi i\,6k/6}$.
+\item Find $e^{2\pi i\,x/2^3}$ for $x = 53 = 110101_2$.
+\item Is $\frac{1}{\sqrt2}\begin{psmallmatrix}1 & i\\ 1 & -i\end{psmallmatrix}$ unitary?
+\item Give $|\beta_0|^2$ for the DFT ($N = 4$) of $\alpha = \frac{1}{\sqrt6}(1, 1, 2, 0)$.
+\item $\ket\psi = \frac{1}{\sqrt6}(\ket{00} + 2\ket{01} + i\ket{11})$. Find $P(\text{qubit 1} = 0)$ and the state of qubit 2 afterwards.
+\item Is $\frac12(\ket{00} + i\ket{01} + i\ket{10} - \ket{11})$ entangled? If not, factor it.
+\item For $n = 3$ write $\QFT\ket{011}$ with the product formula and give the amplitude of $\ket{100}$.
+\item Number of controlled rotations, SWAPs and $R_4$ gates in the QFT on $n = 7$ qubits.
+\item Phase (degrees) of the amplitude of $\ket{y = 9}$ in $\QFT\ket{x = 3}$ for $n = 4$.
+\item $\QFT^2\ket{5}$ for $n = 3$.
+\item The state $\frac{1}{2}(\ket2 + \ket6 + \ket{10} + \ket{14})$ ($n = 4$) is Fourier transformed. Outcomes and probabilities?
+\item QPE with $t = 3$ and $\varphi = \frac38$: which outcome, with which probability?
+\item QPE with $t = 2$, $\varphi = \frac16$: $P(y = 1)$ exactly.
+\item Order of $4$ modulo $21$, and what does Shor's gcd step give?
+\item $N = 15$, $a = 4$, $t = 8$: possible outcomes $y$.
+\item Approximate QFT, $n = 16$, keep $k \le 5$: number of dropped controlled rotations.
+\end{enumerate}
+
+\newpage
+\subsection*{Answers to the practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $6 \nmid 3$: sum $0$ (it is $1 - 1 + 1 - 1 + 1 - 1$). $6 \mid 6$: sum $6$.
+\item $53/8 = 110.101_2$, fractional part $0.101_2 = \frac58$: $e^{5\pi i/4}$.
+\item Columns $\frac{1}{\sqrt2}(1,1)$ and $\frac{1}{\sqrt2}(i,-i)$: inner product $\frac12(i - i) = 0$, norms 1. Yes.
+\item $\beta_0 = \frac12\cdot\frac{4}{\sqrt6}$, $|\beta_0|^2 = \frac{4}{6} = \frac23$.
+\item Group $\{\ket{00},\ket{01}\}$: $P = \frac{1 + 4}{6} = \frac56$; qubit 2 becomes $\frac{\ket0 + 2\ket1}{\sqrt5}$.
+\item $c_{00}c_{11} = -1$, $c_{01}c_{10} = i\cdot i = -1$: product. $\frac12(\ket0 + i\ket1)(\ket0 + i\ket1)$.
+\item Phases $0.x_3 = 0.1 \to -1$; $0.x_2x_3 = 0.11 \to -i$; $0.011 = \frac38 \to e^{3\pi i/4}$:
+      $\frac{1}{\sqrt8}(\ket0 - \ket1)(\ket0 - i\ket1)(\ket0 + e^{3\pi i/4}\ket1)$. Amplitude of $\ket{100}$: $-\frac{1}{\sqrt8}$ (check: $\omega^{12} = \omega^4 = -1$).
+\item $21$, $3$, and $7 - 4 + 1 = 4$.
+\item $27 \bmod 16 = 11$: $360^\circ\cdot\frac{11}{16} = 247.5^\circ$.
+\item $\ket{-5 \bmod 8} = \ket3$.
+\item Period 4, $4 \mid 16$: $y \in \{0, 4, 8, 12\}$, each $\frac14$.
+\item $\frac38 = 0.011_2$ exactly: outcome $011$ with probability 1.
+\item $\delta = \frac16 - \frac14 = -\frac{1}{12}$: $P = \frac{\sin^2(\pi/3)}{16\sin^2(\pi/12)} = \frac{3/4}{16(2-\sqrt3)/4} = \frac{3(2+\sqrt3)}{16} = \frac{6 + 3\sqrt3}{16} \approx 0.70$.
+\item $4, 16, 1$: $r = 3$, odd --- the method fails for this $a$; choose another $a$.
+\item $4^2 = 16 \equiv 1$: $r = 2$; outcomes $\{0, 128\}$, each $\frac12$.
+\item Total $\frac{16\cdot15}{2} = 120$; kept $15 + 14 + 13 + 12 = 54$; dropped $66$.
+\end{enumerate}
+
+\subsection*{Summary of the chapter in ten lines}
+\begin{enumerate}[itemsep=1pt]
+\item $\sum_j\omega^{jk} = N$ if $N \mid k$, else $0$; whole turns vanish.
+\item $e^{2\pi i x/2^l}$ keeps only the last $l$ bits of $x$.
+\item Unitary $\Leftrightarrow$ orthonormal columns; $|\det| = 1$; $|\lambda| = 1$.
+\item Global phase is invisible; relative phase becomes probability after $H$: $P(0) = \cos^2(\phi/2)$.
+\item Kickback: $CU^m$ writes $e^{2\pi i m\varphi}$ on the control.
+\item $\QFT\ket x = \frac{1}{\sqrt N}\sum_y\omega^{xy}\ket y$ = product of $(\ket0 + e^{2\pi i\,0.x_{n-l+1}\dots x_n}\ket1)$.
+\item Circuit: $H$ + controlled $R_k$ + SWAPs; $\frac{n(n-1)}{2}$ rotations; invert by reversing and conjugating.
+\item $\QFT^2\ket x = \ket{-x}$, $\QFT^4 = I$, eigenvalues in $\{\pm1, \pm i\}$.
+\item Period $r \mid N$: $r$ peaks spaced $N/r$, each $\frac1r$; otherwise leakage.
+\item QPE: exact if $\varphi = b/2^t$, else $\ge 4/\pi^2$ for the closest estimate; Shor = QPE + continued fractions + gcd.
+\end{enumerate}
+\end{document}
