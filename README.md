@@ -39,6 +39,22 @@ report built only from real measurements.
   "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
+* [`presentations/QAOA_Lecture.pdf`](presentations/QAOA_Lecture.pdf) - a 58-slide lecture on the Quantum Approximate
+  Optimization Algorithm in the same style: optimization and Max-Cut, spins and the cost Hamiltonian, Pauli algebra and
+  gates, the QAOA circuit, the exact $p = 1$ analysis, sign conventions, a line-by-line walkthrough of `QAOA.ipynb`,
+  recorded and re-executed results, limits, noise and current research, exercises with answers. Source:
+  `presentations/qaoa_source/` (`python make_figures.py` recomputes every figure and number with CUDA-Q, then
+  `latexmk -pdf qaoa_lecture.tex`).
+* [`book/QAOA_Chapter.pdf`](book/QAOA_Chapter.pdf) - book chapter "QAOA" with worked examples, common traps, a map from
+  every assessment question to its section, and practice problems with answers. Source: `book/qaoa_chapter_source/`.
+* [`assessments/QAOA_Question_Paper.pdf`](assessments/QAOA_Question_Paper.pdf) and
+  [`assessments/QAOA_Answer_Book.pdf`](assessments/QAOA_Answer_Book.pdf) - an 80-question QAOA test in the QFT format
+  (A Mathematics and Graph Theory for QAOA, B Quantum Mechanics, C QAOA Basics, D Advanced QAOA and Implementation;
+  4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet). The Answer Book adds a
+  topic-wise map and, for every question, the concepts required, relevant formulae, a step-by-step explanation, why
+  each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
+  `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
+  `python generate_papers.py`.
 
 ## Structure of the notebooks
 
