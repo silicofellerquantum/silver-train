@@ -1,0 +1,631 @@
+% Chapter "QAOA" -- build with:  latexmk -pdf qaoa_chapter.tex
+% Companion of book/qft_chapter_source/qft_chapter.tex (same layout and box styles).
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[a4paper, top=22mm, bottom=22mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{braket}
+\usepackage{array, tabularx, booktabs}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{quantikz2, arrows.meta, calc}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+
+\usepackage{needspace}
+
+\definecolor{brand}{HTML}{1F4E79}
+\definecolor{okgreen}{HTML}{1B7F3B}
+\definecolor{warn}{HTML}{B5551B}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\allowdisplaybreaks
+
+\newtcolorbox{defn}[1]{enhanced, breakable, colback=brand!5, colframe=brand, fonttitle=\bfseries, title={Definition: #1}}
+\newtcolorbox{keyres}[1]{enhanced, breakable, colback=okgreen!5, colframe=okgreen!70!black, fonttitle=\bfseries, title={Key result: #1}}
+\newtcolorbox{trap}{enhanced, breakable, colback=warn!6, colframe=warn, fonttitle=\bfseries, title={Common trap}}
+\newtcolorbox{method}[1]{enhanced, breakable, colback=black!3, colframe=black!55, fonttitle=\bfseries, title={Method: #1}}
+\newtcolorbox{checklist}{enhanced, breakable, colback=white, colframe=black!35, fonttitle=\bfseries, title={Checklist}}
+
+\newcounter{wex}[chapter]
+\newtcolorbox{wexample}[1]{enhanced, breakable, colback=white, colframe=brand!60, coltitle=black, colbacktitle=brand!15,
+  fonttitle=\bfseries, title={\refstepcounter{wex}Worked example \thesection.\arabic{wex}: #1}}
+\newenvironment{steps}{\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=4.2em, itemsep=2pt]}{\end{enumerate}}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{black!70}Chapter: QAOA}
+\fancyhead[R]{\small\color{black!70}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+\newcommand{\bg}{\boldsymbol\gamma}
+\newcommand{\bb}{\boldsymbol\beta}
+
+\begin{document}
+\begin{titlepage}
+\centering
+{\color{brand}\rule{\linewidth}{1.5pt}}\\[10pt]
+{\Huge\bfseries\color{brand} QAOA}\\[8pt]
+{\LARGE The Quantum Approximate Optimization Algorithm}\\[6pt]
+{\large A step-by-step chapter: from graphs and cuts to a CUDA-Q implementation}\\[6pt]
+{\color{brand}\rule{\linewidth}{1.5pt}}
+\vspace{18mm}
+
+\begin{minipage}{0.86\linewidth}
+\large
+\textbf{What you will be able to do after this chapter}
+\begin{itemize}[itemsep=3pt]
+\item compute cuts, optimal cuts and random-split statistics of small graphs quickly and reliably;
+\item translate Max-Cut between bits, spins, QUBO polynomials and the cost Hamiltonian, without sign errors;
+\item work with Pauli operators, rotation gates and CNOTs, including conjugation rules;
+\item write down the QAOA state and circuit, count its gates and parameters, and read the notebook's code;
+\item derive the $p = 1$ expectation value and use symmetries, light cones and conventions correctly;
+\item reason about optimizers, gradients, shot noise, backends, memory, noise and the limits of QAOA;
+\item solve every type of question in the accompanying 80-question QAOA assessment.
+\end{itemize}
+\end{minipage}
+\vfill
+{\small Companion material in the same repository: \texttt{presentations/QAOA\_Lecture.pdf} (slides),
+\texttt{QAOA.ipynb} (CUDA-Q notebook) and \texttt{assessments/} (question paper and answer book).}
+\end{titlepage}
+
+\tableofcontents
+\setcounter{chapter}{0}
+\chapter*{QAOA --- The Quantum Approximate Optimization Algorithm}
+\addcontentsline{toc}{chapter}{QAOA --- The Quantum Approximate Optimization Algorithm}
+\markboth{QAOA}{QAOA}
+
+\section*{How to use this chapter}
+The chapter is built as a staircase. Sections~1--3 are the \emph{mathematics} (graphs, cuts, probability, the Ising
+form). Sections~4--5 are the \emph{quantum mechanics} (states, Pauli algebra, gates). Sections~6--9 are \emph{QAOA itself}
+(state, circuit, $p = 1$ analysis, conventions). Sections~10--13 are the \emph{advanced} material and the
+\emph{implementation} (depth, optimizers, the notebook, backends, noise). Section~14 collects strategies and a map from every
+assessment question to the section that teaches it; Section~15 has practice problems with answers.
+
+Each section has: the idea in words, the precise statement, a derivation, \textbf{worked examples} solved step by step,
+\textbf{common traps} (the wrong answers examiners like to offer) and a short checklist. Statements are marked as
+\emph{general theory}, \emph{the notebook's convention}, or \emph{illustrative assumptions}; ``previously recorded'' results are the
+outputs stored in \texttt{QAOA.ipynb}.
+
+\begin{defn}{Conventions used everywhere in this chapter}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item Graph $G = (V, E)$, nodes $0, \dots, n-1$, weights $w_{ij}$ (1 if unweighted), $W = \sum_{(i,j)\in E}w_{ij}$.
+\item A split is a bitstring $z = z_0z_1\dots z_{n-1}$, node 0 written first; $\bar z$ = all bits flipped; spin $s_i = (-1)^{z_i}$.
+\item $C(z) = \sum_{(i,j)} w_{ij}[z_i\neq z_j]$; \ \textbf{notebook:} $H_C = \sum_{(i,j)}\frac{w_{ij}}{2}Z_iZ_j$, $C = \frac W2 - H_C$, $H_M = \sum_iX_i$.
+\item $\ket{\bg,\bb} = e^{-i\beta_pH_M}e^{-i\gamma_pH_C}\cdots e^{-i\beta_1H_M}e^{-i\gamma_1H_C}\ket+^{\otimes n}$; $F_p = \braket{C}$; $r = F_p/C_{\max}$.
+\item $R_X(\theta) = e^{-i\theta X/2}$, $R_Z(\theta) = e^{-i\theta Z/2}$; two-qubit basis order $\ket{00}, \ket{01}, \ket{10}, \ket{11}$.
+\end{itemize}
+\end{defn}
+
+%=====================================================================================================
+\section{Graphs, cuts and Max-Cut}
+\subsection{Graphs}
+A graph is a set of nodes joined by edges. The \textbf{degree} $d_i$ of a node is its number of edges. Every edge has two ends,
+so
+\[ \sum_{i\in V} d_i = 2|E| \qquad\text{(handshake lemma)}, \]
+and therefore the number of odd-degree nodes is always even. A graph is \textbf{bipartite} if its nodes can be coloured with
+two colours so that every edge joins different colours; this is possible exactly when the graph has no \textbf{odd cycle}.
+
+\subsection{Cuts}
+\begin{defn}{Cut and Max-Cut}
+For a split $z$, the cut value is $C(z) = \sum_{(i,j)\in E} w_{ij}\,[z_i \neq z_j]$. Max-Cut asks for
+$C_{\max} = \max_z C(z)$ and an optimal $z$.
+\end{defn}
+Because flipping all bits swaps the two group labels, $C(\bar z) = C(z)$: the $2^n$ bitstrings describe only $2^{n-1}$ different
+partitions, and optimal bitstrings always come in complementary pairs.
+
+\begin{keyres}{when can every edge be cut?}
+$C_{\max} = |E|$ (unit weights) $\iff$ $G$ is bipartite $\iff$ $G$ has no odd cycle. Every odd cycle leaves at least one of its
+edges uncut. Standard values: $C_{\max}(C_n) = n$ for even $n$ and $n - 1$ for odd $n$; $C_{\max}(K_n) = \lfloor n/2\rfloor\lceil n/2\rceil$;
+$C_{\max}(K_{a,b}) = ab$; Petersen graph: $12$ of $15$.
+\end{keyres}
+
+\begin{wexample}{the house graph}
+Square $0{-}1{-}2{-}3{-}0$ plus node 4 joined to 0 and 1.
+\begin{steps}
+\item Bound: the triangle $0, 1, 4$ is odd, so $C \le 6 - 1 = 5$.
+\item Construct: $z_0z_1z_2z_3 = 0101$ cuts the 4 square edges; node 4 has one neighbour in each group, so exactly one roof edge is
+cut for either value of $z_4$. $C = 5$.
+\item Count: a 5-cut must cut all square edges (otherwise at most 4), so $z_0z_1z_2z_3 \in \{0101, 1010\}$ and $z_4$ is free:
+4 optimal bitstrings, 2 partitions.
+\end{steps}
+\end{wexample}
+
+\begin{trap}
+``A graph with an odd number of nodes cannot have all edges cut.'' False: a star with 7 nodes is bipartite. What matters is an
+odd \emph{cycle}. Equally, do not confuse \emph{bitstrings} (count $2^n$) with \emph{partitions} (count $2^{n-1}$).
+\end{trap}
+
+\subsection{Complexity and classical algorithms}
+Max-Cut is NP-hard: no polynomial-time exact algorithm is known. \emph{Minimum} cut, in contrast, is polynomial (max-flow/min-cut,
+Stoer--Wagner). The Goemans--Williamson algorithm (semidefinite relaxation plus random hyperplane rounding) guarantees
+$\mathbb E[C] \ge 0.878\,C_{\max}$ in polynomial time. Single-node-flip local search stops at a \emph{local} optimum; there each node $v$
+has at least half its edges cut (flipping $v$ changes the cut by $u_v - c_v \le 0$), so $C \ge |E|/2$ --- but the local optimum need
+not be global. The notebook uses brute force up to 22 nodes and local search with 200 restarts above.
+
+%=====================================================================================================
+\begin{wexample}{standard graph families}
+\begin{steps}
+\item $C_9$ (odd cycle): alternate colours round the cycle; the last edge closes an odd loop and stays uncut: $C_{\max} = 8$.
+\item $K_5$: with $k$ nodes on one side, $k(5 - k)$ edges are cut; $k = 2$ or $3$ gives $6$.
+\item $K_{3,3}$ is bipartite: all $9$ edges cut. Petersen graph (15 edges, twelve 5-cycles): $C_{\max} = 12$ (brute force over $2^{10}$ splits).
+\end{steps}
+\end{wexample}
+\begin{checklist}
+Odd cycle present? Bitstrings ($2^n$) or partitions ($2^{n-1}$)? Bound first, then construct a split that reaches the bound.
+\end{checklist}
+
+\section{Random splits and sampling statistics}
+\begin{keyres}{random-split baseline}
+If every $z_i$ is an independent fair bit, each edge is cut with probability $\frac12$, so
+\[ \mathbb E[C] = \frac W2, \qquad \mathrm{Var}(C) = \sum_{e}\frac{w_e^2}{4} \;(= |E|/4 \text{ for unit weights}). \]
+The variance formula uses that the edge indicators $z_i\oplus z_j$ are \emph{pairwise} independent, even for edges sharing a node.
+\end{keyres}
+Consequences: $C_{\max} \ge W/2$ for every graph, and random guessing already has approximation ratio $(W/2)/C_{\max}$.
+For the notebook's graph: $W/2 = 15$, $\sigma = \sqrt{7.5} = 2.74$, $C_{\max} = 25$ is $3.7\sigma$ above the mean, and only
+$4/2^{15} = 1.22\times10^{-4}$ of random splits are optimal.
+
+\subsection{Random graphs}
+In $G(n, q)$ each of the $\binom n2$ pairs is an edge with probability $q$: $|E| \sim \mathrm{Binomial}(\binom n2, q)$. For $n = 15$,
+$q = 0.3$: mean $31.5$, standard deviation $\sqrt{105\cdot0.21} = 4.70$. The seed-42 instance has 30 edges.
+
+\subsection{Shots}
+\begin{method}{estimates from shots}
+\begin{itemize}[itemsep=1pt]
+\item A $\pm1$ observable such as $Z_iZ_j$ has variance $1 - \mu^2 \le 1$: standard error $\le 1/\sqrt S$. A $0/1$ indicator has variance $\le\frac14$.
+\item A general observable with spread $\sigma$: standard error $\sigma/\sqrt S$.
+\item With success probability $P$ per shot: number of successes in $S$ shots is Binomial($S, P$), $\sigma = \sqrt{SP(1-P)}$;
+$P(\text{none in } k) = (1-P)^k$; shots for confidence $c$: $S \ge \ln(1-c)/\ln(1-P)$.
+\end{itemize}
+\end{method}
+\begin{wexample}{the recorded $P_{\text{opt}} = 0.06$}
+Expected optimal shots in 4000: $240$ (exactly what was recorded), $\sigma = \sqrt{4000\cdot0.06\cdot0.94} = 15.0$.
+$P(\text{none in } 10) = 0.94^{10} = 0.539$. For $99\,\%$ confidence: $S \ge \ln0.01/\ln0.94 = 74.4$, i.e.\ $75$ shots.
+\end{wexample}
+
+%=====================================================================================================
+\begin{wexample}{variance of a random cut}
+For a uniformly random split each edge indicator $X_e = z_i\oplus z_j$ is a fair bit, and two indicators are uncorrelated even when the edges share a
+node (given $z_j$, the bits $z_i$ and $z_k$ are independent). Hence $\mathrm{Var}(C) = |E|/4$. For the notebook's graph: $30/4 = 7.5$,
+$\sigma = 2.74$; the optimum $25$ lies $(25 - 15)/2.74 = 3.7\,\sigma$ above the mean.
+\end{wexample}
+\begin{checklist}
+Mean $W/2$, variance $|E|/4$ (unit weights); standard error $\sigma/\sqrt S$; ``none in $k$ shots'' $= (1-P)^k$.
+\end{checklist}
+
+\section{From bits to spins: QUBO and the cost Hamiltonian}
+\subsection{Two identities}
+\[ [a \neq b] = a + b - 2ab \quad(a, b \in \{0,1\}), \qquad [z_i\neq z_j] = \frac{1 - s_is_j}{2} \quad(s = (-1)^z). \]
+The first gives the QUBO form, e.g.\ for the path $0{-}1{-}2$: $C = z_0 + 2z_1 + z_2 - 2z_0z_1 - 2z_1z_2$ (the linear coefficient of
+$z_i$ is its weighted degree). The second gives the Ising form:
+\[ C(z) = \frac W2 - \sum_{(i,j)}\frac{w_{ij}}{2}s_is_j . \]
+\subsection{The cost Hamiltonian}
+$Z$ has eigenvalue $s_i$ on $\ket{z_i}$, so $Z_iZ_j\ket z = s_is_j\ket z$ and
+\begin{keyres}{cost Hamiltonian (notebook convention)}
+\[ H_C = \sum_{(i,j)\in E}\frac{w_{ij}}{2}Z_iZ_j, \qquad C = \frac W2\,I - H_C, \qquad E_0(H_C) = \frac W2 - C_{\max}. \]
+$H_C$ is diagonal; its ground states are the optimal splits. The code (\texttt{cost\_hamiltonian()}) builds exactly this, without
+the constant.
+\end{keyres}
+\begin{wexample}{QUBO to Ising}
+$f = 2x_0x_1 - x_0 - x_1$ with $x = (1 - s)/2$: $2x_0x_1 = \frac12(1 - s_0 - s_1 + s_0s_1)$, $-x_0 - x_1 = -1 + \frac12(s_0 + s_1)$; the
+linear terms cancel: $f = \frac12(s_0s_1 - 1) = -[x_0\neq x_1]$.
+\end{wexample}
+\begin{wexample}{the triangle is frustrated}
+$H_C = \frac12(Z_0Z_1 + Z_1Z_2 + Z_0Z_2)$: $+\frac32$ on $000, 111$ and $-\frac12$ on the other six strings. All three products cannot be
+$-1$ since their product is $s_0^2s_1^2s_2^2 = 1$. So $E_0 = -\frac12$ (six-fold) and $C_{\max} = 2$.
+\end{wexample}
+\begin{trap}
+Sign errors: large cuts are \emph{low} energy. $E_0 = W/2 - C_{\max}$, not $-C_{\max}$, and not $+(\dots)$.
+\end{trap}
+
+%=====================================================================================================
+\begin{wexample}{the cut polynomial of a path}
+Path $0{-}1{-}2$: $C = (z_0 + z_1 - 2z_0z_1) + (z_1 + z_2 - 2z_1z_2) = z_0 + 2z_1 + z_2 - 2z_0z_1 - 2z_1z_2$. Check $z = 010$: $0 + 2 + 0 = 2$ (both edges cut).
+The linear coefficient of $z_i$ is the degree of node $i$.
+\end{wexample}
+\begin{checklist}
+$[z_i\neq z_j] = \frac12(1 - s_is_j)$; $C = \frac W2 - H_C$; large cuts are \emph{low} energies; $E_0(H_C) = \frac W2 - C_{\max}$.
+\end{checklist}
+
+\section{Qubits, measurement and Pauli algebra}
+\subsection{States and measurement}
+$n$ qubits: $\ket\psi = \sum_z a_z\ket z$, $\sum|a_z|^2 = 1$; measuring returns $z$ with probability $|a_z|^2$. For a diagonal observable
+$\langle H\rangle = \sum_z|a_z|^2H(z)$; per edge $\langle C_{ij}\rangle = \frac12(1 - \langle Z_iZ_j\rangle) = P(\text{edge cut})$. For a product
+state $\langle Z_0Z_1\rangle = \langle Z_0\rangle\langle Z_1\rangle$ with $\langle Z\rangle = P(0) - P(1)$.
+
+Global phases are unobservable; complex conjugation of all amplitudes leaves all probabilities unchanged. A state vector needs
+$16\times2^n$ bytes in fp64 ($8\times2^n$ in fp32): 32 qubits fit on an 80 GB GPU in fp64, 33 in fp32.
+
+\subsection{Pauli algebra}
+$X^2 = Y^2 = Z^2 = I$; $XY = iZ$, $YZ = iX$, $ZX = iY$; reversing the order flips the sign. Pauli strings commute iff they
+anticommute at an even number of positions: $Z_0Z_1$ commutes with $X_0X_1$ but not with $X_0$, $X_1$ or $Y_0Z_1$. Tensor products
+multiply factor-wise: $(Z\otimes Z)(X\otimes X) = (ZX)\otimes(ZX) = -Y\otimes Y$.
+
+\begin{keyres}{exponential of a Pauli}
+If $P^2 = I$: $e^{-i\phi P} = \cos\phi\,I - i\sin\phi\,P$. Conjugation rotates by twice the angle:
+\[ e^{i\beta X}Ze^{-i\beta X} = \cos2\beta\,Z + \sin2\beta\,Y . \]
+\end{keyres}
+
+%=====================================================================================================
+\begin{wexample}{expected cut from amplitudes}
+One edge, $\ket\psi = \tfrac12\ket{00} + \tfrac{\sqrt3}{2}\ket{01}$: $P(00) = \frac14$, $P(01) = \frac34$, $\braket{Z_0Z_1} = \frac14 - \frac34 = -\frac12$, so
+$\braket C = \frac12(1 + \frac12) = \frac34$ --- simply the probability that the edge is cut.
+\end{wexample}
+\begin{wexample}{products of Pauli strings}
+$(Z\otimes Z)(X\otimes X) = (ZX)\otimes(ZX) = (iY)\otimes(iY) = -Y\otimes Y$; in the other order $(XZ)\otimes(XZ) = (-iY)\otimes(-iY) = -Y\otimes Y$:
+$Z\otimes Z$ and $X\otimes X$ commute (two anticommuting positions).
+\end{wexample}
+\begin{checklist}
+Probabilities are squared moduli; global phases are invisible; count anticommuting positions to decide commutation.
+\end{checklist}
+
+\section{Gates: rotations and CNOT}
+$R_X(\theta) = e^{-i\theta X/2}$, so $R_X(2\beta) = e^{-i\beta X}$ and $R_X(2\beta)\ket0 = \cos\beta\ket0 - i\sin\beta\ket1$ (bit flip with
+probability $\sin^2\beta$). $R_Z(\theta) = \operatorname{diag}(e^{-i\theta/2}, e^{i\theta/2})$ changes only phases; after a Hadamard,
+$P(0) = \cos^2(\theta/2)$ for $HR_Z(\theta)\ket+$.
+
+\begin{keyres}{CNOT conjugation and the $ZZ$ rotation}
+CNOT (control $i$, target $j$): $X_i \to X_iX_j$, $Z_j \to Z_iZ_j$, $Z_i$ and $X_j$ unchanged. Hence
+\[ \mathrm{CNOT}_{ij}\,R_Z^{(j)}(\theta)\,\mathrm{CNOT}_{ij} = e^{-i\theta Z_iZ_j/2} = \operatorname{diag}(e^{-i\theta/2}, e^{i\theta/2}, e^{i\theta/2}, e^{-i\theta/2}). \]
+\end{keyres}
+\begin{wexample}{entangling power of the cost gate}
+$e^{-i\gamma Z\otimes Z/2}\ket{++}$ has amplitudes $\frac12e^{\mp i\gamma/2}$; concurrence $2|c_{00}c_{11} - c_{01}c_{10}| = |\sin\gamma|$: maximal at
+$\gamma = \pi/2$, zero at $\gamma \in \pi\mathbb Z$.
+\end{wexample}
+
+%=====================================================================================================
+\begin{wexample}{a bit flip by the mixer}
+$R_X(2\beta)\ket0 = \cos\beta\ket0 - i\sin\beta\ket1$: for $\beta = \pi/8$ the bit flips with probability $\sin^2(\pi/8) = \frac{2 - \sqrt2}{4} = 0.146$.
+\end{wexample}
+\begin{wexample}{CNOT conjugation table}
+\begin{center}\small
+\begin{tabular}{cc}
+\toprule $P$ & $\mathrm{CNOT}_{0\to1}\,P\,\mathrm{CNOT}_{0\to1}$\\ \midrule
+$X\otimes I$ & $X\otimes X$\\ $I\otimes X$ & $I\otimes X$\\ $Z\otimes I$ & $Z\otimes I$\\ $I\otimes Z$ & $Z\otimes Z$\\ \bottomrule
+\end{tabular}
+\end{center}
+$X$ flows from control to target, $Z$ from target to control. The last row is the reason why CNOT--$R_Z$--CNOT is a $ZZ$ rotation.
+\end{wexample}
+\begin{checklist}
+Half-angle convention: $R_X(2\beta) = e^{-i\beta X}$, $R_Z(\gamma w) \to e^{-i\gamma\frac w2 ZZ}$ inside the CNOT pair.
+\end{checklist}
+
+\section{The QAOA state}
+\begin{defn}{depth-$p$ QAOA (notebook convention)}
+\[ \ket{\bg,\bb} = \prod_{l=p}^{1} e^{-i\beta_lH_M}e^{-i\gamma_lH_C}\,\ket+^{\otimes n}, \qquad F_p = \braket{\bg,\bb|C|\bg,\bb},\qquad r = F_p/C_{\max}. \]
+Layer 1 acts first. The notebook stores $\texttt{params} = [\gamma_1, \dots, \gamma_p, \beta_1, \dots, \beta_p]$ (blocked); the kernel reads
+\texttt{gamma = params[layer]}, \texttt{beta = params[layers + layer]}.
+\end{defn}
+\subsection{The ingredients}
+\begin{itemize}
+\item $\ket+^{\otimes n} = H^{\otimes n}\ket0^{\otimes n}$: uniform, $\langle C\rangle = W/2$. It is the eigenstate of $H_M$ with the \emph{largest}
+eigenvalue $+n$. If all $\gamma_l = 0$, the mixers only add global phases and $F_p = W/2$.
+\item $e^{-i\gamma H_C}$ is diagonal: $\ket z \mapsto e^{-i\gamma H_C(z)}\ket z$. All $Z_iZ_j$ commute, so it factorises exactly over the edges.
+It writes the cut value into the phase and changes no probability.
+\item $e^{-i\beta H_M} = \bigotimes_i R_X(2\beta)$: no entanglement; it makes neighbouring splits interfere. $[H_M, H_C] \neq 0$, so
+$e^{-i\beta H_M}e^{-i\gamma H_C} \neq e^{-i(\beta H_M + \gamma H_C)}$.
+\end{itemize}
+\subsection{Why it should work: the adiabatic picture}
+Slow evolution keeps a system in the same eigenstate position. Trotterising a slow interpolation gives alternating layers with
+special angles, so $F_p^* \to C_{\max}$ as $p\to\infty$; QAOA optimises the angles instead. Since $\ket+^{\otimes n}$ is the \emph{top} state of
+$+H_M$, the matching target is the top state of the final Hamiltonian; to reach the ground state of $H_C$ interpolate to $-H_C$, i.e.\
+choose $\gamma$ and $\beta$ of \textbf{opposite sign} in the notebook's convention.
+
+\begin{wexample}{the notebook's start point}
+The default ``ramp'' (\texttt{linspace(0.2, 0.6, p)} for $\gamma$, \texttt{linspace(0.6, 0.2, p)} for $\beta$) gives, for $p = 2$,
+$\bg = (0.2, 0.6)$, $\bb = (0.6, 0.2)$ --- both positive. An exact calculation (NumPy and CUDA-Q agree) gives $\langle C\rangle = 9.18 < 15$:
+worse than random. COBYLA recovers; the best angles found ($\bg \approx (0.367, 0.690)$, $\bb \approx (1.117, -0.275)$, and
+$1.117 \equiv 1.117 - \pi/2 = -0.454$ by the $\pi/2$ period) have opposite signs.
+\end{wexample}
+
+%=====================================================================================================
+\begin{wexample}{no cost phases, no progress}
+If every $\gamma_l = 0$, each mixer acts on its own eigenstate: $e^{-i\beta H_M}\ket+^{\otimes n} = e^{-i\beta n}\ket+^{\otimes n}$. The state stays uniform and $F_p = W/2$
+(15 for the notebook's graph) for every $\bb$.
+\end{wexample}
+\begin{wexample}{the period in $\beta$}
+$e^{-i\frac\pi2H_M} = (-iX)^{\otimes n} = (-i)^nX^{\otimes n}$ flips every bit. It commutes with $H_C$ and $H_M$, and $C(\bar z) = C(z)$, so shifting any $\beta_l$ by
+$\pi/2$ leaves $F_p$ unchanged: search $\beta$ only in an interval of length $\pi/2$.
+\end{wexample}
+\begin{checklist}
+$\ket+^{\otimes n}$ is the \emph{top} eigenstate of $+H_M$; cost layer = phases only; mixer = interference; $\gamma\beta < 0$ heads for large cuts.
+\end{checklist}
+
+\section{The circuit, gate counts and the code}
+\begin{center}
+\begin{quantikz}[row sep=0.3cm, column sep=0.3cm]
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \qw & \ctrl{1} & \gate{R_X(2\beta)} & \meter{}\\
+\lstick{$\ket{0}$} & \gate{H} & \targ{} & \gate{R_Z(\gamma w)} & \targ{} & \gate{R_X(2\beta)} & \meter{}
+\end{quantikz}
+\end{center}
+One edge, one layer. In general every layer has, per edge, CNOT--$R_Z(\gamma w)$--CNOT on (control $i$, target $j$) and then $R_X(2\beta)$ on
+every qubit.
+\begin{keyres}{counts}
+gates $= n + p(3|E| + n)$; CNOTs $= 2p|E|$; $R_Z$: $p|E|$; $R_X$: $pn$; parameters $2p$. Default $(15, 30, 2)$: 225 gates, 120 CNOTs
+(recorded: \texttt{h 15, cx 120, rz 60, rx 30}, depth 64).
+\end{keyres}
+\begin{trap}
+The factor 2 in \texttt{rx(2.0 * beta)} and the absence of $\frac12$ in \texttt{rz(gamma * w)} both come from the half-angle convention
+$e^{-i\theta P/2}$; they are not part of $H_M$ or $H_C$.
+\end{trap}
+
+\subsection{The objective and the optimizer in the notebook}
+The objective calls \texttt{cudaq.observe(kernels["state"], H\_C, \dots).expectation()}, records $\langle C\rangle = W/2 - \langle H_C\rangle$ and returns
+$\langle H_C\rangle$ to \texttt{scipy.optimize.minimize} (COBYLA, \texttt{maxiter = 80}, \texttt{rhobeg = 0.2}: the initial trust-region radius).
+Minimising $\langle H_C\rangle$ is maximising $\langle C\rangle$. The final \texttt{cudaq.sample} uses the \emph{best evaluated} angles
+(\texttt{argmax(history\_cut)}), not necessarily \texttt{opt.x}; every sample's cut is computed classically.
+
+%=====================================================================================================
+\begin{wexample}{gate counts and parameter layout}
+\begin{steps}
+\item $n = 20$, $|E| = 57$, $p = 3$: gates $20 + 3(171 + 20) = 593$, of which $2\cdot3\cdot57 = 342$ CNOTs.
+\item $p = 3$, \texttt{params = [a, b, c, d, e, f]}: layer 2 is \texttt{layer = 1}: $\gamma_2 = $ \texttt{params[1]} $= b$, $\beta_2 = $ \texttt{params[3 + 1]} $= e$.
+\item Ramp for $p = 5$: $\gamma = (0.2, 0.3, 0.4, 0.5, 0.6)$, $\beta = (0.6, 0.5, 0.4, 0.3, 0.2)$ (\texttt{linspace} includes both end points).
+\end{steps}
+\end{wexample}
+\begin{checklist}
+$n + p(3|E| + n)$ gates, $2p|E|$ CNOTs, $2p$ parameters; parameters are \emph{blocked} $[\bg, \bb]$; the best evaluated angles are sampled.
+\end{checklist}
+
+\section{Exact analysis at $p = 1$}
+\begin{keyres}{one edge}
+$\langle Z_0Z_1\rangle = \sin4\beta\,\sin\gamma$, \qquad $F_1 = \frac12(1 - \sin4\beta\sin\gamma)$.
+Maximum 1 at $(\frac\pi2, -\frac\pi8)$; at $(\frac\pi2, \frac\pi8)$ the edge is \emph{never} cut.
+\end{keyres}
+\textbf{Derivation.} Mixer: $Z_0Z_1 \to (cZ_0 + sY_0)(cZ_1 + sY_1)$ with $c = \cos2\beta$, $s = \sin2\beta$. Cost: $Z_0Z_1$, $Y_0Y_1$ unchanged;
+$Y_0Z_1 \to \cos\gamma\,Y_0Z_1 + \sin\gamma\,X_0$ and $Z_0Y_1 \to \cos\gamma\,Z_0Y_1 + \sin\gamma\,X_1$. In $\ket{++}$ only $X_0$, $X_1$ survive (value 1):
+$\langle Z_0Z_1\rangle = 2cs\sin\gamma$.
+
+\begin{keyres}{triangle-free graphs (Wang et al.\ 2018, translated to the notebook's sign)}
+\[ \langle Z_uZ_v\rangle = \tfrac12\sin4\beta\,\sin\gamma\,\big(\cos^{d_u-1}\gamma + \cos^{d_v-1}\gamma\big). \]
+Ring ($d = 2$): $\langle C_{uv}\rangle = \frac12 - \frac14\sin4\beta\sin2\gamma \le \frac34$: $r = \frac34$. 3-regular graphs: $r \ge 0.6924$ (Farhi et al.).
+\end{keyres}
+\begin{wexample}{the path $0{-}1{-}2$ at $(\frac\pi2, -\frac\pi8)$}
+Edge $(0,1)$: $d_0 = 1$, $d_1 = 2$: $\langle Z_0Z_1\rangle = \frac12(-1)(1)(1 + 0) = -\frac12$ (note $\cos^0\gamma = 1$). Both edges alike:
+$\langle C\rangle = 2\cdot\frac12(1 + \frac12) = 1.5$, $r = 0.75$. State vector: $P(010) = P(101) = 0.3125$, $P_{\text{opt}} = 0.625$.
+\end{wexample}
+\begin{wexample}{the triangle is solved at $p = 1$}
+$H_C$ has two eigenvalues, so the cost layer sets a single relative phase between ``bad'' ($000, 111$) and ``good'' strings. At
+$\gamma^* = \arctan(1/\sqrt2)$, $\beta^* = -\gamma^*/2$ one finds $F_1 = 2 = C_{\max}$ exactly (numerically verified).
+\end{wexample}
+
+%=====================================================================================================
+\begin{wexample}{the ring at $p = 1$}
+For a ring, $d_u = d_v = 2$: $\braket{Z_uZ_v} = \frac12\sin4\beta\sin\gamma\,(2\cos\gamma) = \frac12\sin4\beta\sin2\gamma$ and $\braket{C_{uv}} = \frac12 - \frac14\sin4\beta\sin2\gamma \le \frac34$, reached at
+$(\gamma, \beta) = (\frac\pi4, -\frac\pi8)$. Even ring $C_8$: $F_1 = 8\cdot\frac34 = 6$, $r = 6/8 = 0.75$.
+\end{wexample}
+\begin{wexample}{one edge, traced amplitude by amplitude}
+$\gamma = \frac\pi2$, $\beta = \frac\pi8$ (notebook convention): after $H\otimes H$ all amplitudes are $\frac12$; the cost layer gives $\ket{00}, \ket{11}$ the phase $e^{-i\pi/4}$ and
+$\ket{01}, \ket{10}$ the phase $e^{+i\pi/4}$ (relative phase $90^\circ$); after the mixer the probabilities are $(0.5, 0, 0, 0.5)$: the edge is \emph{never} cut. With
+$\beta = -\frac\pi8$ it is always cut.
+\end{wexample}
+\begin{checklist}
+Edge formula with degrees; $\cos^0\gamma = 1$ for leaves; $F_1 \le \frac34$ per edge on rings; check signs of $\gamma$ and $\beta$.
+\end{checklist}
+
+\section{Symmetries and sign conventions}
+\begin{itemize}
+\item $\beta_l \to \beta_l + \frac\pi2$ inserts $e^{-i\frac\pi2H_M} = (-i)^nX^{\otimes n}$ (flip all bits), which commutes with $H_C$ and $H_M$ and leaves
+$\ket+^{\otimes n}$ invariant: $F_p$ has period $\frac\pi2$ in each $\beta_l$.
+\item $(\bg, \bb) \to (-\bg, -\bb)$ gives the complex-conjugate state (real Hamiltonians and start state): same probabilities, same $F_p$.
+\item $H_C \to H_C + cI$ multiplies the state by a global phase.
+\end{itemize}
+\begin{trap}
+Textbooks often write $e^{-i\gamma C}$. Since $C = \frac W2 - H_C$, $e^{-i\gamma C} = e^{-i\gamma W/2}e^{+i\gamma H_C}$: the notebook's circuit with
+$\gamma \to -\gamma$. Literature optima such as $(\frac\pi2, \frac\pi8)$ become $(\frac\pi2, -\frac\pi8)$. The constant is harmless; the sign is not.
+\end{trap}
+
+%=====================================================================================================
+\begin{wexample}{translating literature angles}
+A paper using $e^{-i\gamma C}$ quotes the single-edge optimum $(\gamma, \beta) = (\frac\pi2, \frac\pi8)$. In the notebook's convention ($e^{-i\gamma H_C}$, $H_C = \frac W2 - C$) the same
+circuit needs $(-\frac\pi2, \frac\pi8)$ --- or, using $(\gamma, \beta) \to (-\gamma, -\beta)$ symmetry, $(\frac\pi2, -\frac\pi8)$. Using the literature angles unchanged gives $F_1 = 0$.
+\end{wexample}
+\begin{checklist}
+Constant shifts $\to$ global phase (harmless); sign of $H_C$ $\to$ sign of $\gamma$ (not harmless); $\beta$ period $\pi/2$; point symmetry $(\bg, \bb) \to -(\bg, \bb)$.
+\end{checklist}
+
+\section{Depth, light cones and limits}
+In $U^\dagger Z_uZ_vU$ every cost layer adds the neighbours of the current support; after $p$ layers only nodes within distance $p$
+matter (a ring edge: $2p + 2$ qubits). Consequences: fixed-$p$ QAOA is local; for rings with $n \ge 2p + 2$ the ratio is independent of
+$n$; numerically $r_p = \frac34, \frac56, \frac78$ for $p = 1, 2, 3$, following $\frac{2p+1}{2p+2}$. With optimal angles $F_{p+1}^* \ge F_p^*$
+(set the extra angles to 0) and $F_p^* \to C_{\max}$; the \emph{found} value can still drop with a finite budget.
+
+No quantum advantage for Max-Cut has been demonstrated. $p = 1$ guarantees $0.6924$ on 3-regular graphs, below
+Goemans--Williamson's $0.878$, and locality limits low-depth QAOA on some graph families (Bravyi et al.\ 2020).
+
+%=====================================================================================================
+\begin{wexample}{light cone on a ring}
+Edge $(u, v)$, $p = 3$: the support grows $\{u, v\} \to 4 \to 6 \to 8$ nodes (one on each side per cost layer). So $\braket{Z_uZ_v}$ involves $2p + 2 = 8$ qubits, and
+any ring with $n \ge 8$ gives the same per-edge value. Numerically the optimal ring ratios are $\frac34, \frac56, \frac78$ for $p = 1, 2, 3$.
+\end{wexample}
+\begin{checklist}
+Light cone $2p + 2$ on rings; $F_{p+1}^* \ge F_p^*$ but found values may not improve; $0.6924$ (QAOA $p = 1$, 3-regular) $< 0.878$ (Goemans--Williamson).
+\end{checklist}
+
+\section{Optimizers, gradients and noise in the objective}
+\begin{itemize}
+\item \textbf{Parameter shift.} For a single gate $e^{-i\theta P/2}$, $f(\theta) = a + b\cos\theta + c\sin\theta$ and
+$f' = \frac12[f(\theta + \frac\pi2) - f(\theta - \frac\pi2)]$ exactly. A shared angle ($\gamma_l$ appears in $|E|$ gates) needs the chain rule:
+$2|E|$ runs per $\gamma_l$, $2n$ per $\beta_l$; $2p(|E| + n) = 180$ for the default. A two-term shift of $\gamma_l$ as a whole is not exact.
+\item \textbf{Finite differences} (L-BFGS-B): $2p + 1$ runs per gradient, approximate.
+\item \textbf{COBYLA}: derivative-free trust region; local, no global guarantee. The recorded run stopped at its budget (80); a re-run
+stopped after 75 evaluations at the trust-region lower bound, with identical results to 4 decimals.
+\item \textbf{Shot noise}: standard error $\sigma_C/\sqrt S$ ($0.079$ for $\sigma_C = 2.5$, $S = 1000$). On hardware the notebook always uses shots.
+\item \textbf{Better starts}: INTERP interpolates depth-$p$ optima, e.g.\ $(0.4, 0.8) \to (0.4, 0.6, 0.8)$; parameter transfer reuses angles across
+graphs with similar local structure.
+\end{itemize}
+
+%=====================================================================================================
+\begin{wexample}{gradient and shot budgets}
+\begin{steps}
+\item Exact parameter shift, gate by gate, for $n = 15$, $|E| = 30$, $p = 2$: $2p(|E| + n) = 180$ runs per gradient; forward differences: $2p + 1 = 5$.
+\item Shot-based objective, spread $\sigma_C = 2.5$, $S = 1000$: standard error $2.5/\sqrt{1000} = 0.079$.
+\item INTERP from $\bg^{(2)} = (0.4, 0.8)$: $\bg^{(3)} = (0.4, \frac12(0.4 + 0.8), 0.8) = (0.4, 0.6, 0.8)$.
+\end{steps}
+\end{wexample}
+\begin{checklist}
+Count circuit runs per optimiser step; shot noise $\sigma/\sqrt S$; COBYLA's \texttt{rhobeg} is a trust-region radius, not a learning rate.
+\end{checklist}
+
+\section{Results of the notebook and how to read them}
+\begin{center}\small
+\begin{tabular}{lcc}
+\toprule & previously recorded & re-executed (WSL laptop)\\ \midrule
+COBYLA evaluations & 80 & 75\\
+best $\langle C\rangle$, $r$ & 20.5336, 0.8213 & 20.5336, 0.8213\\
+best sampled cut & 25 & 25\\
+$P(\text{optimal split})$ (4000 shots) & 0.0600 & 0.0600\\
+execution cell & 40.8 s & 183.9 s\\ \bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item $r$ is an average; $6\,\%$ of shots (not $82\,\%$) were optimal. The exact $P(C = 25)$ of the optimised state is $0.058$ (lecture script).
+\item Random guessing already gives $r = 0.6$; the normalised improvement is $\eta = (20.53 - 15)/(25 - 15) = 0.553$.
+\item The four most frequent bitstrings are the four optimal ones; complementary pairs have nearly equal counts ($68/67$, $56/49$).
+\item Timing: $40.01$ s $/80 \approx 0.50$ s per evaluation $\approx 2.2$ ms per gate (calibration predicted $2.18$ ms). Scaling to $n = 25$,
+$|E| = 90$: $\approx 2.8\times10^3\times$ longer on a CPU.
+\item Only the CPU state-vector path (\texttt{qpp-cpu}) has been executed; GPU, multi-GPU and hardware paths are implemented but unvalidated.
+\end{itemize}
+
+%=====================================================================================================
+\begin{wexample}{reading the recorded run}
+\begin{steps}
+\item $r = 20.5336/25 = 0.821$, but random guessing already gives $15/25 = 0.6$: $\eta = (20.5336 - 15)/(25 - 15) = 0.553$.
+\item Partition $\{\texttt{110010001001101}, \texttt{001101110110010}\}$: $(68 + 67)/4000 = 0.0338$; the other optimal partition $(56 + 49)/4000 = 0.0263$; total $0.06$.
+\item Time: $40.01\,\text{s}/80 = 0.50$ s per evaluation, $0.50/225 = 2.2$ ms per gate (the calibration predicted $2.18$ ms).
+\end{steps}
+\end{wexample}
+
+\section{Backends, memory, noise and variants}
+\textbf{Backends} (\texttt{resolve\_backend}): \texttt{cpu}+\texttt{statevector} $\to$ \texttt{qpp-cpu}; \texttt{cpu}+\texttt{density\_matrix} $\to$
+\texttt{density-matrix-cpu} ($16\times4^n$ B); \texttt{gpu}+\texttt{statevector} $\to$ \texttt{nvidia}; \texttt{gpu}+\texttt{mps} $\to$ \texttt{tensornet-mps};
+\texttt{cpu}+\texttt{mps} $\to$ error (needs a GPU); \texttt{multi-gpu} needs \texttt{mpiexec}, one rank per GPU; 36 qubits in fp64 ($1.1$ TB) need 16 GPUs of 80 GB.
+MPS is efficient when few edges cross each cut of the qubit order ($\chi \le 2^{p\,m_k}$): rings yes, dense graphs no.
+
+\textbf{Noise} (illustrative global depolarising model): $\langle C\rangle_{\text{noisy}} = F\langle C\rangle + (1 - F)\frac W2$, $F = (1-\varepsilon)^{N_{\text{CNOT}}}$;
+default with $\varepsilon = 0.5\,\%$: $F = 0.548$, $\langle C\rangle \approx 18.0$. Limited connectivity adds SWAPs (3 CNOTs each).
+
+\textbf{Variants}: warm-start QAOA (initial state from a relaxation), ADAPT-QAOA (mixers from an operator pool), Quantum Alternating
+Operator Ansatz (feasibility-preserving mixers such as XY), recursive QAOA (eliminate variables using $\langle Z_iZ_j\rangle$). None is in the notebook.
+
+%=====================================================================================================
+\begin{wexample}{memory and noise estimates}
+\begin{steps}
+\item 36 qubits in fp64: $16\times2^{36} = 1.10$ TB; with power-of-two slices of 80 GB GPUs: $2^4 = 16$ GPUs ($68.7$ GB each).
+\item Global depolarising model, $120$ CNOTs, $\varepsilon = 0.005$: $F = 0.995^{120} = 0.548$; $\braket C = 0.548\cdot20.53 + 0.452\cdot15 = 18.0$.
+\end{steps}
+\end{wexample}
+\begin{checklist}
+State memory $16\cdot2^n$ B (fp64); density matrix $16\cdot4^n$ B; MPS good for 1D-like graphs; noise pulls $\braket C$ towards $W/2$.
+\end{checklist}
+
+\section{Problem-solving strategies and question map}
+\subsection{Strategy by question format}
+\begin{itemize}[itemsep=3pt]
+\item \textbf{Single-correct numerical:} compute fully, then sanity-check: cuts between $0$ and $|E|$, $\braket C \ge W/2$ is \emph{not} guaranteed, probabilities
+      in $[0, 1]$. Typical distractors: ``bitstrings instead of partitions'', ``variance instead of standard deviation'', ``textbook sign of $\gamma$'',
+      ``one CNOT per edge''.
+\item \textbf{Matching lists:} fix the easiest row first; one row often decides the option.
+\item \textbf{Assertion--Reason:} judge A and R independently; then ask whether R \emph{causes} A (odd \emph{cycles}, not odd node counts).
+\item \textbf{Statement I/II:} one counterexample kills a ``for every'' statement; read code statements against the code.
+\item \textbf{Paragraph:} reuse the quantity computed in the first question.
+\end{itemize}
+\subsection{Fast checks that catch most mistakes}
+\begin{enumerate}[itemsep=2pt]
+\item Is $C(\bar z) = C(z)$ respected (counts come in pairs)?
+\item Does an odd cycle forbid the claimed cut?
+\item Which convention: $e^{-i\gamma H_C}$ or $e^{-i\gamma C}$?
+\item Average ($r$) or best sample ($P_{\text{opt}}$)?
+\item Recorded or re-executed numbers?
+\end{enumerate}
+
+\begin{method}{five habits}
+\begin{enumerate}[itemsep=1pt]
+\item \textbf{Convention first}: which sign ($e^{-i\gamma H_C}$ or $e^{-i\gamma C}$)? Which bit is written first? Blocked or interleaved parameters?
+\item \textbf{Bound, then construct}: odd cycles bound $C_{\max}$; a 2-colouring of a large bipartite part achieves it.
+\item \textbf{Count strings versus partitions}: factor 2 from $z \leftrightarrow \bar z$.
+\item \textbf{Edge by edge}: $\langle C\rangle = \sum_e\frac{w_e}{2}(1 - \langle Z_uZ_v\rangle)$.
+\item \textbf{Separate averages from best samples} and recorded from re-executed results.
+\end{enumerate}
+\end{method}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule Section & Assessment questions\\ \midrule
+1 Graphs, cuts & 1, 2, 6, 7, 8, 14, 17, 18, 20, 78\\
+2 Random splits, shots & 3, 5, 10, 12, 13, 18, 21, 65, 79\\
+3 QUBO, Ising, $H_C$ & 4, 9, 15, 19, 41, 53\\
+4 States, Pauli algebra & 22, 25, 26, 30, 31, 32, 35, 36, 38\\
+5 Gates, CNOT & 23, 24, 27, 28, 33, 39, 43, 44\\
+6 QAOA state, ramp & 11, 34, 42, 51, 52, 54, 55\\
+7 Circuit, code & 45, 46, 55, 58, 63, 64\\
+8 $p = 1$ analysis & 40, 47, 48, 56, 59, 60\\
+9 Symmetries, conventions & 29, 35, 37, 54\\
+10 Depth, light cones, limits & 49, 50, 61, 62, 77\\
+11 Optimizers, gradients & 16, 58, 63, 64, 65, 73, 74\\
+12 Notebook results & 13, 14, 21, 57, 75, 79, 80\\
+13 Backends, noise, variants & 32, 66, 67, 68, 69, 70, 71, 72, 76\\ \bottomrule
+\end{tabularx}
+\end{center}
+
+%=====================================================================================================
+\section{Practice problems}
+Try each before looking at the answers on the next page. They use the same ideas as the assessment but different numbers.
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $C_{\max}$ of $C_{11}$, $K_6$, $K_{2,5}$.
+\item Expected cut and its variance for a random split of $K_5$ (unit weights).
+\item Write the cut of the star with centre 0 and leaves $1, 2, 3$ as a QUBO polynomial.
+\item Smallest eigenvalue of $H_C$ for $K_4$ and its degeneracy (bitstrings).
+\item $\langle Z_0Z_1\rangle$ for the product state with $P(z_0 = 1) = 0.9$, $P(z_1 = 1) = 0.4$.
+\item Compute $e^{i\beta X}Ye^{-i\beta X}$.
+\item Gates and CNOTs of the notebook's circuit for $n = 10$, $|E| = 15$, $p = 4$.
+\item For \texttt{params = [a, b, c, d]} (so $p = 2$), give $\gamma_2$ and $\beta_1$.
+\item For one edge with weight $w = 3$ and $p = 1$: $F_1(\gamma, \beta)$ in the notebook's convention, and one optimal point.
+\item Ring $C_{12}$, $p = 1$, optimal angles: expected cut.
+\item The textbook optimum $(\gamma, \beta) = (0.6, 0.3)$ (convention $e^{-i\gamma C}$) in the notebook's convention.
+\item $P_{\text{opt}} = 0.01$: shots for $90\,\%$ confidence of at least one optimal sample.
+\item Exact parameter-shift runs for $n = 8$, $|E| = 12$, $p = 3$.
+\item Noise model: $N_{\text{CNOT}} = 200$, $\varepsilon = 0.002$, ideal $\langle C\rangle = 30$, $W/2 = 24$: noisy $\langle C\rangle$.
+\item Path $0{-}1{-}2{-}3$ at $p = 1$, $(\gamma, \beta) = (\frac\pi2, -\frac\pi8)$: $\braket{Z_uZ_v}$ for the end edge and for the middle edge, and $F_1$.
+\item Number of exact parameter-shift runs for one gradient when $n = 6$, $|E| = 9$, $p = 2$, and the forward-difference count.
+\end{enumerate}
+
+\newpage
+\subsection*{Answers to the practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $10$ (odd cycle), $3\cdot3 = 9$, $2\cdot5 = 10$ (bipartite).
+\item $W/2 = 5$; $\mathrm{Var} = 10/4 = 2.5$.
+\item $\sum_{k=1}^{3}(z_0 + z_k - 2z_0z_k) = 3z_0 + z_1 + z_2 + z_3 - 2z_0(z_1 + z_2 + z_3)$.
+\item $C_{\max}(K_4) = 4$, $W/2 = 3$: $E_0 = -1$; optimal strings have two nodes on each side: $\binom42 = 6$ bitstrings.
+\item $\langle Z_0\rangle = 0.1 - 0.9 = -0.8$, $\langle Z_1\rangle = 0.6 - 0.4 = 0.2$: $-0.16$.
+\item $e^{i\beta X}Y = Ye^{-i\beta X}$, so $Y(\cos2\beta - i\sin2\beta X) = \cos2\beta\,Y - i\sin2\beta\,YX = \cos2\beta\,Y - \sin2\beta\,Z$.
+\item $10 + 4(45 + 10) = 230$ gates; $2\cdot4\cdot15 = 120$ CNOTs.
+\item $\gamma_2 = b$, $\beta_1 = c$.
+\item Replace $\gamma$ by $w\gamma$: $F_1 = \frac w2(1 - \sin4\beta\sin3\gamma)$; e.g.\ $(\gamma, \beta) = (\frac\pi6, -\frac\pi8)$ gives $F_1 = 3$.
+\item $12\times\frac34 = 9$ ($C_{\max} = 12$).
+\item $(-0.6, 0.3)$, or equivalently $(0.6, -0.3)$.
+\item $S \ge \ln0.1/\ln0.99 = 229.1$: $230$ shots.
+\item $2\cdot3\cdot(12 + 8) = 120$.
+\item $F = 0.998^{200} = 0.670$; $0.670\cdot30 + 0.330\cdot24 = 28.0$.
+\item End edge ($d = 1, 2$): $\frac12(-1)(1)(1 + 0) = -\frac12$; middle edge ($d = 2, 2$): $\frac12(-1)(1)(0 + 0) = 0$. $F_1 = 2\cdot\frac34 + \frac12 = 2$ ($C_{\max} = 3$, $r = \frac23$).
+\item $2\cdot2\cdot(9 + 6) = 60$ parameter-shift runs; $2p + 1 = 5$ forward-difference runs.
+\end{enumerate}
+
+\subsection*{Summary of the chapter in ten lines}
+\begin{enumerate}[itemsep=1pt]
+\item $C(z) = \sum w[z_i\neq z_j]$; $C(\bar z) = C(z)$; $2^n$ strings, $2^{n-1}$ partitions.
+\item Odd cycles block a perfect cut; bipartite $\iff$ $C_{\max} = |E|$; Max-Cut NP-hard, min cut easy.
+\item Random split: mean $W/2$, variance $|E|/4$.
+\item $[z_i\neq z_j] = \frac12(1 - s_is_j)$ $\Rightarrow$ $C = \frac W2 - H_C$, $H_C = \sum\frac w2Z_iZ_j$.
+\item $e^{-i\phi P} = \cos\phi - i\sin\phi P$; conjugation rotates by $2\phi$; CNOT--$R_Z(\theta)$--CNOT $= e^{-i\theta ZZ/2}$.
+\item $\ket{\bg,\bb} = \prod e^{-i\beta_lH_M}e^{-i\gamma_lH_C}\ket+^{\otimes n}$; $n + p(3|E| + n)$ gates, $2p$ parameters.
+\item One edge: $F_1 = \frac12(1 - \sin4\beta\sin\gamma)$; rings $\frac34, \frac56, \frac78$; triangle exact at $p = 1$.
+\item Period $\frac\pi2$ in $\beta$; $(\bg,\bb) \to -(\bg,\bb)$ symmetric; textbook $\gamma$ = $-$notebook $\gamma$.
+\item Light cones make fixed-$p$ QAOA local; $F_p^* \to C_{\max}$ only as $p \to \infty$.
+\item Read results honestly: $r$ vs.\ best sample vs.\ $P_{\text{opt}}$; recorded vs.\ re-executed; no speed-up claimed.
+\end{enumerate}
+\end{document}

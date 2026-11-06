@@ -56,6 +56,57 @@ report built only from real measurements.
   Source: `assessments/grover_test_source/` - edit the questions in `bank_*.py`, check them with
   `python verify_answers.py --cudaq` (NumPy, a gate-by-gate simulation, and the notebook's own kernels in CUDA-Q) and
   rebuild both PDFs with `python generate_papers.py` (needs `latexmk`; also writes `answer_key.csv`).
+* [`presentations/QAOA_Lecture.pdf`](presentations/QAOA_Lecture.pdf) - a 58-slide lecture on the Quantum Approximate
+  Optimization Algorithm in the same style: optimization and Max-Cut, spins and the cost Hamiltonian, Pauli algebra and
+  gates, the QAOA circuit, the exact $p = 1$ analysis, sign conventions, a line-by-line walkthrough of `QAOA.ipynb`,
+  recorded and re-executed results, limits, noise and current research, exercises with answers. Source:
+  `presentations/qaoa_source/` (`python make_figures.py` recomputes every figure and number with CUDA-Q, then
+  `latexmk -pdf qaoa_lecture.tex`).
+* [`book/QAOA_Chapter.pdf`](book/QAOA_Chapter.pdf) - book chapter "QAOA" with worked examples, common traps, a map from
+  every assessment question to its section, and practice problems with answers. Source: `book/qaoa_chapter_source/`.
+* [`assessments/QAOA_Question_Paper.pdf`](assessments/QAOA_Question_Paper.pdf) and
+  [`assessments/QAOA_Answer_Book.pdf`](assessments/QAOA_Answer_Book.pdf) - an 80-question QAOA test in the QFT format
+  (A Mathematics and Graph Theory for QAOA, B Quantum Mechanics, C QAOA Basics, D Advanced QAOA and Implementation;
+  4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet). The Answer Book adds a
+  topic-wise map and, for every question, the concepts required, relevant formulae, a step-by-step explanation, why
+  each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
+  `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
+  `python generate_papers.py`.
+* [`presentations/VQE_Lecture.pdf`](presentations/VQE_Lecture.pdf) - a lecture on the Variational Quantum Eigensolver in the
+  same style: eigenvalue problems, molecular Hamiltonians and second quantisation, Jordan-Wigner / Bravyi-Kitaev, Pauli
+  decomposition and measurement, the variational principle, Hartree-Fock / UCC / hardware-efficient ansaetze, optimizers,
+  worked H$_2$ and Ising examples, a line-by-line walkthrough of `VQE.ipynb`, recorded and re-executed results, shots, noise
+  and current research. Source: `presentations/vqe_source/` (`python make_figures.py` recomputes every figure and number
+  with CUDA-Q; the H$_2$ dissociation curve also needs PySCF + OpenFermion).
+* [`book/VQE_Chapter.pdf`](book/VQE_Chapter.pdf) - book chapter "VQE" with worked examples, common traps, a question map and
+  practice problems. Source: `book/vqe_chapter_source/`.
+* [`assessments/VQE_Question_Paper.pdf`](assessments/VQE_Question_Paper.pdf) and
+  [`assessments/VQE_Answer_Book.pdf`](assessments/VQE_Answer_Book.pdf) - an 80-question VQE test in the QFT format
+  (A Mathematical and Quantum Chemistry Foundations, B Quantum Computing Foundations, C VQE Fundamentals, D Advanced VQE and
+  Implementation; +3 / 0 / -1, 3 hours, 240 marks, OMR sheet; Answer Book with key, topic map, quick-marking grid and full
+  explanations). Source: `assessments/vqe_test_source/` - check with `python verify_answers.py --chem --cudaq` (157 checks:
+  NumPy, PySCF/OpenFermion and the notebook's CUDA-Q kernels) and rebuild with `python generate_papers.py`.
+  Note: the notebook's H$_2$ coefficients correspond to a bond length of 0.740 Angstrom (verified with PySCF); the notebook
+  text, which previously said 0.7414 Angstrom, has been corrected.
+* [`presentations/HHL_Lecture.pdf`](presentations/HHL_Lecture.pdf) - a 55-slide lecture on the HHL quantum linear-systems
+  algorithm in the same style: linear systems, eigen-decomposition, Hermitian embedding, sparsity and the condition number,
+  amplitude encoding, $e^{iAt}$, controlled unitaries, the inverse QFT and phase estimation, eigenvalue inversion with the
+  constant $C$, the ancilla, uncomputation and post-selection, worked $2\times2$ and $4\times4$ examples, read-out and
+  complexity, a line-by-line walkthrough of `HHL.ipynb`, recorded / re-executed / variant results, noise, limitations and
+  newer algorithms, exercises with answers. Source: `presentations/hhl_source/` (`python make_figures.py` recomputes every
+  figure and number with the notebook's CUDA-Q circuit, then `latexmk -pdf hhl_lecture.tex`).
+* [`book/HHL_Chapter.pdf`](book/HHL_Chapter.pdf) - book chapter "HHL" (22 pages) with worked examples, common traps, a map
+  from every assessment question to its section, and 16 practice problems with answers. Source: `book/hhl_chapter_source/`
+  (uses the lecture's figures: run `presentations/hhl_source/make_figures.py` first).
+* [`assessments/HHL_Question_Paper.pdf`](assessments/HHL_Question_Paper.pdf) and
+  [`assessments/HHL_Answer_Book.pdf`](assessments/HHL_Answer_Book.pdf) - an 80-question HHL test in the QFT format
+  (A Linear Algebra and Mathematical Foundations, B Quantum Computing Foundations, C HHL Algorithm Fundamentals, D Advanced
+  HHL and Implementation; +3 / 0 / -1, 3 hours, 240 marks, OMR sheet; Answer Book with key, topic map, quick-marking grid and
+  full explanations). Source: `assessments/hhl_test_source/` - check with `python verify_answers.py --cudaq` (144 checks:
+  NumPy, a state-vector simulation of the circuit and the notebook's CUDA-Q builder) and rebuild with `python generate_papers.py`.
+  Note: with `NUM_CLOCK_QUBITS = 3` (default system, $\kappa = 4 > 3$ levels) the notebook's printed "ideal" success
+  probability (0.632716) uses $C = 4/3 > \lambda_{\min}$ and is not a probability; the circuit gives 0.3285. The notebook
+  itself is unchanged.
 
 ## Structure of the notebooks
 

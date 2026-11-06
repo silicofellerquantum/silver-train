@@ -26,3 +26,15 @@ assessments/grover_test_source/build/*
 !assessments/grover_test_source/build/*.tex
 book/grover_chapter_source/grover_chapter.pdf
 presentations/grover_source/grover_lecture.pdf
+presentations/qaoa_source/qaoa_lecture.pdf
+book/qaoa_chapter_source/qaoa_chapter.pdf
+assessments/qaoa_test_source/build/*
+!assessments/qaoa_test_source/build/*.tex
+presentations/vqe_source/vqe_lecture.pdf
+book/vqe_chapter_source/vqe_chapter.pdf
+assessments/vqe_test_source/build/*
+!assessments/vqe_test_source/build/*.tex
+presentations/hhl_source/hhl_lecture.pdf
+book/hhl_chapter_source/hhl_chapter.pdf
+assessments/hhl_test_source/build/*
+!assessments/hhl_test_source/build/*.tex
