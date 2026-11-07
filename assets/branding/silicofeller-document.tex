@@ -1,0 +1,11 @@
+% =====================================================================================
+% SILICO FELLER branding for the book chapters (and any other A4 document).
+% \input this file in the preamble of every book/<algorithm>_chapter_source/<algorithm>_chapter.tex.
+% The official logo (assets/branding/silico_feller_logo.png, unmodified, aspect ratio kept) is drawn as a
+% light watermark (~8 % opacity) in the page background of EVERY page, behind all text, equations and figures -
+% the same treatment as the question papers and answer books.
+% =====================================================================================
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{eso-pic}
+\AddToShipoutPictureBG{\AtPageCenter{\makebox(0,0){\tikz\node[opacity=0.08, inner sep=0pt]{\includegraphics[width=0.72\paperwidth]{../../assets/branding/silico_feller_logo.png}};}}}

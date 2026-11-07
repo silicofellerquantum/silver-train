@@ -175,6 +175,8 @@ unmodified, in [`assets/branding/silico_feller_logo.png`](assets/branding/silico
   appears at the top-right of every slide (including slides added later) and frame titles stop before the logo.
 * **Question papers and answer books** - every `generate_papers.py` adds the logo as a light (8 % opacity) watermark in the
   page background of every page. The papers have no OMR response sheet.
+* **Book chapters** - every `*_chapter.tex` inputs `assets/branding/silicofeller-document.tex`, which adds the same light
+  watermark to every page.
 
 ## Structure of the notebooks
 
