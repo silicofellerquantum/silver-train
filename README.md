@@ -109,6 +109,26 @@ report built only from real measurements.
   NumPy, PySCF/OpenFermion and the notebook's CUDA-Q kernels) and rebuild with `python generate_papers.py`.
   Note: the notebook's H$_2$ coefficients correspond to a bond length of 0.740 Angstrom (verified with PySCF); the notebook
   text, which previously said 0.7414 Angstrom, has been corrected.
+* [`presentations/Shor_Lecture.pdf`](presentations/Shor_Lecture.pdf) - a 72-slide lecture on Shor's algorithm in the same
+  style (16 modules for a two-hour session): number theory, classical factoring and RSA, the reduction of factoring to order
+  finding, quantum foundations, period finding, the QFT's role, phase estimation, continued fractions, fully worked
+  N = 15 and N = 21 examples, circuit architecture and resources, the CUDA-Q code of `Shor.ipynb`, recorded and re-executed
+  results, a gate-level N = 15 circuit under depolarizing noise, an approximate QFT, limitations, post-quantum cryptography
+  and research directions, with a syllabus coverage map. Every result is labelled *in repository*, *recorded run*, *theory
+  only* or *illustrative experiment*; nothing was run on a GPU or on quantum hardware. Source: `presentations/shor_source/`
+  (`python make_figures.py` re-executes the notebook's circuit builder with CUDA-Q on a CPU - about one minute - then
+  `latexmk -pdf shor_lecture.tex`).
+* [`book/Shor_Chapter.pdf`](book/Shor_Chapter.pdf) - book chapter "Shor's Algorithm" (17 pages) with worked examples, common
+  traps, checklists, a map from every assessment question to its section, and 16 practice problems with answers. Source:
+  `book/shor_chapter_source/` (build after `make_figures.py`, since it reads its tables).
+* [`assessments/Shor_Question_Paper.pdf`](assessments/Shor_Question_Paper.pdf) and
+  [`assessments/Shor_Answer_Book.pdf`](assessments/Shor_Answer_Book.pdf) - an 80-question test in the QFT format
+  (A Mathematical and Number Theory Foundations, B Quantum Computing Foundations, C Shor's Algorithm Fundamentals,
+  D Advanced Shor's Algorithm and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
+  response sheet), with key, topic map, quick-marking grid and full solutions explaining every option. Source:
+  `assessments/shor_test_source/` - check with `python verify_answers.py --cudaq` (exact integer/Fraction arithmetic,
+  checks against `build_shor.py` and the recorded outputs, and CUDA-Q runs of the notebook's builder for N = 15, 21, 33, 39)
+  and rebuild with `python generate_papers.py`.
 
 ## Structure of the notebooks
 
