@@ -236,7 +236,7 @@ kap = np.linspace(1, 40, 200)
 worst = 1 / kap ** 2
 uniform = [np.mean((1 / np.linspace(1, k, 4)) ** 2) for k in kap]
 fig, ax = plt.subplots(figsize=(4.6, 2.5))
-ax.loglog(kap, uniform, color=BLUE, label=r"$\lambda_j$ = 4 evenly spaced values in $[1,\kappa]$, all $|\beta_j|^2=\frac14$")
+ax.loglog(kap, uniform, color=BLUE, label=r"$\lambda_j$ = 4 evenly spaced values in $[1,\kappa]$, all $|\beta_j|^2=1/4$")
 ax.loglog(kap, worst, color=ORANGE, label=r"$|b\rangle$ = top eigenvector: $1/\kappa^2$")
 ax.plot([4], [0.355903], "*", color=INK, ms=9); ax.text(4.4, 0.36, "notebook default", fontsize=7)
 ax.set_xlabel(r"condition number $\kappa$ ($C=\lambda_{\min}=1$)"); ax.set_ylabel(r"$P_{\rm success}$"); ax.legend(fontsize=7)

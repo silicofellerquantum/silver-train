@@ -34,8 +34,8 @@ report built only from real measurements.
   [`assessments/QFT_Answer_Book.pdf`](assessments/QFT_Answer_Book.pdf) - an 80-question test
   on the QFT algorithm: 4 sections x 20 questions (A Mathematics for the QFT, B Quantum Mechanics, C QFT
   Basics, D Advanced QFT), every question single-correct with 4 options, marking +3 / 0 / -1, 3 hours, 240 marks.
-  Formats: single-correct MCQ, matching lists, Assertion-Reason, Statement I/II and paragraph questions. The paper
-  ends with an OMR-style response sheet; the Answer Book has the key, topic map, quick-marking grid and the
+  Formats: single-correct MCQ, matching lists, Assertion-Reason, Statement I/II and paragraph questions. Every page of the
+  paper carries the SILICO FELLER watermark; the Answer Book has the key, topic map, quick-marking grid and the
   "Answer Bank": for every question the concepts needed, a full step-by-step derivation, why each wrong option is wrong, and a takeaway (explanations in `bank_explain.py`). Source: `assessments/qft_test_source/` - edit the questions in `bank_*.py`,
   check them with `python verify_answers.py --cudaq` (recomputes every key with NumPy and CUDA-Q) and rebuild both
   PDFs with `python generate_papers.py` (also writes `answer_key.csv`).
@@ -67,7 +67,7 @@ report built only from real measurements.
 * [`assessments/QAOA_Question_Paper.pdf`](assessments/QAOA_Question_Paper.pdf) and
   [`assessments/QAOA_Answer_Book.pdf`](assessments/QAOA_Answer_Book.pdf) - an 80-question QAOA test in the QFT format
   (A Mathematics and Graph Theory for QAOA, B Quantum Mechanics, C QAOA Basics, D Advanced QAOA and Implementation;
-  4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet). The Answer Book adds a
+  4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks). The Answer Book adds a
   topic-wise map and, for every question, the concepts required, relevant formulae, a step-by-step explanation, why
   each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
   `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
@@ -85,8 +85,8 @@ report built only from real measurements.
 * [`assessments/QML_Question_Paper.pdf`](assessments/QML_Question_Paper.pdf) and
   [`assessments/QML_Answer_Book.pdf`](assessments/QML_Answer_Book.pdf) - an 80-question QML test in the QFT format
   (A Classical Machine Learning and Mathematics, B Quantum Computing Foundations, C Quantum Machine Learning
-  Fundamentals, D Advanced QML and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
-  response sheet). The Answer Book has the key, a topic-wise map, a quick-marking grid and, for every question, the
+  Fundamentals, D Advanced QML and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240
+  marks). The Answer Book has the key, a topic-wise map, a quick-marking grid and, for every question, the
   concepts required, relevant formulae, a step-by-step explanation, why each wrong option is wrong and a key takeaway.
   Source: `assessments/qml_test_source/` - check with `python verify_answers.py --cudaq` (280 checks, including a rebuild
   of the notebook's QCNN kernel in CUDA-Q, exact parameter-shift gradients and gate counts) and rebuild with
@@ -106,7 +106,7 @@ report built only from real measurements.
 * [`assessments/Noise_Question_Paper.pdf`](assessments/Noise_Question_Paper.pdf) and
   [`assessments/Noise_Answer_Book.pdf`](assessments/Noise_Answer_Book.pdf) - an 80-question test in the QFT format
   (A Mathematical and Quantum Foundations, B Quantum Noise Fundamentals, C Noise Models and Simulation, D Advanced Noise
-  Analysis and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet), with
+  Analysis and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks), with
   key, topic map, quick-marking grid and full solutions. Source: `assessments/noise_test_source/` - check with
   `python verify_answers.py --cudaq` (283 checks, including CUDA-Q's channel conventions, the notebook's own noise model and
   an exact re-run of the recorded sweep) and rebuild with `python generate_papers.py`.
@@ -121,7 +121,7 @@ report built only from real measurements.
 * [`assessments/VQE_Question_Paper.pdf`](assessments/VQE_Question_Paper.pdf) and
   [`assessments/VQE_Answer_Book.pdf`](assessments/VQE_Answer_Book.pdf) - an 80-question VQE test in the QFT format
   (A Mathematical and Quantum Chemistry Foundations, B Quantum Computing Foundations, C VQE Fundamentals, D Advanced VQE and
-  Implementation; +3 / 0 / -1, 3 hours, 240 marks, OMR sheet; Answer Book with key, topic map, quick-marking grid and full
+  Implementation; +3 / 0 / -1, 3 hours, 240 marks; Answer Book with key, topic map, quick-marking grid and full
   explanations). Source: `assessments/vqe_test_source/` - check with `python verify_answers.py --chem --cudaq` (157 checks:
   NumPy, PySCF/OpenFermion and the notebook's CUDA-Q kernels) and rebuild with `python generate_papers.py`.
   Note: the notebook's H$_2$ coefficients correspond to a bond length of 0.740 Angstrom (verified with PySCF); the notebook
@@ -139,7 +139,7 @@ report built only from real measurements.
 * [`assessments/HHL_Question_Paper.pdf`](assessments/HHL_Question_Paper.pdf) and
   [`assessments/HHL_Answer_Book.pdf`](assessments/HHL_Answer_Book.pdf) - an 80-question HHL test in the QFT format
   (A Linear Algebra and Mathematical Foundations, B Quantum Computing Foundations, C HHL Algorithm Fundamentals, D Advanced
-  HHL and Implementation; +3 / 0 / -1, 3 hours, 240 marks, OMR sheet; Answer Book with key, topic map, quick-marking grid and
+  HHL and Implementation; +3 / 0 / -1, 3 hours, 240 marks; Answer Book with key, topic map, quick-marking grid and
   full explanations). Source: `assessments/hhl_test_source/` - check with `python verify_answers.py --cudaq` (144 checks:
   NumPy, a state-vector simulation of the circuit and the notebook's CUDA-Q builder) and rebuild with `python generate_papers.py`.
   Note: with `NUM_CLOCK_QUBITS = 3` (default system, $\kappa = 4 > 3$ levels) the notebook's printed "ideal" success
@@ -160,11 +160,21 @@ report built only from real measurements.
 * [`assessments/Shor_Question_Paper.pdf`](assessments/Shor_Question_Paper.pdf) and
   [`assessments/Shor_Answer_Book.pdf`](assessments/Shor_Answer_Book.pdf) - an 80-question test in the QFT format
   (A Mathematical and Number Theory Foundations, B Quantum Computing Foundations, C Shor's Algorithm Fundamentals,
-  D Advanced Shor's Algorithm and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
-  response sheet), with key, topic map, quick-marking grid and full solutions explaining every option. Source:
+  D Advanced Shor's Algorithm and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240
+  marks), with key, topic map, quick-marking grid and full solutions explaining every option. Source:
   `assessments/shor_test_source/` - check with `python verify_answers.py --cudaq` (exact integer/Fraction arithmetic,
   checks against `build_shor.py` and the recorded outputs, and CUDA-Q runs of the notebook's builder for N = 15, 21, 33, 39)
   and rebuild with `python generate_papers.py`.
+
+## SILICO FELLER branding
+
+All teaching material belongs to the SILICO FELLER Quantum Computing Education Series. The official logo is stored once,
+unmodified, in [`assets/branding/silico_feller_logo.png`](assets/branding/silico_feller_logo.png):
+
+* **Lectures** - `assets/branding/silicofeller-beamer.tex` is the slide master: every `*_lecture.tex` inputs it, so the logo
+  appears at the top-right of every slide (including slides added later) and frame titles stop before the logo.
+* **Question papers and answer books** - every `generate_papers.py` adds the logo as a light (8 % opacity) watermark in the
+  page background of every page. The papers have no OMR response sheet.
 
 ## Structure of the notebooks
 

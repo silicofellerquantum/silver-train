@@ -13,6 +13,10 @@
 \usepackage{fancyhdr, lastpage}
 \usepackage{pifont}
 \usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+% SILICO FELLER watermark: official logo, centred, ~8 % opacity, behind all content, on every page
+\AddToShipoutPictureBG{\AtPageCenter{\makebox(0,0){\tikz\node[opacity=0.08, inner sep=0pt]{\includegraphics[width=0.72\paperwidth]{../../../assets/branding/silico_feller_logo.png}};}}}
 \usepackage[hidelinks]{hyperref}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \definecolor{brand}{HTML}{1F4E79}
@@ -33,7 +37,6 @@
   title={#1}, left=6pt, right=6pt, top=4pt, bottom=4pt}
 \newtcolorbox{solbox}[1]{enhanced, breakable, colback=okgreen!3, colframe=okgreen!60!black, fonttitle=\bfseries,
   title={Answer: (#1) \quad Detailed solution}, left=6pt, right=6pt, top=3pt, bottom=4pt, before skip=4pt, after skip=6pt}
-\newcommand{\bub}[1]{\tikz[baseline=-0.65ex]\node[draw, circle, inner sep=0pt, minimum size=4.6mm, font=\scriptsize]{#1};}
 \allowdisplaybreaks
 \setlength{\emergencystretch}{3em}
 
@@ -69,8 +72,7 @@ Each question has \textbf{four} options (A), (B), (C) and (D). \textbf{ONLY ONE}
 \end{infobox}
 
 \begin{infobox}{How to evaluate}
-For each section count $N_{\mathrm c}$ = number of correct answers and $N_{\mathrm w}$ = number of questions answered wrongly (or with more than
-one bubble darkened). Section marks $= 3N_{\mathrm c} - N_{\mathrm w}$; unanswered questions score $0$. The total is out of $240$.
+For each section count $N_{\mathrm c}$ = number of correct answers and $N_{\mathrm w}$ = number of questions answered wrongly (or with more than one option marked). Section marks $= 3N_{\mathrm c} - N_{\mathrm w}$; unanswered questions score $0$. The total is out of $240$.
 Every numerical answer was re-computed independently (exact integer and \texttt{Fraction} arithmetic, NumPy phase-estimation formulas, checks against the code and recorded outputs of \texttt{Shor.ipynb}, and CUDA-Q state-vector and density-matrix simulations with the notebook's circuit builder) by
 \texttt{verify\_answers.py} in the source folder.
 \end{infobox}
@@ -99,16 +101,16 @@ Every numerical answer was re-computed independently (exact integer and \texttt{
 \begin{tabularx}{\linewidth}{@{}r c L @{\hspace{1em}} r c L@{}}
 \toprule
 \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested} & \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested}\\ \midrule
-1 & \textbf{C} & Euclidean algorithm & 11 & \textbf{B} & Failure: $a^{r/2} \equiv -1$ \\
-2 & \textbf{D} & Modular inverse & 12 & \textbf{B} & Fermat's little theorem \\
-3 & \textbf{C} & Euler's totient $\varphi(pq)$ & 13 & \textbf{C} & Trial-division bound \\
-4 & \textbf{C} & Multiplicative order & 14 & \textbf{A} & Success bound $1 - 2^{-(k-1)}$ \\
-5 & \textbf{D} & Repeated squaring & 15 & \textbf{A} & $\varphi$, order, $\lambda$, inverse \\
-6 & \textbf{D} & Square-and-multiply cost & 16 & \textbf{B} & Classical factoring complexity \\
+1 & \textbf{A} & Euclidean algorithm & 11 & \textbf{A} & Failure: $a^{r/2} \equiv -1$ \\
+2 & \textbf{A} & Modular inverse & 12 & \textbf{C} & Fermat's little theorem \\
+3 & \textbf{D} & Euler's totient $\varphi(pq)$ & 13 & \textbf{D} & Trial-division bound \\
+4 & \textbf{B} & Multiplicative order & 14 & \textbf{C} & Success bound $1 - 2^{-(k-1)}$ \\
+5 & \textbf{B} & Repeated squaring & 15 & \textbf{C} & $\varphi$, order, $\lambda$, inverse \\
+6 & \textbf{D} & Square-and-multiply cost & 16 & \textbf{D} & Classical factoring complexity \\
 7 & \textbf{B} & Orders divide $\lambda(N)$ & 17 & \textbf{A} & Non-trivial square root $\Rightarrow$ factor \\
-8 & \textbf{B} & Lucky gcd probability & 18 & \textbf{C} & Euler's theorem vs order \\
-9 & \textbf{D} & Chinese remainder theorem & 19 & \textbf{A} & Order of $3$ mod $91$ \\
-10 & \textbf{D} & Square roots of $1$ mod $15$ & 20 & \textbf{A} & Factors of $91$ by gcd \\
+8 & \textbf{A} & Lucky gcd probability & 18 & \textbf{C} & Euler's theorem vs order \\
+9 & \textbf{D} & Chinese remainder theorem & 19 & \textbf{B} & Order of $3$ mod $91$ \\
+10 & \textbf{B} & Square roots of $1$ mod $15$ & 20 & \textbf{C} & Factors of $91$ by gcd \\
 \bottomrule
 \end{tabularx}}
 
@@ -118,16 +120,16 @@ Every numerical answer was re-computed independently (exact integer and \texttt{
 \begin{tabularx}{\linewidth}{@{}r c L @{\hspace{1em}} r c L@{}}
 \toprule
 \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested} & \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested}\\ \midrule
-21 & \textbf{B} & Uniform superposition & 31 & \textbf{A} & CNOT cost of a Fredkin gate \\
-22 & \textbf{B} & Measuring the work register & 32 & \textbf{D} & Implicit measurement \\
-23 & \textbf{D} & Unitarity of $U_a$ & 33 & \textbf{A} & Notebook qubit count \\
-24 & \textbf{D} & Eigenvalues of $U_a$ & 34 & \textbf{A} & State-vector memory \\
-25 & \textbf{C} & $\ket1$ as sum of eigenvectors & 35 & \textbf{C} & Roles of circuit blocks \\
-26 & \textbf{C} & Phase kickback & 36 & \textbf{D} & Phase gates $R_1(\lambda)$ \\
-27 & \textbf{B} & Phases of $U^{2^j}$ & 37 & \textbf{C} & Kickback and controls \\
-28 & \textbf{C} & Hadamard transform signs & 38 & \textbf{D} & Parallelism vs interference \\
-29 & \textbf{B} & Two-path interference & 39 & \textbf{A} & QPE: exact phase \\
-30 & \textbf{A} & Reversible modular exponentiation & 40 & \textbf{B} & QPE: inexact phase \\
+21 & \textbf{B} & Uniform superposition & 31 & \textbf{B} & CNOT cost of a Fredkin gate \\
+22 & \textbf{D} & Measuring the work register & 32 & \textbf{C} & Implicit measurement \\
+23 & \textbf{C} & Unitarity of $U_a$ & 33 & \textbf{A} & Notebook qubit count \\
+24 & \textbf{D} & Eigenvalues of $U_a$ & 34 & \textbf{D} & State-vector memory \\
+25 & \textbf{B} & $\ket1$ as sum of eigenvectors & 35 & \textbf{B} & Roles of circuit blocks \\
+26 & \textbf{D} & Phase kickback & 36 & \textbf{B} & Phase gates $R_1(\lambda)$ \\
+27 & \textbf{C} & Phases of $U^{2^j}$ & 37 & \textbf{C} & Kickback and controls \\
+28 & \textbf{A} & Hadamard transform signs & 38 & \textbf{D} & Parallelism vs interference \\
+29 & \textbf{C} & Two-path interference & 39 & \textbf{A} & QPE: exact phase \\
+30 & \textbf{A} & Reversible modular exponentiation & 40 & \textbf{A} & QPE: inexact phase \\
 \bottomrule
 \end{tabularx}}
 
@@ -137,16 +139,16 @@ Every numerical answer was re-computed independently (exact integer and \texttt{
 \begin{tabularx}{\linewidth}{@{}r c L @{\hspace{1em}} r c L@{}}
 \toprule
 \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested} & \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested}\\ \midrule
-41 & \textbf{A} & Steps of Shor's algorithm & 51 & \textbf{B} & Exact success, notebook default \\
-42 & \textbf{D} & $N = 15$, $a = 2$ & 52 & \textbf{A} & Probability $\varphi(r)/r$ \\
+41 & \textbf{D} & Steps of Shor's algorithm & 51 & \textbf{D} & Exact success, notebook default \\
+42 & \textbf{B} & $N = 15$, $a = 2$ & 52 & \textbf{A} & Probability $\varphi(r)/r$ \\
 43 & \textbf{C} & Failure for $a = N - 1$ & 53 & \textbf{A} & Role of the QFT in Shor \\
-44 & \textbf{C} & Odd order: retry & 54 & \textbf{B} & Skipped identity multipliers \\
-45 & \textbf{D} & Lucky base & 55 & \textbf{C} & Functions of \texttt{Shor.ipynb} \\
-46 & \textbf{D} & Register sizes for $N = 33$ & 56 & \textbf{C} & Outcomes to fractions \\
-47 & \textbf{B} & $N = 15$, $a = 11$ outcomes & 57 & \textbf{D} & Prime powers \\
-48 & \textbf{B} & Continued fractions, $N = 33$ & 58 & \textbf{B} & Uninformative outcomes \\
-49 & \textbf{D} & Multiples test & 59 & \textbf{C} & $N = 39$: order and factors \\
-50 & \textbf{A} & Condition $2^t \ge N^2$ & 60 & \textbf{A} & $N = 39$: continued fraction \\
+44 & \textbf{A} & Odd order: retry & 54 & \textbf{C} & Skipped identity multipliers \\
+45 & \textbf{C} & Lucky base & 55 & \textbf{B} & Functions of \texttt{Shor.ipynb} \\
+46 & \textbf{A} & Register sizes for $N = 33$ & 56 & \textbf{D} & Outcomes to fractions \\
+47 & \textbf{C} & $N = 15$, $a = 11$ outcomes & 57 & \textbf{D} & Prime powers \\
+48 & \textbf{D} & Continued fractions, $N = 33$ & 58 & \textbf{B} & Uninformative outcomes \\
+49 & \textbf{B} & Multiples test & 59 & \textbf{A} & $N = 39$: order and factors \\
+50 & \textbf{B} & Condition $2^t \ge N^2$ & 60 & \textbf{C} & $N = 39$: continued fraction \\
 \bottomrule
 \end{tabularx}}
 
@@ -156,16 +158,16 @@ Every numerical answer was re-computed independently (exact integer and \texttt{
 \begin{tabularx}{\linewidth}{@{}r c L @{\hspace{1em}} r c L@{}}
 \toprule
 \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested} & \textbf{Q.} & \textbf{Ans.} & \textbf{Topic tested}\\ \midrule
-61 & \textbf{D} & Beauregard qubit count & 71 & \textbf{B} & Memory for $N = 1023$ \\
+61 & \textbf{B} & Beauregard qubit count & 71 & \textbf{D} & Memory for $N = 1023$ \\
 62 & \textbf{C} & Published RSA-2048 estimates & 72 & \textbf{A} & Toy RSA \\
-63 & \textbf{D} & $O(n^3)$ scaling & 73 & \textbf{B} & Post-quantum standards \\
-64 & \textbf{C} & Semiclassical QFT & 74 & \textbf{A} & Impact on RSA, ECC, AES \\
-65 & \textbf{D} & Approximate QFT & 75 & \textbf{B} & Fault-tolerance terms \\
-66 & \textbf{C} & Controlled phases in the QFT & 76 & \textbf{A} & Qubit counts of constructions \\
-67 & \textbf{D} & Recorded gate counts & 77 & \textbf{B} & Harvest now, decrypt later \\
+63 & \textbf{C} & $O(n^3)$ scaling & 73 & \textbf{A} & Post-quantum standards \\
+64 & \textbf{D} & Semiclassical QFT & 74 & \textbf{C} & Impact on RSA, ECC, AES \\
+65 & \textbf{A} & Approximate QFT & 75 & \textbf{D} & Fault-tolerance terms \\
+66 & \textbf{B} & Controlled phases in the QFT & 76 & \textbf{C} & Qubit counts of constructions \\
+67 & \textbf{A} & Recorded gate counts & 77 & \textbf{B} & Harvest now, decrypt later \\
 68 & \textbf{D} & No hardware execution & 78 & \textbf{A} & Qubits and repeated squaring \\
-69 & \textbf{C} & CNOTs of a controlled multiplier & 79 & \textbf{A} & Error-free probability vs success \\
-70 & \textbf{B} & Random baseline & 80 & \textbf{C} & Interpreting noisy results \\
+69 & \textbf{C} & CNOTs of a controlled multiplier & 79 & \textbf{B} & Error-free probability vs success \\
+70 & \textbf{B} & Random baseline & 80 & \textbf{D} & Interpreting noisy results \\
 \bottomrule
 \end{tabularx}}
 
@@ -196,21 +198,21 @@ RSA, ECC and post-quantum cryptography & 72, 73, 74, 77 \\
 \subsection*{Quick-marking grid}
 \begin{center}\renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}\hline
-1\,\textbf{C} & 2\,\textbf{D} & 3\,\textbf{C} & 4\,\textbf{C} & 5\,\textbf{D} & 6\,\textbf{D} & 7\,\textbf{B} & 8\,\textbf{B} & 9\,\textbf{D} & 10\,\textbf{D} \\
+1\,\textbf{A} & 2\,\textbf{A} & 3\,\textbf{D} & 4\,\textbf{B} & 5\,\textbf{B} & 6\,\textbf{D} & 7\,\textbf{B} & 8\,\textbf{A} & 9\,\textbf{D} & 10\,\textbf{B} \\
 \hline
-11\,\textbf{B} & 12\,\textbf{B} & 13\,\textbf{C} & 14\,\textbf{A} & 15\,\textbf{A} & 16\,\textbf{B} & 17\,\textbf{A} & 18\,\textbf{C} & 19\,\textbf{A} & 20\,\textbf{A} \\
+11\,\textbf{A} & 12\,\textbf{C} & 13\,\textbf{D} & 14\,\textbf{C} & 15\,\textbf{C} & 16\,\textbf{D} & 17\,\textbf{A} & 18\,\textbf{C} & 19\,\textbf{B} & 20\,\textbf{C} \\
 \hline
-21\,\textbf{B} & 22\,\textbf{B} & 23\,\textbf{D} & 24\,\textbf{D} & 25\,\textbf{C} & 26\,\textbf{C} & 27\,\textbf{B} & 28\,\textbf{C} & 29\,\textbf{B} & 30\,\textbf{A} \\
+21\,\textbf{B} & 22\,\textbf{D} & 23\,\textbf{C} & 24\,\textbf{D} & 25\,\textbf{B} & 26\,\textbf{D} & 27\,\textbf{C} & 28\,\textbf{A} & 29\,\textbf{C} & 30\,\textbf{A} \\
 \hline
-31\,\textbf{A} & 32\,\textbf{D} & 33\,\textbf{A} & 34\,\textbf{A} & 35\,\textbf{C} & 36\,\textbf{D} & 37\,\textbf{C} & 38\,\textbf{D} & 39\,\textbf{A} & 40\,\textbf{B} \\
+31\,\textbf{B} & 32\,\textbf{C} & 33\,\textbf{A} & 34\,\textbf{D} & 35\,\textbf{B} & 36\,\textbf{B} & 37\,\textbf{C} & 38\,\textbf{D} & 39\,\textbf{A} & 40\,\textbf{A} \\
 \hline
-41\,\textbf{A} & 42\,\textbf{D} & 43\,\textbf{C} & 44\,\textbf{C} & 45\,\textbf{D} & 46\,\textbf{D} & 47\,\textbf{B} & 48\,\textbf{B} & 49\,\textbf{D} & 50\,\textbf{A} \\
+41\,\textbf{D} & 42\,\textbf{B} & 43\,\textbf{C} & 44\,\textbf{A} & 45\,\textbf{C} & 46\,\textbf{A} & 47\,\textbf{C} & 48\,\textbf{D} & 49\,\textbf{B} & 50\,\textbf{B} \\
 \hline
-51\,\textbf{B} & 52\,\textbf{A} & 53\,\textbf{A} & 54\,\textbf{B} & 55\,\textbf{C} & 56\,\textbf{C} & 57\,\textbf{D} & 58\,\textbf{B} & 59\,\textbf{C} & 60\,\textbf{A} \\
+51\,\textbf{D} & 52\,\textbf{A} & 53\,\textbf{A} & 54\,\textbf{C} & 55\,\textbf{B} & 56\,\textbf{D} & 57\,\textbf{D} & 58\,\textbf{B} & 59\,\textbf{A} & 60\,\textbf{C} \\
 \hline
-61\,\textbf{D} & 62\,\textbf{C} & 63\,\textbf{D} & 64\,\textbf{C} & 65\,\textbf{D} & 66\,\textbf{C} & 67\,\textbf{D} & 68\,\textbf{D} & 69\,\textbf{C} & 70\,\textbf{B} \\
+61\,\textbf{B} & 62\,\textbf{C} & 63\,\textbf{C} & 64\,\textbf{D} & 65\,\textbf{A} & 66\,\textbf{B} & 67\,\textbf{A} & 68\,\textbf{D} & 69\,\textbf{C} & 70\,\textbf{B} \\
 \hline
-71\,\textbf{B} & 72\,\textbf{A} & 73\,\textbf{B} & 74\,\textbf{A} & 75\,\textbf{B} & 76\,\textbf{A} & 77\,\textbf{B} & 78\,\textbf{A} & 79\,\textbf{A} & 80\,\textbf{C} \\
+71\,\textbf{D} & 72\,\textbf{A} & 73\,\textbf{A} & 74\,\textbf{C} & 75\,\textbf{D} & 76\,\textbf{C} & 77\,\textbf{B} & 78\,\textbf{A} & 79\,\textbf{B} & 80\,\textbf{D} \\
 \hline\end{tabular}\end{center}
 \newpage
 \section*{Answer Bank --- questions with detailed solutions}\label{bank}
@@ -222,11 +224,11 @@ RSA, ECC and post-quantum cryptography & 72, 73, 74, 77 \\
 \qmeta{Single-correct MCQ}{Euclidean algorithm}
 Using the Euclidean algorithm, $\gcd(1071, 462)$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$42$ & \optlabel{B}\,$7$ & \correctlabel{C}\,$21$ & \optlabel{D}\,$147$
+\correctlabel{A}\,$21$ & \optlabel{B}\,$7$ & \optlabel{C}\,$147$ & \optlabel{D}\,$42$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $21$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $21$
 
 \textbf{\color{brand}Concepts required.} The Euclidean algorithm replaces $(a, b)$ by $(b, a \bmod b)$ until the remainder is $0$; the last non-zero remainder is the $\gcd$.
 
@@ -238,9 +240,9 @@ which is why the gcd steps of Shor's algorithm are classically cheap.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $42$ does not divide $1071$ (odd), so it cannot be a common divisor at all.
 \item[\textbf{(B)}] $7$ divides both numbers, but so does $21 = 3\cdot7$; $7$ is a common divisor, not the greatest one.
-\item[\textbf{(D)}] $147$ is the first remainder of the algorithm, not its last non-zero remainder; $147 \nmid 462$.
+\item[\textbf{(C)}] $147$ is the first remainder of the algorithm, not its last non-zero remainder; $147 \nmid 462$.
+\item[\textbf{(D)}] $42$ does not divide $1071$ (odd), so it cannot be a common divisor at all.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The final $\gcd$ step of Shor's algorithm is this fast classical algorithm: $O(\log N)$ division steps.
 \end{solbox}
@@ -251,11 +253,11 @@ which is why the gcd steps of Shor's algorithm are classically cheap.
 \qmeta{Single-correct MCQ}{Modular inverse}
 The multiplicative inverse of $3$ modulo $20$ (the $b$ with $3b \equiv 1 \pmod{20}$, $0 < b < 20$) is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$3$ & \optlabel{B}\,$13$ & \optlabel{C}\,$17$ & \correctlabel{D}\,$7$
+\correctlabel{A}\,$7$ & \optlabel{B}\,$13$ & \optlabel{C}\,$17$ & \optlabel{D}\,$3$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $7$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $7$
 
 \textbf{\color{brand}Concepts required.} An inverse modulo $m$ exists iff $\gcd(b, m) = 1$; it is found by the extended Euclidean algorithm or by testing.
 
@@ -266,9 +268,9 @@ $b = 7$. The inverse exists because $\gcd(3, 20) = 1$; the same condition $\gcd(
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $3$ is the number itself; $3\cdot3 = 9 \not\equiv 1 \pmod{20}$.
 \item[\textbf{(B)}] $3\cdot13 = 39 \equiv 19 \equiv -1 \pmod{20}$: $13$ is the inverse of $-3$, not of $3$.
 \item[\textbf{(C)}] $3\cdot17 = 51 \equiv 11 \pmod{20}$, which is not $1$.
+\item[\textbf{(D)}] $3$ is the number itself; $3\cdot3 = 9 \not\equiv 1 \pmod{20}$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Invertibility of $a$ modulo $N$ is exactly what makes the multiplier $U_a$ a permutation (unitary).
 \end{solbox}
@@ -279,11 +281,11 @@ $b = 7$. The inverse exists because $\gcd(3, 20) = 1$; the same condition $\gcd(
 \qmeta{Single-correct MCQ}{Euler's totient $\varphi(pq)$}
 Euler's totient $\varphi(91)$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$84$ & \optlabel{B}\,$78$ & \correctlabel{C}\,$72$ & \optlabel{D}\,$90$
+\optlabel{A}\,$84$ & \optlabel{B}\,$90$ & \optlabel{C}\,$78$ & \correctlabel{D}\,$72$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $72$
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $72$
 
 \textbf{\color{brand}Concepts required.} Euler's totient counts the residues coprime to $N$; it is multiplicative for coprime factors.
 
@@ -295,8 +297,8 @@ $90 = N - 1$ would hold only for a prime $N$.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $84 = 91 - 7$ removes only the multiples of $13$ ($7$ of them) and forgets the multiples of $7$.
-\item[\textbf{(B)}] $78 = 91 - 13$ removes only the multiples of $7$ and forgets the multiples of $13$.
-\item[\textbf{(D)}] $90 = 91 - 1$ would be $\varphi$ of a prime; $91 = 7\cdot13$ is composite.
+\item[\textbf{(B)}] $90 = 91 - 1$ would be $\varphi$ of a prime; $91 = 7\cdot13$ is composite.
+\item[\textbf{(C)}] $78 = 91 - 13$ removes only the multiples of $7$ and forgets the multiples of $13$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Knowing $\varphi(N)$ is equivalent to knowing the factors of an RSA modulus.
 \end{solbox}
@@ -307,11 +309,11 @@ $90 = N - 1$ would hold only for a prime $N$.
 \qmeta{Single-correct MCQ}{Multiplicative order}
 The multiplicative order of $2$ modulo $11$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$11$ & \optlabel{B}\,$2$ & \correctlabel{C}\,$10$ & \optlabel{D}\,$5$
+\optlabel{A}\,$11$ & \correctlabel{B}\,$10$ & \optlabel{C}\,$2$ & \optlabel{D}\,$5$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $10$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $10$
 
 \textbf{\color{brand}Concepts required.} The order is the least $r > 0$ with $a^r \equiv 1$; it divides $\varphi(N)$ (Lagrange).
 
@@ -323,7 +325,7 @@ candidates are $1, 2, 5, 10$: $2^2 = 4$, $2^5 = 32 \equiv 10 \equiv -1$, so the 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $11$ is the modulus; orders modulo a prime $p$ divide $p - 1 = 10$, so $11$ is impossible.
-\item[\textbf{(B)}] $2^2 = 4 \ne 1$; $2$ is the base, not its order.
+\item[\textbf{(C)}] $2^2 = 4 \ne 1$; $2$ is the base, not its order.
 \item[\textbf{(D)}] $2^5 = 32 \equiv 10 \equiv -1 \pmod{11}$, not $1$; $5$ divides $10$ but is not the order.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Order finding is the hard problem; for tiny $N$ we can list powers, for RSA sizes we cannot.
@@ -335,11 +337,11 @@ candidates are $1, 2, 5, 10$: $2^2 = 4$, $2^5 = 32 \equiv 10 \equiv -1$, so the 
 \qmeta{Single-correct MCQ}{Repeated squaring}
 Using repeated squaring, $3^{13} \bmod 17$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$5$ & \optlabel{B}\,$3$ & \optlabel{C}\,$16$ & \correctlabel{D}\,$12$
+\optlabel{A}\,$5$ & \correctlabel{B}\,$12$ & \optlabel{C}\,$3$ & \optlabel{D}\,$16$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $12$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $12$
 
 \textbf{\color{brand}Concepts required.} Repeated squaring computes $a^{2^k}$ by squaring and multiplies the powers selected by the binary digits of the exponent.
 
@@ -352,8 +354,8 @@ since $10\cdot12 = 120 = 7\cdot17 + 1$.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $5 \equiv 3^5 \pmod{17}$ ($243 = 14\cdot17 + 5$); it uses the wrong exponent.
-\item[\textbf{(B)}] $3 = 3^1$ is the starting value; it would require $3^{12} \equiv 1$, but the order of $3$ modulo $17$ is $16$.
-\item[\textbf{(C)}] $16 \equiv 3^8$ is only one of the three factors needed for $13 = 8 + 4 + 1$.
+\item[\textbf{(C)}] $3 = 3^1$ is the starting value; it would require $3^{12} \equiv 1$, but the order of $3$ modulo $17$ is $16$.
+\item[\textbf{(D)}] $16 \equiv 3^8$ is only one of the three factors needed for $13 = 8 + 4 + 1$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Repeated squaring is the classical model for the controlled-$U^{2^j}$ structure of the quantum circuit.
 \end{solbox}
@@ -365,7 +367,7 @@ since $10\cdot12 = 120 = 7\cdot17 + 1$.
 Square-and-multiply computes $a^{1000} \bmod N$ from the binary expansion $1000 = 1111101000_2$. The number of modular multiplications
 (squarings plus extra multiplications) is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$10$ & \optlabel{B}\,$999$ & \optlabel{C}\,$16$ & \correctlabel{D}\,$14$
+\optlabel{A}\,$10$ & \optlabel{B}\,$16$ & \optlabel{C}\,$999$ & \correctlabel{D}\,$14$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{D}
@@ -382,8 +384,8 @@ This is the classical idea behind computing $a^{2^j} \bmod N$ in Shor's circuit.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $10$ is the number of bits; it ignores the extra multiplications for the $1$-bits (and overcounts the squarings by one).
-\item[\textbf{(B)}] $999$ multiplications is the naive method $a\cdot a\cdots a$, which is exponential in the bit length.
-\item[\textbf{(C)}] $16$ counts a squaring and a multiplication for each of the six $1$-bits plus extras; only $9 + 5$ operations are needed.
+\item[\textbf{(B)}] $16$ counts a squaring and a multiplication for each of the six $1$-bits plus extras; only $9 + 5$ operations are needed.
+\item[\textbf{(C)}] $999$ multiplications is the naive method $a\cdot a\cdots a$, which is exponential in the bit length.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Modular exponentiation is polynomial: $O(n)$ multiplications of $n$-bit numbers, $O(n^3)$ bit operations.
 \end{solbox}
@@ -424,11 +426,11 @@ $8^4 \equiv 1$) and $6$ (e.g.\ $a = 4$: $4^3 = 64 \equiv 29$, $4^6 \equiv 1$) oc
 For $N = 15$, a base $a$ is drawn uniformly from $\{2, 3, \dots, 13\}$. The probability that $\gcd(a, 15) > 1$, so that a factor is found classically
 without any quantum step, is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$7/15$ & \correctlabel{B}\,$1/2$ & \optlabel{C}\,$8/15$ & \optlabel{D}\,$1/3$
+\correctlabel{A}\,$1/2$ & \optlabel{B}\,$8/15$ & \optlabel{C}\,$7/15$ & \optlabel{D}\,$1/3$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $1/2$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $1/2$
 
 \textbf{\color{brand}Concepts required.} Before any quantum step, Shor's algorithm computes $\gcd(a, N)$; if it exceeds $1$ a factor is found classically.
 
@@ -439,8 +441,8 @@ probability is about $\frac1p + \frac1q$, astronomically small --- the lucky gcd
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $7/15$ divides by all $15$ residues and counts $0$; the bases are drawn from $12$ values, $6$ of which are lucky.
-\item[\textbf{(C)}] $8/15 = \varphi(15)/15$ is the fraction of coprime residues in $\{0, \dots, 14\}$, the complement of what is asked, on the wrong set.
+\item[\textbf{(B)}] $8/15 = \varphi(15)/15$ is the fraction of coprime residues in $\{0, \dots, 14\}$, the complement of what is asked, on the wrong set.
+\item[\textbf{(C)}] $7/15$ divides by all $15$ residues and counts $0$; the bases are drawn from $12$ values, $6$ of which are lucky.
 \item[\textbf{(D)}] $1/3$ counts only the multiples of $3$ ($3, 6, 9, 12$) or of $5$ separately; both kinds must be included.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} For tiny $N$ lucky bases are common; for RSA moduli the probability is negligible ($\approx 2/\sqrt N$).
@@ -452,7 +454,7 @@ probability is about $\frac1p + \frac1q$, astronomically small --- the lucky gcd
 \qmeta{Single-correct MCQ}{Chinese remainder theorem}
 The unique $x \in \{0, \dots, 14\}$ with $x \equiv 2 \pmod 3$ and $x \equiv 3 \pmod 5$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$13$ & \optlabel{B}\,$2$ & \optlabel{C}\,$11$ & \correctlabel{D}\,$8$
+\optlabel{A}\,$11$ & \optlabel{B}\,$2$ & \optlabel{C}\,$13$ & \correctlabel{D}\,$8$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{D}
@@ -467,9 +469,9 @@ modulo $15$; it is the reason why orders modulo $N = pq$ are least common multip
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $13 \equiv 3 \pmod 5$ but $13 \equiv 1 \pmod 3$, not $2$.
+\item[\textbf{(A)}] $11 \equiv 2 \pmod 3$ but $11 \equiv 1 \pmod 5$.
 \item[\textbf{(B)}] $2 \equiv 2 \pmod 3$ but $2 \not\equiv 3 \pmod 5$.
-\item[\textbf{(C)}] $11 \equiv 2 \pmod 3$ but $11 \equiv 1 \pmod 5$.
+\item[\textbf{(C)}] $13 \equiv 3 \pmod 5$ but $13 \equiv 1 \pmod 3$, not $2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} CRT explains the four square roots of $1$ modulo $pq$: $\pm1$ modulo each prime independently.
 \end{solbox}
@@ -480,11 +482,11 @@ modulo $15$; it is the reason why orders modulo $N = pq$ are least common multip
 \qmeta{Single-correct MCQ}{Square roots of $1$ mod $15$}
 The complete set of solutions of $x^2 \equiv 1 \pmod{15}$ with $0 \le x < 15$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$\{1, 4, 14\}$ & \optlabel{B}\,$\{1, 14\}$ & \optlabel{C}\,$\{1, 11\}$ & \correctlabel{D}\,$\{1, 4, 11, 14\}$
+\optlabel{A}\,$\{1, 11\}$ & \correctlabel{B}\,$\{1, 4, 11, 14\}$ & \optlabel{C}\,$\{1, 14\}$ & \optlabel{D}\,$\{1, 4, 14\}$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $\{1, 4, 11, 14\}$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $\{1, 4, 11, 14\}$
 
 \textbf{\color{brand}Concepts required.} Modulo $N = pq$, $x^2 \equiv 1$ iff $x \equiv \pm1$ modulo both $p$ and $q$ (CRT), giving four solutions.
 
@@ -496,9 +498,9 @@ finds such a root as $x = a^{r/2}$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $\{1, 4, 14\}$ misses $11 = 15 - 4$; roots come in pairs $\pm x$.
-\item[\textbf{(B)}] $\{1, 14\}$ are only the trivial roots $\pm1$; the non-trivial ones $4$ and $11$ are what Shor's algorithm exploits.
-\item[\textbf{(C)}] $\{1, 11\}$ misses $4$ and $14$; $14 \equiv -1$ is always a root.
+\item[\textbf{(A)}] $\{1, 11\}$ misses $4$ and $14$; $14 \equiv -1$ is always a root.
+\item[\textbf{(C)}] $\{1, 14\}$ are only the trivial roots $\pm1$; the non-trivial ones $4$ and $11$ are what Shor's algorithm exploits.
+\item[\textbf{(D)}] $\{1, 4, 14\}$ misses $11 = 15 - 4$; roots come in pairs $\pm x$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} A non-trivial square root of $1$ immediately factors $N$ via $\gcd(x \pm 1, N)$.
 \end{solbox}
@@ -509,14 +511,14 @@ finds such a root as $x = a^{r/2}$.
 \qmeta{Single-correct MCQ}{Failure: $a^{r/2} \equiv -1$}
 For $N = 21$ and $a = 5$, the order $r$ and the outcome of Shor's classical reduction are
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] $r = 12$; it gives the factors $3$ and $7$
-\item[\correctlabel{B}] $r = 6$; the reduction fails because $5^3 \equiv -1 \pmod{21}$
-\item[\optlabel{C}] $r = 3$; it fails because $r$ is odd
+\item[\correctlabel{A}] $r = 6$; the reduction fails because $5^3 \equiv -1 \pmod{21}$
+\item[\optlabel{B}] $r = 3$; it fails because $r$ is odd
+\item[\optlabel{C}] $r = 12$; it gives the factors $3$ and $7$
 \item[\optlabel{D}] $r = 6$; it gives the factors $3$ and $7$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $r = 6$; the reduction fails because $5^3 \equiv -1 \pmod{21}$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $r = 6$; the reduction fails because $5^3 \equiv -1 \pmod{21}$
 
 \textbf{\color{brand}Concepts required.} The reduction needs $r$ even and $a^{r/2} \not\equiv -1$; otherwise the attempt fails and a new base is chosen.
 
@@ -527,8 +529,8 @@ $\gcd(5^3 + 1, 21) = \gcd(21, 21) = 21$ and $\gcd(5^3 - 1, 21) = \gcd(19, 21) = 
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $12$ is a multiple of the order, not the order; $5^6 \equiv 1$ already.
-\item[\textbf{(C)}] $5^3 \equiv 20 \ne 1$, so $3$ is not the order; the order is $6$, which is even.
+\item[\textbf{(B)}] $5^3 \equiv 20 \ne 1$, so $3$ is not the order; the order is $6$, which is even.
+\item[\textbf{(C)}] $12$ is a multiple of the order, not the order; $5^6 \equiv 1$ already.
 \item[\textbf{(D)}] With $5^3 \equiv -1$ the gcds are $\gcd(19, 21) = 1$ and $\gcd(21, 21) = 21$: trivial, so no factors are obtained.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Correct order finding can still give a failed attempt; report it as a failure and retry.
@@ -540,11 +542,11 @@ $\gcd(5^3 + 1, 21) = \gcd(21, 21) = 21$ and $\gcd(5^3 - 1, 21) = \gcd(19, 21) = 
 \qmeta{Single-correct MCQ}{Fermat's little theorem}
 $2^{100} \bmod 13$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$12$ & \correctlabel{B}\,$3$ & \optlabel{C}\,$1$ & \optlabel{D}\,$9$
+\optlabel{A}\,$9$ & \optlabel{B}\,$1$ & \correctlabel{C}\,$3$ & \optlabel{D}\,$12$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $3$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $3$
 
 \textbf{\color{brand}Concepts required.} Fermat's little theorem: $a^{p-1} \equiv 1 \pmod p$ for prime $p \nmid a$; reduce the exponent modulo the order.
 
@@ -555,9 +557,9 @@ $\varphi$) is what makes $a^x \bmod N$ periodic in $x$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $12 \equiv -1$ is $2^6$; the exponent $100$ reduces to $4$, not $6$.
-\item[\textbf{(C)}] $1$ would require $12 \mid 100$; $100 = 8\cdot12 + 4$.
-\item[\textbf{(D)}] $9 \equiv 2^8 \pmod{13}$ ($256 = 19\cdot13 + 9$): it reduces the exponent incorrectly; $100 \bmod 12 = 4$, not $8$.
+\item[\textbf{(A)}] $9 \equiv 2^8 \pmod{13}$ ($256 = 19\cdot13 + 9$): it reduces the exponent incorrectly; $100 \bmod 12 = 4$, not $8$.
+\item[\textbf{(B)}] $1$ would require $12 \mid 100$; $100 = 8\cdot12 + 4$.
+\item[\textbf{(D)}] $12 \equiv -1$ is $2^6$; the exponent $100$ reduces to $4$, not $6$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Exponents can be reduced modulo the order --- which is exactly why the order is so useful.
 \end{solbox}
@@ -568,11 +570,11 @@ $\varphi$) is what makes $a^x \bmod N$ periodic in $x$.
 \qmeta{Single-correct MCQ}{Trial-division bound}
 Trial division factors $N = 10403$ by testing divisors $d \ge 2$ in increasing order. The largest $d$ that may have to be tested is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$103$ & \optlabel{B}\,$5201$ & \correctlabel{C}\,$101$ & \optlabel{D}\,$102$
+\optlabel{A}\,$5201$ & \optlabel{B}\,$102$ & \optlabel{C}\,$103$ & \correctlabel{D}\,$101$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $101$
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $101$
 
 \textbf{\color{brand}Concepts required.} A composite $N$ has a prime factor $\le \sqrt N$, so trial division stops at $\lfloor\sqrt N\rfloor$.
 
@@ -583,9 +585,9 @@ Trial division factors $N = 10403$ by testing divisors $d \ge 2$ in increasing o
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $103$ is the larger factor; it is found as $N/101$, never by testing.
-\item[\textbf{(B)}] $5201 \approx N/2$ is a far too pessimistic bound; divisors above $\sqrt N$ pair with ones below it.
-\item[\textbf{(D)}] $102 > \sqrt{10403}$ is never needed (and is even); the search stops at $101$.
+\item[\textbf{(A)}] $5201 \approx N/2$ is a far too pessimistic bound; divisors above $\sqrt N$ pair with ones below it.
+\item[\textbf{(B)}] $102 > \sqrt{10403}$ is never needed (and is even); the search stops at $101$.
+\item[\textbf{(C)}] $103$ is the larger factor; it is found as $N/101$, never by testing.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Trial division costs $O(\sqrt N) = O(2^{n/2})$ --- exponential in the bit length.
 \end{solbox}
@@ -597,11 +599,11 @@ Trial division factors $N = 10403$ by testing divisors $d \ge 2$ in increasing o
 For an odd $N$ with $k$ distinct prime factors (not a prime power) and $a$ uniformly random among the residues coprime to $N$, the probability
 that $r$ is even and $a^{r/2} \not\equiv -1 \pmod N$ is at least $1 - 2^{-(k-1)}$. For $N = 105 = 3\cdot5\cdot7$ this lower bound is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$3/4$ & \optlabel{B}\,$1/8$ & \optlabel{C}\,$1/2$ & \optlabel{D}\,$7/8$
+\optlabel{A}\,$1/8$ & \optlabel{B}\,$1/2$ & \correctlabel{C}\,$3/4$ & \optlabel{D}\,$7/8$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $3/4$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $3/4$
 
 \textbf{\color{brand}Concepts required.} For $N$ with $k$ distinct odd prime factors, a random coprime base works with probability at least $1 - 2^{-(k-1)}$.
 
@@ -612,8 +614,8 @@ the CRT: the reduction fails only if the 2-adic parts of the orders modulo the p
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $1/8 = 2^{-3}$ confuses the failure bound with the success bound and uses the wrong exponent.
-\item[\textbf{(C)}] $1/2$ is the bound for $k = 2$ (an RSA modulus), not for three prime factors.
+\item[\textbf{(A)}] $1/8 = 2^{-3}$ confuses the failure bound with the success bound and uses the wrong exponent.
+\item[\textbf{(B)}] $1/2$ is the bound for $k = 2$ (an RSA modulus), not for three prime factors.
 \item[\textbf{(D)}] $7/8 = 1 - 2^{-3}$ uses the exponent $k$ instead of $k - 1$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} For an RSA modulus at least half of the bases work, so a few repetitions suffice.
@@ -635,12 +637,12 @@ Match each quantity for $N = 15$ (List-I) with its value (List-II).
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\correctlabel{A}\,P$\to$2, Q$\to$3, R$\to$4, S$\to$1 & \optlabel{B}\,P$\to$2, Q$\to$3, R$\to$1, S$\to$4 \\[3pt]
-\optlabel{C}\,P$\to$2, Q$\to$4, R$\to$3, S$\to$1 & \optlabel{D}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1
+\optlabel{A}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1 & \optlabel{B}\,P$\to$2, Q$\to$3, R$\to$1, S$\to$4 \\[3pt]
+\correctlabel{C}\,P$\to$2, Q$\to$3, R$\to$4, S$\to$1 & \optlabel{D}\,P$\to$2, Q$\to$4, R$\to$3, S$\to$1
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} P$\to$2, Q$\to$3, R$\to$4, S$\to$1
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} P$\to$2, Q$\to$3, R$\to$4, S$\to$1
 
 \textbf{\color{brand}Concepts required.} $\varphi$, $\lambda$, orders and inverses are basic invariants of $\mathbb Z_N^*$; for $N = 15$ they can be computed by hand.
 
@@ -656,9 +658,9 @@ Hence P$\to$2, Q$\to$3, R$\to$4, S$\to$1.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
+\item[\textbf{(A)}] This assigns $4$ to $\varphi(15)$; $\varphi(15) = 8$ counts $1, 2, 4, 7, 8, 11, 13, 14$.
 \item[\textbf{(B)}] This gives $\lambda(15) = 13$ and $7^{-1} = 4$; but $7\cdot4 = 28 \equiv 13 \not\equiv 1$.
-\item[\textbf{(C)}] This swaps the order of $4$ and $\lambda(15)$: $4^2 \equiv 1$, so the order is $2$, while $\lambda(15) = 4$.
-\item[\textbf{(D)}] This assigns $4$ to $\varphi(15)$; $\varphi(15) = 8$ counts $1, 2, 4, 7, 8, 11, 13, 14$.
+\item[\textbf{(D)}] This swaps the order of $4$ and $\lambda(15)$: $4^2 \equiv 1$, so the order is $2$, while $\lambda(15) = 4$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Orders divide $\lambda(N)$, which divides $\varphi(N)$: here $2 \mid 4 \mid 8$.
 \end{solbox}
@@ -679,12 +681,12 @@ Match each classical algorithm (List-I) with its running time for an $n$-bit inp
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$4, Q$\to$2, R$\to$3, S$\to$1 & \correctlabel{B}\,P$\to$4, Q$\to$2, R$\to$1, S$\to$3 \\[3pt]
-\optlabel{C}\,P$\to$2, Q$\to$4, R$\to$1, S$\to$3 & \optlabel{D}\,P$\to$4, Q$\to$1, R$\to$2, S$\to$3
+\optlabel{A}\,P$\to$2, Q$\to$4, R$\to$1, S$\to$3 & \optlabel{B}\,P$\to$4, Q$\to$1, R$\to$2, S$\to$3 \\[3pt]
+\optlabel{C}\,P$\to$4, Q$\to$2, R$\to$3, S$\to$1 & \correctlabel{D}\,P$\to$4, Q$\to$2, R$\to$1, S$\to$3
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} P$\to$4, Q$\to$2, R$\to$1, S$\to$3
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} P$\to$4, Q$\to$2, R$\to$1, S$\to$3
 
 \textbf{\color{brand}Concepts required.} Classical factoring methods range from exponential (trial division, rho) to sub-exponential (GNFS); gcd is polynomial.
 
@@ -700,9 +702,9 @@ Hence P$\to$4, Q$\to$2, R$\to$1, S$\to$3. Not all classical factoring is exponen
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] This gives the gcd the GNFS time; the Euclidean algorithm is polynomial, $O(n)$ division steps.
-\item[\textbf{(C)}] This swaps trial division and Pollard's rho; rho finds a factor $p$ in about $\sqrt p \le N^{1/4}$ steps, faster than trial division.
-\item[\textbf{(D)}] This gives Pollard's rho the GNFS running time and vice versa; GNFS is the fastest known general method.
+\item[\textbf{(A)}] This swaps trial division and Pollard's rho; rho finds a factor $p$ in about $\sqrt p \le N^{1/4}$ steps, faster than trial division.
+\item[\textbf{(B)}] This gives Pollard's rho the GNFS running time and vice versa; GNFS is the fastest known general method.
+\item[\textbf{(C)}] This gives the gcd the GNFS time; the Euclidean algorithm is polynomial, $O(n)$ division steps.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The best classical method is sub-exponential; Shor's algorithm is polynomial --- on a fault-tolerant machine.
 \end{solbox}
@@ -784,11 +786,11 @@ then $\gcd(a^{r/2} \pm 1, N)$ are non-trivial factors.
 \qmeta{Paragraph based}{Order of $3$ mod $91$}
 The order $r$ of $3$ modulo $91$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$6$ & \optlabel{B}\,$3$ & \optlabel{C}\,$72$ & \optlabel{D}\,$12$
+\optlabel{A}\,$72$ & \correctlabel{B}\,$6$ & \optlabel{C}\,$12$ & \optlabel{D}\,$3$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $6$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $6$
 
 \textbf{\color{brand}Concepts required.} The order is the first exponent where the powers return to $1$.
 
@@ -799,9 +801,9 @@ The order $r$ of $3$ modulo $91$ is
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $3^3 = 27 \ne 1$; $3$ is half of the order.
-\item[\textbf{(C)}] $72 = \varphi(91)$ is an exponent that works, not the least one.
-\item[\textbf{(D)}] $12$ is a multiple of the order ($3^{12} \equiv 1$) but not the least one.
+\item[\textbf{(A)}] $72 = \varphi(91)$ is an exponent that works, not the least one.
+\item[\textbf{(C)}] $12$ is a multiple of the order ($3^{12} \equiv 1$) but not the least one.
+\item[\textbf{(D)}] $3^3 = 27 \ne 1$; $3$ is half of the order.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Order $=$ smallest exponent; multiples and $\varphi(N)$ also satisfy $a^x \equiv 1$.
 \end{solbox}
@@ -812,11 +814,11 @@ The order $r$ of $3$ modulo $91$ is
 \qmeta{Paragraph based}{Factors of $91$ by gcd}
 The values of $\gcd(3^{r/2} - 1, 91)$ and $\gcd(3^{r/2} + 1, 91)$ are, respectively,
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$13$ and $7$ & \optlabel{B}\,$7$ and $13$ & \optlabel{C}\,$1$ and $91$ & \optlabel{D}\,$26$ and $28$
+\optlabel{A}\,$26$ and $28$ & \optlabel{B}\,$1$ and $91$ & \correctlabel{C}\,$13$ and $7$ & \optlabel{D}\,$7$ and $13$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $13$ and $7$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $13$ and $7$
 
 \textbf{\color{brand}Concepts required.} With $r$ even and $a^{r/2} \not\equiv -1$, the gcds with $a^{r/2} \mp 1$ give the factors.
 
@@ -827,9 +829,9 @@ The values of $\gcd(3^{r/2} - 1, 91)$ and $\gcd(3^{r/2} + 1, 91)$ are, respectiv
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $7$ and $13$ are the correct factors in the wrong order: $\gcd(26, 91) = 13$ and $\gcd(28, 91) = 7$.
-\item[\textbf{(C)}] $1$ and $91$ would be the trivial result for $a^{r/2} \equiv -1$; but $27 \not\equiv 90$.
-\item[\textbf{(D)}] $26$ and $28$ are $a^{r/2} \mp 1$ themselves; the gcd with $91$ is still needed.
+\item[\textbf{(A)}] $26$ and $28$ are $a^{r/2} \mp 1$ themselves; the gcd with $91$ is still needed.
+\item[\textbf{(B)}] $1$ and $91$ would be the trivial result for $a^{r/2} \equiv -1$; but $27 \not\equiv 90$.
+\item[\textbf{(D)}] $7$ and $13$ are the correct factors in the wrong order: $\gcd(26, 91) = 13$ and $\gcd(28, 91) = 7$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The quantum part ends with $r$; the factors come from two classical gcds.
 \end{solbox}
@@ -844,7 +846,7 @@ The values of $\gcd(3^{r/2} - 1, 91)$ and $\gcd(3^{r/2} + 1, 91)$ are, respectiv
 \qmeta{Single-correct MCQ}{Uniform superposition}
 After $H^{\otimes8}$ acts on $\ket{0}^{\otimes8}$ (the counting register of the notebook for $N = 15$), the amplitude of each basis state $\ket x$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$1/\sqrt8$ & \correctlabel{B}\,$1/16$ & \optlabel{C}\,$1/8$ & \optlabel{D}\,$1/256$
+\optlabel{A}\,$1/256$ & \correctlabel{B}\,$1/16$ & \optlabel{C}\,$1/8$ & \optlabel{D}\,$1/\sqrt8$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{B}
@@ -859,9 +861,9 @@ This superposition is the input on which the modular exponentiation acts ``for a
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $1/\sqrt8$ is the amplitude for $t = 3$ qubits.
+\item[\textbf{(A)}] $1/256$ is the probability $|1/16|^2$, not the amplitude.
 \item[\textbf{(C)}] $1/8$ would be the amplitude for $t = 6$ ($2^{-3}$); for $t = 8$ it is $2^{-4}$.
-\item[\textbf{(D)}] $1/256$ is the probability $|1/16|^2$, not the amplitude.
+\item[\textbf{(D)}] $1/\sqrt8$ is the amplitude for $t = 3$ qubits.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Amplitudes are $2^{-t/2}$; probabilities $2^{-t}$.
 \end{solbox}
@@ -873,12 +875,12 @@ This superposition is the input on which the modular exponentiation acts ``for a
 The state $\frac{1}{\sqrt8}\sum_{x=0}^{7}\ket x\ket{2^x \bmod 15}$ is prepared and the \emph{second} register is measured with result $4$. The probability
 of this result and the post-measurement state of the first register are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$1/4$; $\ \frac{1}{\sqrt2}(\ket2 - \ket6)$ & \correctlabel{B}\,$1/4$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$ \\[3pt]
-\optlabel{C}\,$1/2$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$ & \optlabel{D}\,$1/8$; $\ \ket2$
+\optlabel{A}\,$1/2$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$ & \optlabel{B}\,$1/4$; $\ \frac{1}{\sqrt2}(\ket2 - \ket6)$ \\[3pt]
+\optlabel{C}\,$1/8$; $\ \ket2$ & \correctlabel{D}\,$1/4$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $1/4$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $1/4$; $\ \frac{1}{\sqrt2}(\ket2 + \ket6)$
 
 \textbf{\color{brand}Concepts required.} Measuring one register of an entangled state keeps only the compatible terms of the other, renormalised.
 
@@ -890,9 +892,9 @@ with period $r = 4$ and an unknown offset --- the QFT removes the offset from th
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The amplitudes before the measurement are all $+1/\sqrt8$; no minus sign can appear.
-\item[\textbf{(C)}] $1/2$ counts two of the four values as matching; only $x = 2, 6$ of $8$ terms give $4$.
-\item[\textbf{(D)}] $1/8$ and $\ket2$ forget that the function is periodic: $x = 6$ gives $2^6 = 64 \equiv 4$ as well.
+\item[\textbf{(A)}] $1/2$ counts two of the four values as matching; only $x = 2, 6$ of $8$ terms give $4$.
+\item[\textbf{(B)}] The amplitudes before the measurement are all $+1/\sqrt8$; no minus sign can appear.
+\item[\textbf{(C)}] $1/8$ and $\ket2$ forget that the function is periodic: $x = 6$ gives $2^6 = 64 \equiv 4$ as well.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The collapsed first register is periodic with period $r$ and a random offset.
 \end{solbox}
@@ -903,14 +905,14 @@ with period $r = 4$ and an unknown offset --- the QFT removes the offset from th
 \qmeta{Single-correct MCQ}{Unitarity of $U_a$}
 Why does the operator $U_a\ket y = \ket{ay \bmod N}$ (for $0 \le y < N$; identity for $y \ge N$) require $\gcd(a, N) = 1$ to be a valid quantum gate?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] because otherwise $U_a$ would not be Hermitian
-\item[\optlabel{B}] because the eigenvalues of $U_a$ must be real
-\item[\optlabel{C}] because a quantum gate must map $\ket0$ to $\ket0$
-\item[\correctlabel{D}] only then is $y \mapsto ay \bmod N$ a permutation of $\{0, \dots, N-1\}$, so $U_a$ is a permutation matrix and hence unitary
+\item[\optlabel{A}] because the eigenvalues of $U_a$ must be real
+\item[\optlabel{B}] because a quantum gate must map $\ket0$ to $\ket0$
+\item[\correctlabel{C}] only then is $y \mapsto ay \bmod N$ a permutation of $\{0, \dots, N-1\}$, so $U_a$ is a permutation matrix and hence unitary
+\item[\optlabel{D}] because otherwise $U_a$ would not be Hermitian
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} only then is $y \mapsto ay \bmod N$ a permutation of $\{0, \dots, N-1\}$, so $U_a$ is a permutation matrix and hence unitary
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} only then is $y \mapsto ay \bmod N$ a permutation of $\{0, \dots, N-1\}$, so $U_a$ is a permutation matrix and hence unitary
 
 \textbf{\color{brand}Concepts required.} A permutation matrix is unitary; a non-injective map of basis states is not.
 
@@ -922,9 +924,9 @@ Hermitian, and their eigenvalues are complex phases.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] Quantum gates must be unitary, not Hermitian; $U_a$ is generally not Hermitian (it cycles states).
-\item[\textbf{(B)}] Unitary eigenvalues are phases $e^{i\phi}$; $U_a$ has complex eigenvalues $e^{2\pi is/r}$.
-\item[\textbf{(C)}] Gates need not fix $\ket0$; $U_a$ happens to fix $\ket0$, but that is not the requirement.
+\item[\textbf{(A)}] Unitary eigenvalues are phases $e^{i\phi}$; $U_a$ has complex eigenvalues $e^{2\pi is/r}$.
+\item[\textbf{(B)}] Gates need not fix $\ket0$; $U_a$ happens to fix $\ket0$, but that is not the requirement.
+\item[\textbf{(D)}] Quantum gates must be unitary, not Hermitian; $U_a$ is generally not Hermitian (it cycles states).
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Coprimality makes modular multiplication reversible, hence implementable as a quantum gate.
 \end{solbox}
@@ -935,8 +937,8 @@ Hermitian, and their eigenvalues are complex phases.
 \qmeta{Single-correct MCQ}{Eigenvalues of $U_a$}
 On the subspace spanned by $\{\ket1, \ket2, \ket4, \ket8\}$, the operator $U_2\ket y = \ket{2y \bmod 15}$ has the eigenvalues
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$1, 2, 4, 8$ & \optlabel{B}\,$e^{2\pi i/15}, e^{4\pi i/15}, e^{8\pi i/15}, e^{16\pi i/15}$ \\[3pt]
-\optlabel{C}\,$1, -1$ (each twice) & \correctlabel{D}\,$1, i, -1, -i$
+\optlabel{A}\,$1, 2, 4, 8$ & \optlabel{B}\,$1, -1$ (each twice) \\[3pt]
+\optlabel{C}\,$e^{2\pi i/15}, e^{4\pi i/15}, e^{8\pi i/15}, e^{16\pi i/15}$ & \correctlabel{D}\,$1, i, -1, -i$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{D}
@@ -953,8 +955,8 @@ eigenphases $s/r$ --- this is what phase estimation reads out.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $1, 2, 4, 8$ are the basis labels on the orbit, not eigenvalues; unitary eigenvalues have modulus $1$.
-\item[\textbf{(B)}] Phases with denominator $15$ use $N$ instead of the order $r = 4$.
-\item[\textbf{(C)}] $\pm1$ would require $U_2^2 = I$, but $U_2^2\ket1 = \ket4 \ne \ket1$.
+\item[\textbf{(B)}] $\pm1$ would require $U_2^2 = I$, but $U_2^2\ket1 = \ket4 \ne \ket1$.
+\item[\textbf{(C)}] Phases with denominator $15$ use $N$ instead of the order $r = 4$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The order is hidden in the eigenphases $s/r$ of $U_a$.
 \end{solbox}
@@ -965,12 +967,12 @@ eigenphases $s/r$ --- this is what phase estimation reads out.
 \qmeta{Single-correct MCQ}{$\ket1$ as sum of eigenvectors}
 With $\ket{u_s} = \frac{1}{\sqrt r}\sum_{k=0}^{r-1}e^{-2\pi isk/r}\ket{a^k \bmod N}$, the superposition $\frac{1}{\sqrt r}\sum_{s=0}^{r-1}\ket{u_s}$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$\ket0$ & \optlabel{B}\,$\ket a$ \\[3pt]
-\correctlabel{C}\,$\ket1$ & \optlabel{D}\,$\frac{1}{\sqrt N}\sum_{y=0}^{N-1}\ket y$
+\optlabel{A}\,$\ket a$ & \correctlabel{B}\,$\ket1$ \\[3pt]
+\optlabel{C}\,$\ket0$ & \optlabel{D}\,$\frac{1}{\sqrt N}\sum_{y=0}^{N-1}\ket y$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $\ket1$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $\ket1$
 
 \textbf{\color{brand}Concepts required.} The eigenvectors $\ket{u_s}$ are Fourier transforms of the orbit; summing over $s$ inverts the transform.
 
@@ -982,8 +984,8 @@ and QPE returns a random $s/r$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $\ket0$ is outside the orbit $\{a^k \bmod N\}$ of $\ket1$, so it cannot be a combination of the $\ket{u_s}$.
-\item[\textbf{(B)}] $\ket a = \ket{a^1}$ would need the phase factors $e^{2\pi is/r}$ inserted before summing.
+\item[\textbf{(A)}] $\ket a = \ket{a^1}$ would need the phase factors $e^{2\pi is/r}$ inserted before summing.
+\item[\textbf{(C)}] $\ket0$ is outside the orbit $\{a^k \bmod N\}$ of $\ket1$, so it cannot be a combination of the $\ket{u_s}$.
 \item[\textbf{(D)}] The uniform superposition over all residues is not in the span of one orbit (it includes non-coprime values).
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Initialising the work register to $\ket1$ prepares all eigenvectors at once, so QPE yields a random $s/r$.
@@ -996,11 +998,11 @@ and QPE returns a random $s/r$.
 A control qubit in $\ket+$ controls a unitary $U$ acting on its eigenvector $\ket u$, $U\ket u = e^{i\phi}\ket u$, with $\phi = 2\pi/3$. Afterwards, the
 expectation value $\langle X\rangle$ of the control qubit is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$1/2$ & \optlabel{B}\,$1$ & \correctlabel{C}\,$-1/2$ & \optlabel{D}\,$-\sqrt3/2$
+\optlabel{A}\,$1/2$ & \optlabel{B}\,$1$ & \optlabel{C}\,$-\sqrt3/2$ & \correctlabel{D}\,$-1/2$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $-1/2$
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $-1/2$
 
 \textbf{\color{brand}Concepts required.} Phase kickback moves the eigenphase of the target onto the $\ket1$ branch of the control.
 
@@ -1013,7 +1015,7 @@ the control. For $\frac{1}{\sqrt2}(\ket0 + e^{i\phi}\ket1)$, $\langle X\rangle =
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $1/2 = \cos(\pi/3)$ uses half of the phase.
 \item[\textbf{(B)}] $\langle X\rangle = 1$ is the value before the controlled gate; the kickback rotates the state.
-\item[\textbf{(D)}] $-\sqrt3/2$ mixes up sine and cosine; $\sin(2\pi/3) = +\sqrt3/2$ is $\langle Y\rangle$.
+\item[\textbf{(C)}] $-\sqrt3/2$ mixes up sine and cosine; $\sin(2\pi/3) = +\sqrt3/2$ is $\langle Y\rangle$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The control qubit records the phase; the eigenvector target is untouched.
 \end{solbox}
@@ -1024,11 +1026,11 @@ the control. For $\frac{1}{\sqrt2}(\ket0 + e^{i\phi}\ket1)$, $\langle X\rangle =
 \qmeta{Single-correct MCQ}{Phases of $U^{2^j}$}
 In phase estimation, counting qubit $j$ controls $U^{2^j}$. If $U\ket u = e^{2\pi i/6}\ket u$, the phase kicked back onto counting qubit $j = 2$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$2\pi/3$ & \correctlabel{B}\,$4\pi/3$ & \optlabel{C}\,$\pi/3$ & \optlabel{D}\,$2\pi$
+\optlabel{A}\,$2\pi$ & \optlabel{B}\,$\pi/3$ & \correctlabel{C}\,$4\pi/3$ & \optlabel{D}\,$2\pi/3$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $4\pi/3$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $4\pi/3$
 
 \textbf{\color{brand}Concepts required.} Applying $U^{2^j}$ to an eigenvector multiplies its phase by $2^j$.
 
@@ -1039,9 +1041,9 @@ doubled relative to the previous one --- the binary-fraction pattern that the in
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $2\pi/3$ is the phase for $j = 1$ ($U^2$).
-\item[\textbf{(C)}] $\pi/3 = 2\pi/6$ is the phase for $j = 0$ ($U$ itself).
-\item[\textbf{(D)}] $2\pi$ would correspond to $U^6$; $2^j = 4$, not $6$.
+\item[\textbf{(A)}] $2\pi$ would correspond to $U^6$; $2^j = 4$, not $6$.
+\item[\textbf{(B)}] $\pi/3 = 2\pi/6$ is the phase for $j = 0$ ($U$ itself).
+\item[\textbf{(D)}] $2\pi/3$ is the phase for $j = 1$ ($U^2$).
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Counting qubit $j$ carries the binary digit pattern $2^j\varphi \bmod 1$.
 \end{solbox}
@@ -1052,12 +1054,12 @@ doubled relative to the previous one --- the binary-fraction pattern that the in
 \qmeta{Single-correct MCQ}{Hadamard transform signs}
 $(H\otimes H)\ket{11}$ equals
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$\frac12(\ket{00} + \ket{01} + \ket{10} + \ket{11})$ & \optlabel{B}\,$\frac12(\ket{00} - \ket{01} - \ket{10} - \ket{11})$ \\[3pt]
-\correctlabel{C}\,$\frac12(\ket{00} - \ket{01} - \ket{10} + \ket{11})$ & \optlabel{D}\,$\frac{1}{\sqrt2}(\ket{00} - \ket{11})$
+\correctlabel{A}\,$\frac12(\ket{00} - \ket{01} - \ket{10} + \ket{11})$ & \optlabel{B}\,$\frac{1}{\sqrt2}(\ket{00} - \ket{11})$ \\[3pt]
+\optlabel{C}\,$\frac12(\ket{00} - \ket{01} - \ket{10} - \ket{11})$ & \optlabel{D}\,$\frac12(\ket{00} + \ket{01} + \ket{10} + \ket{11})$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $\frac12(\ket{00} - \ket{01} - \ket{10} + \ket{11})$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $\frac12(\ket{00} - \ket{01} - \ket{10} + \ket{11})$
 
 \textbf{\color{brand}Concepts required.} $H^{\otimes n}\ket x = 2^{-n/2}\sum_y(-1)^{x\cdot y}\ket y$.
 
@@ -1068,9 +1070,9 @@ In general $H^{\otimes n}\ket x = 2^{-n/2}\sum_y(-1)^{x\cdot y}\ket y$: signs de
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] All plus signs is $(H\otimes H)\ket{00}$.
-\item[\textbf{(B)}] The last sign is $(-1)^{1 + 1} = +1$, not $-1$.
-\item[\textbf{(D)}] A Bell-type state cannot arise from local Hadamards on a product state.
+\item[\textbf{(B)}] A Bell-type state cannot arise from local Hadamards on a product state.
+\item[\textbf{(C)}] The last sign is $(-1)^{1 + 1} = +1$, not $-1$.
+\item[\textbf{(D)}] All plus signs is $(H\otimes H)\ket{00}$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Hadamard transforms encode parities in signs --- the simplest Fourier transform.
 \end{solbox}
@@ -1081,11 +1083,11 @@ In general $H^{\otimes n}\ket x = 2^{-n/2}\sum_y(-1)^{x\cdot y}\ket y$: signs de
 \qmeta{Single-correct MCQ}{Two-path interference}
 Two computational paths lead to the same outcome with amplitudes $\frac12$ and $\frac12e^{i\theta}$. For $\theta = 2\pi/3$ the probability of that outcome is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$0$ & \correctlabel{B}\,$1/4$ & \optlabel{C}\,$3/4$ & \optlabel{D}\,$1/2$
+\optlabel{A}\,$0$ & \optlabel{B}\,$1/2$ & \correctlabel{C}\,$1/4$ & \optlabel{D}\,$3/4$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $1/4$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $1/4$
 
 \textbf{\color{brand}Concepts required.} Probabilities come from the squared modulus of the \emph{sum} of amplitudes of indistinguishable paths.
 
@@ -1097,8 +1099,8 @@ Interference concentrates probability where the phases agree; in Shor's algorith
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $0$ needs $\theta = \pi$ (complete destructive interference).
-\item[\textbf{(C)}] $3/4 = \sin^2(\pi/3)$ is the probability of the other output port.
-\item[\textbf{(D)}] $1/2$ adds probabilities ($\frac14 + \frac14$) instead of amplitudes, ignoring interference.
+\item[\textbf{(B)}] $1/2$ adds probabilities ($\frac14 + \frac14$) instead of amplitudes, ignoring interference.
+\item[\textbf{(D)}] $3/4 = \sin^2(\pi/3)$ is the probability of the other output port.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Interference, not parallelism alone, makes the right answer likely.
 \end{solbox}
@@ -1110,9 +1112,9 @@ Interference concentrates probability where the phases agree; in Shor's algorith
 Why does Shor's circuit compute $\ket x\ket1 \mapsto \ket x\ket{a^x \bmod N}$ instead of $\ket x \mapsto \ket{a^x \bmod N}$ in place?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
 \item[\correctlabel{A}] the map $x \mapsto a^x \bmod N$ is not injective ($x$ and $x + r$ give the same value), so it cannot be a unitary on a single register; keeping $x$ makes it reversible
-\item[\optlabel{B}] because measurement requires two registers
+\item[\optlabel{B}] because a single register cannot hold numbers larger than $N$
 \item[\optlabel{C}] because the Hadamard gates must act on a different register than the QFT
-\item[\optlabel{D}] because a single register cannot hold numbers larger than $N$
+\item[\optlabel{D}] because measurement requires two registers
 \end{itemize}
 \end{qitem}
 \begin{solbox}{A}
@@ -1128,9 +1130,9 @@ registers: $\sum_x\ket x\ket{a^x \bmod N}$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] Measurement can be performed on any register; it does not require a second one.
+\item[\textbf{(B)}] Register size is not the issue: $a^x \bmod N < N$ always fits in $n$ qubits.
 \item[\textbf{(C)}] The Hadamards and the QFT both act on the counting register; this is not why two registers are used.
-\item[\textbf{(D)}] Register size is not the issue: $a^x \bmod N < N$ always fits in $n$ qubits.
+\item[\textbf{(D)}] Measurement can be performed on any register; it does not require a second one.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Reversibility forces the input to be kept, which entangles the two registers.
 \end{solbox}
@@ -1142,11 +1144,11 @@ registers: $\sum_x\ket x\ket{a^x \bmod N}$.
 A controlled-SWAP (Fredkin) gate is compiled as $\mathrm{CNOT}_{b\to a}\cdot\mathrm{Toffoli}_{c,a\to b}\cdot\mathrm{CNOT}_{b\to a}$, and each Toffoli uses the
 standard decomposition with 6 CNOTs. The number of CNOTs per controlled-SWAP is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$8$ & \optlabel{B}\,$6$ & \optlabel{C}\,$3$ & \optlabel{D}\,$9$
+\optlabel{A}\,$9$ & \correctlabel{B}\,$8$ & \optlabel{C}\,$3$ & \optlabel{D}\,$6$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $8$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $8$
 
 \textbf{\color{brand}Concepts required.} A Fredkin gate can be built from two CNOTs around a Toffoli; a Toffoli needs 6 CNOTs in the standard decomposition.
 
@@ -1157,9 +1159,9 @@ Gate-level modular multipliers are built from many such gates, which is why comp
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $6$ counts only the Toffoli and forgets the two outer CNOTs.
+\item[\textbf{(A)}] $9 = 3\times3$ treats every CNOT of a SWAP as a 3-CNOT gate; only the middle CNOT must become a (6-CNOT) Toffoli.
 \item[\textbf{(C)}] $3$ CNOTs make an uncontrolled SWAP; the control requires the Toffoli.
-\item[\textbf{(D)}] $9 = 3\times3$ treats every CNOT of a SWAP as a 3-CNOT gate; only the middle CNOT must become a (6-CNOT) Toffoli.
+\item[\textbf{(D)}] $6$ counts only the Toffoli and forgets the two outer CNOTs.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Controlled arithmetic is costly: every controlled SWAP is a Toffoli plus two CNOTs.
 \end{solbox}
@@ -1171,14 +1173,14 @@ Gate-level modular multipliers are built from many such gates, which is why comp
 \texttt{Shor.ipynb} measures only the counting register. Compared with also measuring the work register first, the distribution of the counting
 outcome $y$ is
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] different: without measuring the work register no periodic structure appears
-\item[\optlabel{B}] different: the peaks become twice as wide
-\item[\optlabel{C}] undefined, because entangled registers cannot be measured separately
-\item[\correctlabel{D}] exactly the same: a measurement of the other register that is never used cannot change the marginal statistics of $y$
+\item[\optlabel{A}] different: the peaks become twice as wide
+\item[\optlabel{B}] undefined, because entangled registers cannot be measured separately
+\item[\correctlabel{C}] exactly the same: a measurement of the other register that is never used cannot change the marginal statistics of $y$
+\item[\optlabel{D}] different: without measuring the work register no periodic structure appears
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} exactly the same: a measurement of the other register that is never used cannot change the marginal statistics of $y$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} exactly the same: a measurement of the other register that is never used cannot change the marginal statistics of $y$
 
 \textbf{\color{brand}Concepts required.} Measuring a subsystem that is never used again does not change the reduced state of the rest.
 
@@ -1190,9 +1192,9 @@ measurement). Textbook derivations ``measure the second register'' only to simpl
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The periodic structure is in the entangled state already; the measurement of the work register only simplifies textbook algebra.
-\item[\textbf{(B)}] Peak widths depend on $t$ and $r$, not on whether the idle work register is measured.
-\item[\textbf{(C)}] Entangled registers can be measured separately; the marginal statistics are well defined.
+\item[\textbf{(A)}] Peak widths depend on $t$ and $r$, not on whether the idle work register is measured.
+\item[\textbf{(B)}] Entangled registers can be measured separately; the marginal statistics are well defined.
+\item[\textbf{(D)}] The periodic structure is in the entangled state already; the measurement of the work register only simplifies textbook algebra.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Principle of implicit (deferred) measurement: unused registers may be measured or ignored.
 \end{solbox}
@@ -1204,7 +1206,7 @@ measurement). Textbook derivations ``measure the second register'' only to simpl
 In \texttt{Shor.ipynb} the work register has $n = $ \texttt{N.bit\_length()} qubits and the counting register $t = 2n$. The total number of qubits for
 $N = 143$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$24$ & \optlabel{B}\,$21$ & \optlabel{C}\,$16$ & \optlabel{D}\,$22$
+\correctlabel{A}\,$24$ & \optlabel{B}\,$21$ & \optlabel{C}\,$22$ & \optlabel{D}\,$16$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{A}
@@ -1220,8 +1222,8 @@ $22 = 2\lceil\log_2 143\rceil + 6$ has no basis.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(B)}] $21$ would be $3\cdot7$, but $143 > 127 = 2^7 - 1$ needs $8$ bits.
-\item[\textbf{(C)}] $16$ is only the counting register $t = 2n$.
-\item[\textbf{(D)}] $22$ does not follow from $t = 2n$ with $n = 8$; no formula of the notebook gives it.
+\item[\textbf{(C)}] $22$ does not follow from $t = 2n$ with $n = 8$; no formula of the notebook gives it.
+\item[\textbf{(D)}] $16$ is only the counting register $t = 2n$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Qubits scale as $3n$ here: three per bit of $N$.
 \end{solbox}
@@ -1232,11 +1234,11 @@ $22 = 2\lceil\log_2 143\rceil + 6$ has no basis.
 \qmeta{Single-correct MCQ}{State-vector memory}
 The memory of a double-precision state vector (16 bytes per amplitude) for the 24-qubit circuit of the previous question is about
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$268$ MB & \optlabel{B}\,$4.3$ GB & \optlabel{C}\,$384$ bytes & \optlabel{D}\,$16.8$ MB
+\optlabel{A}\,$16.8$ MB & \optlabel{B}\,$384$ bytes & \optlabel{C}\,$4.3$ GB & \correctlabel{D}\,$268$ MB
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $268$ MB
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $268$ MB
 
 \textbf{\color{brand}Concepts required.} A state vector of $q$ qubits has $2^q$ complex amplitudes of $16$ bytes (complex128).
 
@@ -1247,9 +1249,9 @@ $4.3$ GB corresponds to 28 qubits. Each extra bit of $N$ adds 3 qubits, i.e.\ mu
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $4.3$ GB is $16\cdot2^{28}$, the memory of $28$ qubits.
-\item[\textbf{(C)}] $384$ bytes grows linearly with the number of qubits; state vectors grow exponentially.
-\item[\textbf{(D)}] $16.8$ MB is $16\cdot2^{20}$, the memory of $20$ qubits.
+\item[\textbf{(A)}] $16.8$ MB is $16\cdot2^{20}$, the memory of $20$ qubits.
+\item[\textbf{(B)}] $384$ bytes grows linearly with the number of qubits; state vectors grow exponentially.
+\item[\textbf{(C)}] $4.3$ GB is $16\cdot2^{28}$, the memory of $28$ qubits.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Each extra qubit doubles the memory; each extra bit of $N$ multiplies it by $8$.
 \end{solbox}
@@ -1270,12 +1272,12 @@ Match each operation of the order-finding circuit (List-I) with its role (List-I
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{B}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 \\[3pt]
-\correctlabel{C}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \optlabel{D}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2
+\optlabel{A}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2 & \correctlabel{B}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 \\[3pt]
+\optlabel{C}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{D}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
 
 \textbf{\color{brand}Concepts required.} Order finding: superposition, controlled modular exponentiation (kickback), inverse QFT, measurement.
 
@@ -1291,9 +1293,9 @@ Hence P$\to$3, Q$\to$4, R$\to$1, S$\to$2.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] This swaps the roles of the inverse QFT and the $X$ gate; $X$ only prepares $\ket1$ in the work register.
-\item[\textbf{(B)}] This gives the Hadamards the role of modular exponentiation and vice versa; the Hadamards only create the superposition.
-\item[\textbf{(D)}] This gives the controlled multiplications the decoding role of the inverse QFT and the QFT the exponentiation.
+\item[\textbf{(A)}] This gives the controlled multiplications the decoding role of the inverse QFT and the QFT the exponentiation.
+\item[\textbf{(C)}] This swaps the roles of the inverse QFT and the $X$ gate; $X$ only prepares $\ket1$ in the work register.
+\item[\textbf{(D)}] This gives the Hadamards the role of modular exponentiation and vice versa; the Hadamards only create the superposition.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Know what each block does: it is the basis for every resource and error discussion.
 \end{solbox}
@@ -1314,12 +1316,12 @@ The phase gate is $R_1(\lambda) = \operatorname{diag}(1, e^{i\lambda})$ (control
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$3, Q$\to$2, R$\to$4, S$\to$1 & \optlabel{B}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1 \\[3pt]
-\optlabel{C}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \correctlabel{D}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1
+\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \correctlabel{B}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 \\[3pt]
+\optlabel{C}\,P$\to$3, Q$\to$2, R$\to$4, S$\to$1 & \optlabel{D}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} P$\to$3, Q$\to$4, R$\to$2, S$\to$1
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} P$\to$3, Q$\to$4, R$\to$2, S$\to$1
 
 \textbf{\color{brand}Concepts required.} $R_1(\lambda) = \operatorname{diag}(1, e^{i\lambda})$ contains $Z$, $S$, $T$ and their inverses as special cases.
 
@@ -1330,9 +1332,9 @@ $R_1(-\pi/2) = \operatorname{diag}(1, -i) = S^\dagger$ (1). The inverse QFT of t
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] This exchanges $S$ and $T$: $R_1(\pi/2) = \operatorname{diag}(1, i) = S$, while $T$ has $e^{i\pi/4}$.
-\item[\textbf{(B)}] This assigns $R_1(\pi)$ to $S$; $R_1(\pi) = \operatorname{diag}(1, -1) = Z$.
-\item[\textbf{(C)}] This exchanges $T$ and $S^\dagger$; $R_1(-\pi/2)$ has $-i$ on the diagonal, which is $S^\dagger$.
+\item[\textbf{(A)}] This exchanges $T$ and $S^\dagger$; $R_1(-\pi/2)$ has $-i$ on the diagonal, which is $S^\dagger$.
+\item[\textbf{(C)}] This exchanges $S$ and $T$: $R_1(\pi/2) = \operatorname{diag}(1, i) = S$, while $T$ has $e^{i\pi/4}$.
+\item[\textbf{(D)}] This assigns $R_1(\pi)$ to $S$; $R_1(\pi) = \operatorname{diag}(1, -1) = Z$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The inverse QFT uses controlled $R_1(-\pi/2^k)$: controlled $S^\dagger$, $T^\dagger$ and finer rotations.
 \end{solbox}
@@ -1418,7 +1420,7 @@ The estimate of the phase is $y/8$; $y$ is written in binary with the most signi
 For $\varphi = 3/8$ the measurement gives
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
 \correctlabel{A}\,$y = 3$ (bits $011$) with probability $1$ & \optlabel{B}\,$y = 6$ (bits $110$) with probability $1$ \\[3pt]
-\optlabel{C}\,$y = 3$ or $y = 4$ with probability $1/2$ each & \optlabel{D}\,$y = 3$ with probability $1/2$
+\optlabel{C}\,$y = 3$ with probability $1/2$ & \optlabel{D}\,$y = 3$ or $y = 4$ with probability $1/2$ each
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{A}
@@ -1435,8 +1437,8 @@ bit come first.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(B)}] $110$ is the bit-reversed string; the notebook's inverse QFT includes the SWAPs, so $y = 3$ is read MSB first.
-\item[\textbf{(C)}] Splitting between $3$ and $4$ happens for $\varphi$ halfway between grid points ($7/16$), not for $3/8$.
-\item[\textbf{(D)}] For an exactly representable phase all amplitude interferes constructively at $y = 3$; probability $1$, not $1/2$.
+\item[\textbf{(C)}] For an exactly representable phase all amplitude interferes constructively at $y = 3$; probability $1$, not $1/2$.
+\item[\textbf{(D)}] Splitting between $3$ and $4$ happens for $\varphi$ halfway between grid points ($7/16$), not for $3/8$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} If $r$ divides $2^t$, Shor's outcomes are exactly $s2^t/r$ (as for $N = 15$).
 \end{solbox}
@@ -1447,12 +1449,12 @@ bit come first.
 \qmeta{Paragraph based}{QPE: inexact phase}
 For $\varphi = 1/3$ the most likely outcome and its probability are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$y = 3$ with $P \approx 0.41$ & \correctlabel{B}\,$y = 3$ with $P \approx 0.69$ \\[3pt]
-\optlabel{C}\,$y = 3$ with $P = 1$ & \optlabel{D}\,$y = 2$ or $3$ with $P = 1/2$ each
+\correctlabel{A}\,$y = 3$ with $P \approx 0.69$ & \optlabel{B}\,$y = 3$ with $P \approx 0.41$ \\[3pt]
+\optlabel{C}\,$y = 2$ or $3$ with $P = 1/2$ each & \optlabel{D}\,$y = 3$ with $P = 1$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $y = 3$ with $P \approx 0.69$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $y = 3$ with $P \approx 0.69$
 
 \textbf{\color{brand}Concepts required.} For phases that are not multiples of $2^{-t}$ the outcome distribution is a peak around $2^t\varphi$.
 
@@ -1464,9 +1466,9 @@ $\frac{4}{\pi^2} \approx 0.41$ is only the worst-case lower bound for the neares
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $4/\pi^2 \approx 0.405$ is only the worst-case lower bound for the nearest outcome, attained when $\varphi$ lies halfway.
-\item[\textbf{(C)}] Probability $1$ needs an exactly representable phase; $1/3$ has the infinite binary expansion $0.0101\ldots_2$.
-\item[\textbf{(D)}] $P(2) \approx 0.17$ and $P(3) \approx 0.69$: $8\varphi = 2.67$ is closer to $3$ than to $2$, so the two are far from equal.
+\item[\textbf{(B)}] $4/\pi^2 \approx 0.405$ is only the worst-case lower bound for the nearest outcome, attained when $\varphi$ lies halfway.
+\item[\textbf{(C)}] $P(2) \approx 0.17$ and $P(3) \approx 0.69$: $8\varphi = 2.67$ is closer to $3$ than to $2$, so the two are far from equal.
+\item[\textbf{(D)}] Probability $1$ needs an exactly representable phase; $1/3$ has the infinite binary expansion $0.0101\ldots_2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Peaks have finite width; continued fractions turn the nearest $y$ into $s/r$.
 \end{solbox}
@@ -1481,14 +1483,14 @@ $\frac{4}{\pi^2} \approx 0.41$ is only the worst-case lower bound for the neares
 \qmeta{Single-correct MCQ}{Steps of Shor's algorithm}
 Which sequence describes Shor's factoring algorithm for an odd composite $N$ that is not a prime power?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\correctlabel{A}] pick random $a$; if $\gcd(a, N) > 1$ stop (factor found); find the order $r$ of $a$ by quantum phase estimation and continued fractions; if $r$ is even and $a^{r/2} \not\equiv -1$, output $\gcd(a^{r/2} \pm 1, N)$; otherwise repeat
-\item[\optlabel{B}] pick random $a$; measure $a^x \bmod N$ in superposition; the most frequent value is a factor
-\item[\optlabel{C}] find the order $r$ by quantum phase estimation; the factors are $r$ and $N/r$
-\item[\optlabel{D}] apply the QFT to $\ket N$; measure; the outcome is a factor of $N$
+\item[\optlabel{A}] find the order $r$ by quantum phase estimation; the factors are $r$ and $N/r$
+\item[\optlabel{B}] apply the QFT to $\ket N$; measure; the outcome is a factor of $N$
+\item[\optlabel{C}] pick random $a$; measure $a^x \bmod N$ in superposition; the most frequent value is a factor
+\item[\correctlabel{D}] pick random $a$; if $\gcd(a, N) > 1$ stop (factor found); find the order $r$ of $a$ by quantum phase estimation and continued fractions; if $r$ is even and $a^{r/2} \not\equiv -1$, output $\gcd(a^{r/2} \pm 1, N)$; otherwise repeat
 \end{itemize}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} pick random $a$; if $\gcd(a, N) > 1$ stop (factor found); find the order $r$ of $a$ by quantum phase estimation and continued fractions; if $r$ is even and $a^{r/2} \not\equiv -1$, output $\gcd(a^{r/2} \pm 1, N)$; otherwise repeat
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} pick random $a$; if $\gcd(a, N) > 1$ stop (factor found); find the order $r$ of $a$ by quantum phase estimation and continued fractions; if $r$ is even and $a^{r/2} \not\equiv -1$, output $\gcd(a^{r/2} \pm 1, N)$; otherwise repeat
 
 \textbf{\color{brand}Concepts required.} Shor's algorithm is a classical reduction from factoring to order finding, with a quantum subroutine for the order only.
 
@@ -1499,9 +1501,9 @@ final $\gcd(a^{r/2} \pm 1, N)$ --- is classical. Option 3 confuses the order wit
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] Measuring $a^x \bmod N$ gives one random value of the function; no interference step and no factor appear.
-\item[\textbf{(C)}] The order is not a factor: for $N = 15$, $a = 7$, $r = 4 \nmid 15$; the factors come from $\gcd(a^{r/2} \pm 1, N)$.
-\item[\textbf{(D)}] A QFT of the number $N$ itself produces no factor; Shor applies the QFT to the counting register after modular exponentiation.
+\item[\textbf{(A)}] The order is not a factor: for $N = 15$, $a = 7$, $r = 4 \nmid 15$; the factors come from $\gcd(a^{r/2} \pm 1, N)$.
+\item[\textbf{(B)}] A QFT of the number $N$ itself produces no factor; Shor applies the QFT to the counting register after modular exponentiation.
+\item[\textbf{(C)}] Measuring $a^x \bmod N$ gives one random value of the function; no interference step and no factor appear.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Quantum part: period finding. Classical part: everything else.
 \end{solbox}
@@ -1512,12 +1514,12 @@ final $\gcd(a^{r/2} \pm 1, N)$ --- is classical. Option 3 confuses the order wit
 \qmeta{Single-correct MCQ}{$N = 15$, $a = 2$}
 For $N = 15$ and $a = 2$, the order $r$ and the factors obtained from $\gcd(a^{r/2} \pm 1, N)$ are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$r = 8$; $\ 3$ and $5$ & \optlabel{B}\,$r = 2$; $\ 3$ and $5$ \\[3pt]
-\optlabel{C}\,$r = 4$; $\ 1$ and $15$ & \correctlabel{D}\,$r = 4$; $\ \gcd(3, 15) = 3$, $\gcd(5, 15) = 5$
+\optlabel{A}\,$r = 4$; $\ 1$ and $15$ & \correctlabel{B}\,$r = 4$; $\ \gcd(3, 15) = 3$, $\gcd(5, 15) = 5$ \\[3pt]
+\optlabel{C}\,$r = 2$; $\ 3$ and $5$ & \optlabel{D}\,$r = 8$; $\ 3$ and $5$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $r = 4$; $\ \gcd(3, 15) = 3$, $\gcd(5, 15) = 5$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $r = 4$; $\ \gcd(3, 15) = 3$, $\gcd(5, 15) = 5$
 
 \textbf{\color{brand}Concepts required.} For a small $N$ the order can be read off the list of powers; the gcds then give the factors.
 
@@ -1528,9 +1530,9 @@ $r = 8$ is a multiple of the order, not the order (the smallest positive exponen
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $8$ is a multiple of the order; the order is the smallest exponent with $a^r \equiv 1$.
-\item[\textbf{(B)}] $2^2 = 4 \ne 1$, so $r \ne 2$; the order is $4$ (the factors are right, but for the wrong reason).
-\item[\textbf{(C)}] $1$ and $15$ are the trivial gcds that occur only for $a^{r/2} \equiv -1$; here $4 \not\equiv 14$.
+\item[\textbf{(A)}] $1$ and $15$ are the trivial gcds that occur only for $a^{r/2} \equiv -1$; here $4 \not\equiv 14$.
+\item[\textbf{(C)}] $2^2 = 4 \ne 1$, so $r \ne 2$; the order is $4$ (the factors are right, but for the wrong reason).
+\item[\textbf{(D)}] $8$ is a multiple of the order; the order is the smallest exponent with $a^r \equiv 1$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} $N = 15$, $a = 2$ behaves like the notebook default $a = 7$: $r = 4$, factors $3 \times 5$.
 \end{solbox}
@@ -1572,14 +1574,14 @@ failing base. $\gcd(a, N) = 1$ is required, not a reason for failure.
 \qmeta{Single-correct MCQ}{Odd order: retry}
 For $N = 21$ and $a = 4$, the outcome of the classical checks is
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] $r = 6$, factors $3$ and $7$
+\item[\correctlabel{A}] $r = 3$ is odd, so $a^{r/2}$ is not an integer power; the attempt fails and a new $a$ is chosen
 \item[\optlabel{B}] $r = 3$, factors $\gcd(4^1 - 1, 21) = 3$ and $\gcd(4^1 + 1, 21) = 1$
-\item[\correctlabel{C}] $r = 3$ is odd, so $a^{r/2}$ is not an integer power; the attempt fails and a new $a$ is chosen
-\item[\optlabel{D}] $\gcd(4, 21) = 7$, a lucky factor
+\item[\optlabel{C}] $\gcd(4, 21) = 7$, a lucky factor
+\item[\optlabel{D}] $r = 6$, factors $3$ and $7$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $r = 3$ is odd, so $a^{r/2}$ is not an integer power; the attempt fails and a new $a$ is chosen
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $r = 3$ is odd, so $a^{r/2}$ is not an integer power; the attempt fails and a new $a$ is chosen
 
 \textbf{\color{brand}Concepts required.} An odd order gives no square root $a^{r/2}$ in the integers; the attempt fails.
 
@@ -1590,9 +1592,9 @@ reported as a failure, not as a success; one simply repeats with another base ($
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $4^3 \equiv 1$, so the order is $3$, not $6$; $6$ is the order of $a = 2$ modulo $21$.
 \item[\textbf{(B)}] The reduction is not applied for odd $r$; ``$4^{1}$'' is not $a^{r/2}$ for $r = 3$, and a gcd of $1$ is no factor anyway.
-\item[\textbf{(D)}] $\gcd(4, 21) = 1$; $4$ shares no factor with $21 = 3\cdot7$.
+\item[\textbf{(C)}] $\gcd(4, 21) = 1$; $4$ shares no factor with $21 = 3\cdot7$.
+\item[\textbf{(D)}] $4^3 \equiv 1$, so the order is $3$, not $6$; $6$ is the order of $a = 2$ modulo $21$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Odd order $\Rightarrow$ retry with a new base; never present it as a success.
 \end{solbox}
@@ -1603,14 +1605,14 @@ reported as a failure, not as a success; one simply repeats with another base ($
 \qmeta{Single-correct MCQ}{Lucky base}
 For $N = 21$ the randomly chosen base is $a = 6$. What happens?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] order finding gives $r = 6$ and the factors $3$, $7$
-\item[\optlabel{B}] $U_6$ is a valid unitary and phase estimation returns $r = 2$
-\item[\optlabel{C}] the algorithm fails because $a$ is even
-\item[\correctlabel{D}] $\gcd(6, 21) = 3$ is already a non-trivial factor; no quantum computation is needed
+\item[\optlabel{A}] $U_6$ is a valid unitary and phase estimation returns $r = 2$
+\item[\optlabel{B}] order finding gives $r = 6$ and the factors $3$, $7$
+\item[\correctlabel{C}] $\gcd(6, 21) = 3$ is already a non-trivial factor; no quantum computation is needed
+\item[\optlabel{D}] the algorithm fails because $a$ is even
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $\gcd(6, 21) = 3$ is already a non-trivial factor; no quantum computation is needed
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $\gcd(6, 21) = 3$ is already a non-trivial factor; no quantum computation is needed
 
 \textbf{\color{brand}Concepts required.} The first step of the algorithm is the classical test $\gcd(a, N)$.
 
@@ -1621,9 +1623,9 @@ For $N = 21$ the randomly chosen base is $a = 6$. What happens?
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] Order finding is not defined for $a$ not coprime to $N$: no power of $6$ is $\equiv 1 \pmod{21}$.
-\item[\textbf{(B)}] $U_6$ maps $\ket0$ and $\ket7$ to $\ket0$: it is not unitary, so phase estimation cannot be applied.
-\item[\textbf{(C)}] Even bases are allowed; $a = 2$ works for $N = 21$. The point is the common factor $3$.
+\item[\textbf{(A)}] $U_6$ maps $\ket0$ and $\ket7$ to $\ket0$: it is not unitary, so phase estimation cannot be applied.
+\item[\textbf{(B)}] Order finding is not defined for $a$ not coprime to $N$: no power of $6$ is $\equiv 1 \pmod{21}$.
+\item[\textbf{(D)}] Even bases are allowed; $a = 2$ works for $N = 21$. The point is the common factor $3$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Always compute $\gcd(a, N)$ first --- sometimes it already solves the problem.
 \end{solbox}
@@ -1634,12 +1636,12 @@ For $N = 21$ the randomly chosen base is $a = 6$. What happens?
 \qmeta{Single-correct MCQ}{Register sizes for $N = 33$}
 With the register sizes of \texttt{Shor.ipynb} ($n = $ \texttt{N.bit\_length()}, $t = 2n$), the circuit for $N = 33$ uses
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$33$ qubits & \optlabel{B}\,$15$ qubits ($n = 5$, $t = 10$) \\[3pt]
-\optlabel{C}\,$12$ qubits & \correctlabel{D}\,$18$ qubits ($n = 6$, $t = 12$)
+\correctlabel{A}\,$18$ qubits ($n = 6$, $t = 12$) & \optlabel{B}\,$33$ qubits \\[3pt]
+\optlabel{C}\,$12$ qubits & \optlabel{D}\,$15$ qubits ($n = 5$, $t = 10$)
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $18$ qubits ($n = 6$, $t = 12$)
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $18$ qubits ($n = 6$, $t = 12$)
 
 \textbf{\color{brand}Concepts required.} Register sizes: $n = $ bit length of $N$, $t = 2n$ counting qubits, $3n$ in total.
 
@@ -1650,9 +1652,9 @@ With the register sizes of \texttt{Shor.ipynb} ($n = $ \texttt{N.bit\_length()},
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The qubit count grows with $\log_2N$, not with $N$; $33$ qubits would be $3\times11$ bits.
-\item[\textbf{(B)}] $n = 5$ bits only represent $0, \dots, 31$, which does not contain all residues modulo $33$.
+\item[\textbf{(B)}] The qubit count grows with $\log_2N$, not with $N$; $33$ qubits would be $3\times11$ bits.
 \item[\textbf{(C)}] $12$ is only the counting register $t = 2n$.
+\item[\textbf{(D)}] $n = 5$ bits only represent $0, \dots, 31$, which does not contain all residues modulo $33$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} $3n$ qubits in the notebook's construction; better constructions need about $2n$.
 \end{solbox}
@@ -1663,14 +1665,14 @@ With the register sizes of \texttt{Shor.ipynb} ($n = $ \texttt{N.bit\_length()},
 \qmeta{Single-correct MCQ}{$N = 15$, $a = 11$ outcomes}
 For $N = 15$, $a = 11$ and $t = 8$ counting qubits, the ideal outcome distribution and the result of post-processing $y = 128$ are
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] a uniform distribution, because $11$ is prime
-\item[\correctlabel{B}] peaks at $y \in \{0, 128\}$ with probability $1/2$ each; $128/256 = 1/2 \Rightarrow r = 2$, $\gcd(10, 15) = 5$, $\gcd(12, 15) = 3$
-\item[\optlabel{C}] peaks at $y \in \{0, 128\}$; $r = 2$, but $11 \equiv -1$, so the factors are trivial
+\item[\optlabel{A}] peaks at $y \in \{0, 128\}$; $r = 2$, but $11 \equiv -1$, so the factors are trivial
+\item[\optlabel{B}] a uniform distribution, because $11$ is prime
+\item[\correctlabel{C}] peaks at $y \in \{0, 128\}$ with probability $1/2$ each; $128/256 = 1/2 \Rightarrow r = 2$, $\gcd(10, 15) = 5$, $\gcd(12, 15) = 3$
 \item[\optlabel{D}] peaks at $y \in \{0, 64, 128, 192\}$; $r = 4$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} peaks at $y \in \{0, 128\}$ with probability $1/2$ each; $128/256 = 1/2 \Rightarrow r = 2$, $\gcd(10, 15) = 5$, $\gcd(12, 15) = 3$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} peaks at $y \in \{0, 128\}$ with probability $1/2$ each; $128/256 = 1/2 \Rightarrow r = 2$, $\gcd(10, 15) = 5$, $\gcd(12, 15) = 3$
 
 \textbf{\color{brand}Concepts required.} For $r \mid 2^t$ the outcomes are exactly $k2^t/r$, each with probability $1/r$.
 
@@ -1681,8 +1683,8 @@ gives $s/r = 1/2$, $r = 2$; $11 \not\equiv -1 \equiv 14$, and $\gcd(10, 15) = 5$
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] Primality of the base is irrelevant; the distribution depends only on the order $r$.
-\item[\textbf{(C)}] $11 \not\equiv -1 \equiv 14 \pmod{15}$; the gcds $5$ and $3$ are non-trivial.
+\item[\textbf{(A)}] $11 \not\equiv -1 \equiv 14 \pmod{15}$; the gcds $5$ and $3$ are non-trivial.
+\item[\textbf{(B)}] Primality of the base is irrelevant; the distribution depends only on the order $r$.
 \item[\textbf{(D)}] Four peaks would mean $r = 4$; but $11^2 = 121 \equiv 1$, so $r = 2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The number of peaks is the order; their spacing is $2^t/r$.
@@ -1694,14 +1696,14 @@ gives $s/r = 1/2$, $r = 2$; $11 \not\equiv -1 \equiv 14$, and $\gcd(10, 15) = 5$
 \qmeta{Single-correct MCQ}{Continued fractions, $N = 33$}
 For $N = 33$, $a = 5$ and $t = 12$, the measurement gives $y = 1229$. The continued-fraction step and the factors are
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv -1$, trivial factors
-\item[\correctlabel{B}] $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv 23$, $\gcd(22, 33) = 11$, $\gcd(24, 33) = 3$
-\item[\optlabel{C}] $1229/4096 \approx 1/3 \Rightarrow r = 3$; the attempt fails
-\item[\optlabel{D}] $1229/4096 \approx 3/10 \Rightarrow r = 3$; factors $3$ and $11$
+\item[\optlabel{A}] $1229/4096 \approx 1/3 \Rightarrow r = 3$; the attempt fails
+\item[\optlabel{B}] $1229/4096 \approx 3/10 \Rightarrow r = 3$; factors $3$ and $11$
+\item[\optlabel{C}] $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv -1$, trivial factors
+\item[\correctlabel{D}] $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv 23$, $\gcd(22, 33) = 11$, $\gcd(24, 33) = 3$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv 23$, $\gcd(22, 33) = 11$, $\gcd(24, 33) = 3$
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $1229/4096 \approx 3/10 \Rightarrow r = 10$; $5^5 \equiv 23$, $\gcd(22, 33) = 11$, $\gcd(24, 33) = 3$
 
 \textbf{\color{brand}Concepts required.} Continued fractions find the best approximation $s/r$ with $r \le N$ to $y/2^t$.
 
@@ -1712,9 +1714,9 @@ $5^5 = 3125 = 94\cdot33 + 23$; $23 \ne 32$; $\gcd(22, 33) = 11$, $\gcd(24, 33) =
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $5^5 \equiv 23$, and $-1 \equiv 32$; so the factors are non-trivial.
-\item[\textbf{(C)}] $1/3 = 0.333$ is much farther from $0.30005$ than $3/10$; continued fractions give $3/10$.
-\item[\textbf{(D)}] The numerator $3$ is the random index $s$; the order is the denominator $10$.
+\item[\textbf{(A)}] $1/3 = 0.333$ is much farther from $0.30005$ than $3/10$; continued fractions give $3/10$.
+\item[\textbf{(B)}] The numerator $3$ is the random index $s$; the order is the denominator $10$.
+\item[\textbf{(C)}] $5^5 \equiv 23$, and $-1 \equiv 32$; so the factors are non-trivial.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Read the order from the denominator, then verify $a^r \equiv 1$.
 \end{solbox}
@@ -1726,13 +1728,13 @@ $5^5 = 3125 = 94\cdot33 + 23$; $23 \ne 32$; $\gcd(22, 33) = 11$, $\gcd(24, 33) =
 For $N = 33$, $a = 5$, $t = 12$, the outcome is $y = 2048$. The procedure of \texttt{candidate\_orders} returns
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
 \item[\optlabel{A}] the order $2$, because the denominator is always the order
-\item[\optlabel{B}] the order $5$
+\item[\correctlabel{B}] the fraction $1/2$ and, after testing multiples of $2$, the order $10$ (since $5^2, 5^4, 5^6, 5^8 \not\equiv 1$, $5^{10} \equiv 1$)
 \item[\optlabel{C}] no candidate, because $y = 2^{t-1}$ is never useful
-\item[\correctlabel{D}] the fraction $1/2$ and, after testing multiples of $2$, the order $10$ (since $5^2, 5^4, 5^6, 5^8 \not\equiv 1$, $5^{10} \equiv 1$)
+\item[\optlabel{D}] the order $5$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} the fraction $1/2$ and, after testing multiples of $2$, the order $10$ (since $5^2, 5^4, 5^6, 5^8 \not\equiv 1$, $5^{10} \equiv 1$)
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} the fraction $1/2$ and, after testing multiples of $2$, the order $10$ (since $5^2, 5^4, 5^6, 5^8 \not\equiv 1$, $5^{10} \equiv 1$)
 
 \textbf{\color{brand}Concepts required.} If $\gcd(s, r) > 1$ the reduced fraction has a denominator that divides $r$; testing multiples recovers $r$.
 
@@ -1744,8 +1746,8 @@ $5^{10} \equiv 1$ --- the first multiple that works is $10$. Without the multipl
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] The denominator is the order only if $\gcd(s, r) = 1$; here $s = 5$, $r = 10$ share the factor $5$.
-\item[\textbf{(B)}] $5^5 \equiv 23 \ne 1$, so $5$ is not the order; also $5$ is not a multiple of the denominator $2$.
 \item[\textbf{(C)}] $y = 2^{t-1}$ is useful whenever $r$ is even: it gives $1/2$, and the multiples test finds $r$.
+\item[\textbf{(D)}] $5^5 \equiv 23 \ne 1$, so $5$ is not the order; also $5$ is not a multiple of the denominator $2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} The multiples test turns many ``partial'' outcomes into successes.
 \end{solbox}
@@ -1757,12 +1759,12 @@ $5^{10} \equiv 1$ --- the first multiple that works is $10$. Without the multipl
 The textbook condition $2^t \ge N^2$ guarantees that continued fractions recover $s/r$ from the nearest outcome. For $N = 33$, the smallest such
 $t$ and the value used by \texttt{Shor.ipynb} are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\correctlabel{A}\,$t = 11$; the notebook uses $t = 2n = 12$ & \optlabel{B}\,$t = 10$; the notebook uses $12$ \\[3pt]
-\optlabel{C}\,$t = 6$; the notebook uses $12$ & \optlabel{D}\,$t = 12$; the notebook uses $11$
+\optlabel{A}\,$t = 12$; the notebook uses $11$ & \correctlabel{B}\,$t = 11$; the notebook uses $t = 2n = 12$ \\[3pt]
+\optlabel{C}\,$t = 10$; the notebook uses $12$ & \optlabel{D}\,$t = 6$; the notebook uses $12$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $t = 11$; the notebook uses $t = 2n = 12$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $t = 11$; the notebook uses $t = 2n = 12$
 
 \textbf{\color{brand}Concepts required.} With $2^t \ge N^2$, the outcome nearest $s2^t/r$ lies within $\frac{1}{2r^2}$ of $s/r$, so continued fractions find it.
 
@@ -1773,9 +1775,9 @@ because $N < 2^n$. Then two distinct fractions with denominators $\le N$ differ 
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $2^{10} = 1024 < 1089 = N^2$, so $t = 10$ is too small.
-\item[\textbf{(C)}] $t = 6$ is the work register size $n$; $2^6 = 64 \ll N^2$.
-\item[\textbf{(D)}] This swaps the two values: the minimum is $11$, and the notebook's $t = 2n$ gives $12$.
+\item[\textbf{(A)}] This swaps the two values: the minimum is $11$, and the notebook's $t = 2n$ gives $12$.
+\item[\textbf{(C)}] $2^{10} = 1024 < 1089 = N^2$, so $t = 10$ is too small.
+\item[\textbf{(D)}] $t = 6$ is the work register size $n$; $2^6 = 64 \ll N^2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} $t = 2n$ always satisfies $2^t \ge N^2$, with up to one qubit to spare.
 \end{solbox}
@@ -1787,12 +1789,12 @@ because $N < 2^n$. Then two distinct fractions with denominators $\le N$ differ 
 For the notebook's default ($N = 15$, $a = 7$, $t = 8$) the ideal outcomes are $y \in \{0, 64, 128, 192\}$, each with probability $1/4$. Using the
 multiples test, the exact probability that one shot yields the factors is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$1$ & \correctlabel{B}\,$3/4$ --- only $y = 0$ fails \\[3pt]
-\optlabel{C}\,$1/2$ --- only $y = 64$ and $192$ succeed & \optlabel{D}\,$1/4$ --- only $y = 64$ succeeds
+\optlabel{A}\,$1/4$ --- only $y = 64$ succeeds & \optlabel{B}\,$1$ \\[3pt]
+\optlabel{C}\,$1/2$ --- only $y = 64$ and $192$ succeed & \correctlabel{D}\,$3/4$ --- only $y = 0$ fails
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $3/4$ --- only $y = 0$ fails
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $3/4$ --- only $y = 0$ fails
 
 \textbf{\color{brand}Concepts required.} Count the outcomes whose post-processing yields the factors, weighted by their probabilities.
 
@@ -1803,9 +1805,9 @@ $\gcd(3, 15) = 3$, $\gcd(5, 15) = 5$. Hence $3/4$; the recorded run gave $0.766$
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] Success probability $1$ is impossible: the outcome $y = 0$ occurs with probability $1/4$ and carries no information.
+\item[\textbf{(A)}] $1/4$ counts one successful outcome; three of the four peaks succeed.
+\item[\textbf{(B)}] Success probability $1$ is impossible: the outcome $y = 0$ occurs with probability $1/4$ and carries no information.
 \item[\textbf{(C)}] $1/2$ forgets that $y = 128$ succeeds through the multiples test.
-\item[\textbf{(D)}] $1/4$ counts one successful outcome; three of the four peaks succeed.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Recorded $0.766$ vs exact $0.75$: the difference is shot noise, not a better algorithm.
 \end{solbox}
@@ -1817,7 +1819,7 @@ $\gcd(3, 15) = 3$, $\gcd(5, 15) = 5$. Hence $3/4$; the recorded run gave $0.766$
 Suppose $r = 12$ divides $2^t$, so every outcome is exactly $y = s2^t/r$ with $s$ uniform in $\{0, \dots, 11\}$. \emph{Without} the multiples test,
 the fraction of shots whose reduced denominator equals $r$ is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$\varphi(12)/12 = 1/3$ & \optlabel{B}\,$1/12$ & \optlabel{C}\,$1/2$ & \optlabel{D}\,$11/12$
+\correctlabel{A}\,$\varphi(12)/12 = 1/3$ & \optlabel{B}\,$1/2$ & \optlabel{C}\,$11/12$ & \optlabel{D}\,$1/12$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{A}
@@ -1832,9 +1834,9 @@ probability is $\varphi(r)/r = \Omega(1/\log\log r)$, so $O(\log\log N)$ repetit
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $1/12$ counts only $s = 1$; $s = 5, 7, 11$ are also coprime to $12$.
-\item[\textbf{(C)}] $1/2$ is the fraction of odd $s$; $s = 3, 9$ are odd but share the factor $3$ with $12$.
-\item[\textbf{(D)}] $11/12$ counts every $s \ne 0$; most of them share a factor with $12$.
+\item[\textbf{(B)}] $1/2$ is the fraction of odd $s$; $s = 3, 9$ are odd but share the factor $3$ with $12$.
+\item[\textbf{(C)}] $11/12$ counts every $s \ne 0$; most of them share a factor with $12$.
+\item[\textbf{(D)}] $1/12$ counts only $s = 1$; $s = 5, 7, 11$ are also coprime to $12$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} $\varphi(r)/r = \Omega(1/\log\log r)$: a few repetitions suffice.
 \end{solbox}
@@ -1846,9 +1848,9 @@ probability is $\varphi(r)/r = \Omega(1/\log\log r)$, so $O(\log\log N)$ repetit
 What is the role of the (inverse) quantum Fourier transform \emph{within} Shor's algorithm?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
 \item[\correctlabel{A}] it is a subroutine of phase estimation that turns the periodic phase pattern on the counting register into peaks near $y = k2^t/r$; it does not factor $N$ by itself
-\item[\optlabel{B}] it is the whole of Shor's algorithm; the remaining steps are optional
+\item[\optlabel{B}] it finds the factors $p$ and $q$ directly from $\ket N$
 \item[\optlabel{C}] it computes $a^x \bmod N$
-\item[\optlabel{D}] it finds the factors $p$ and $q$ directly from $\ket N$
+\item[\optlabel{D}] it is the whole of Shor's algorithm; the remaining steps are optional
 \end{itemize}
 \end{qitem}
 \begin{solbox}{A}
@@ -1863,9 +1865,9 @@ component; the dominant cost of real implementations is the modular exponentiati
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] The QFT alone factors nothing; modular exponentiation and the classical steps are essential.
+\item[\textbf{(B)}] No circuit acts on $\ket N$; $N$ enters only through the classical choice of the multipliers.
 \item[\textbf{(C)}] $a^x \bmod N$ is computed by the controlled modular multiplications, not by the QFT.
-\item[\textbf{(D)}] No circuit acts on $\ket N$; $N$ enters only through the classical choice of the multipliers.
+\item[\textbf{(D)}] The QFT alone factors nothing; modular exponentiation and the classical steps are essential.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Never confuse Shor with the QFT: the QFT is one subroutine.
 \end{solbox}
@@ -1877,12 +1879,12 @@ component; the dominant cost of real implementations is the modular exponentiati
 \texttt{build\_shor\_kernel} computes $c_j = a^{2^j} \bmod N$ classically and skips $c_j = 1$. For $N = 15$, $a = 7$, $t = 8$, the number of controlled
 multiplications actually applied is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$4$ & \correctlabel{B}\,$2$ ($c_0 = 7$, $c_1 = 4$; $c_j = 1$ for $j \ge 2$) \\[3pt]
-\optlabel{C}\,$1$ & \optlabel{D}\,$8$
+\optlabel{A}\,$4$ & \optlabel{B}\,$1$ \\[3pt]
+\correctlabel{C}\,$2$ ($c_0 = 7$, $c_1 = 4$; $c_j = 1$ for $j \ge 2$) & \optlabel{D}\,$8$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $2$ ($c_0 = 7$, $c_1 = 4$; $c_j = 1$ for $j \ge 2$)
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $2$ ($c_0 = 7$, $c_1 = 4$; $c_j = 1$ for $j \ge 2$)
 
 \textbf{\color{brand}Concepts required.} The multiplier constants $c_j = a^{2^j} \bmod N$ are computed classically; $c_j = 1$ is the identity.
 
@@ -1895,7 +1897,7 @@ specific to the tiny example.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $4$ is the order $r$, not the number of multipliers.
-\item[\textbf{(C)}] $1$ forgets that $c_1 = 4 \ne 1$ (it appears as \texttt{mulmod\_4\_mod\_15}).
+\item[\textbf{(B)}] $1$ forgets that $c_1 = 4 \ne 1$ (it appears as \texttt{mulmod\_4\_mod\_15}).
 \item[\textbf{(D)}] $8$ would be the count without skipping the identity multipliers; the notebook skips $c_j = 1$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Skipping identity multipliers exploits $r \mid 2^j$ --- a shortcut available only for toy examples.
@@ -1917,12 +1919,12 @@ Match each function of \texttt{Shor.ipynb} (List-I) with what it does (List-II).
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$4, Q$\to$2, R$\to$3, S$\to$1 & \optlabel{B}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 \\[3pt]
-\correctlabel{C}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1 & \optlabel{D}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1
+\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \correctlabel{B}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1 \\[3pt]
+\optlabel{C}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 & \optlabel{D}\,P$\to$4, Q$\to$2, R$\to$3, S$\to$1
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} P$\to$4, Q$\to$3, R$\to$2, S$\to$1
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} P$\to$4, Q$\to$3, R$\to$2, S$\to$1
 
 \textbf{\color{brand}Concepts required.} The notebook separates matrix construction, circuit construction, post-processing and classical checks.
 
@@ -1933,9 +1935,9 @@ Match each function of \texttt{Shor.ipynb} (List-I) with what it does (List-II).
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] This swaps the kernel builder and the post-processing: \texttt{build\_shor\_kernel} builds the circuit and never sees $y$.
-\item[\textbf{(B)}] This swaps post-processing and the classical reference: \texttt{candidate\_orders} uses $y$ and continued fractions; \texttt{classical\_order} uses brute force.
-\item[\textbf{(D)}] This swaps the matrix and the kernel builder: \texttt{mulmod\_matrix} returns a NumPy permutation matrix, not a circuit.
+\item[\textbf{(A)}] This swaps the matrix and the kernel builder: \texttt{mulmod\_matrix} returns a NumPy permutation matrix, not a circuit.
+\item[\textbf{(C)}] This swaps post-processing and the classical reference: \texttt{candidate\_orders} uses $y$ and continued fractions; \texttt{classical\_order} uses brute force.
+\item[\textbf{(D)}] This swaps the kernel builder and the post-processing: \texttt{build\_shor\_kernel} builds the circuit and never sees $y$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Know which part of the code is quantum (the kernel) and which is classical (everything around it).
 \end{solbox}
@@ -1956,12 +1958,12 @@ For $N = 33$, $a = 5$ ($r = 10$) and $t = 12$, match each outcome $y$ (List-I) w
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 & \optlabel{B}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 \\[3pt]
-\correctlabel{C}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \optlabel{D}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2
+\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{B}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2 \\[3pt]
+\optlabel{C}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 & \correctlabel{D}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
 
 \textbf{\color{brand}Concepts required.} \texttt{limit\_denominator(N)} returns the closest fraction with denominator at most $N$.
 
@@ -1972,9 +1974,9 @@ denominator $10$ directly ($s = 1, 7$ coprime to $10$); $819$ and $1638$ give $5
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] This exchanges $1/10$ and $1/5$: $410/4096 \approx 0.1$ and $819/4096 \approx 0.2$.
-\item[\textbf{(B)}] This exchanges $2/5$ and $7/10$: $1638/4096 \approx 0.4$ and $2867/4096 \approx 0.7$.
-\item[\textbf{(D)}] This assigns $1/10$ to $1638$; but $1638/4096 \approx 0.4 = 2/5$.
+\item[\textbf{(A)}] This exchanges $2/5$ and $7/10$: $1638/4096 \approx 0.4$ and $2867/4096 \approx 0.7$.
+\item[\textbf{(B)}] This assigns $1/10$ to $1638$; but $1638/4096 \approx 0.4 = 2/5$.
+\item[\textbf{(C)}] This exchanges $1/10$ and $1/5$: $410/4096 \approx 0.1$ and $819/4096 \approx 0.2$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Only fractions with $\gcd(s, r) = 1$ give $r$ directly; others need the multiples test.
 \end{solbox}
@@ -2059,12 +2061,12 @@ $2, 4, 8, 16, 32, 25, 11, 22, 5, 10, 20, 1$.
 \qmeta{Paragraph based}{$N = 39$: order and factors}
 The order $r$ and the factors $\gcd(2^{r/2} - 1, 39)$, $\gcd(2^{r/2} + 1, 39)$ are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$r = 12$; $\ 1$ and $39$ & \optlabel{B}\,$r = 12$; $\ 7$ and $13$ \\[3pt]
-\correctlabel{C}\,$r = 12$; $\ 3$ and $13$ & \optlabel{D}\,$r = 6$; $\ 3$ and $13$
+\correctlabel{A}\,$r = 12$; $\ 3$ and $13$ & \optlabel{B}\,$r = 6$; $\ 3$ and $13$ \\[3pt]
+\optlabel{C}\,$r = 12$; $\ 7$ and $13$ & \optlabel{D}\,$r = 12$; $\ 1$ and $39$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $r = 12$; $\ 3$ and $13$
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $r = 12$; $\ 3$ and $13$
 
 \textbf{\color{brand}Concepts required.} The order is the position of the first $1$ in the list of powers.
 
@@ -2075,9 +2077,9 @@ $r = 6$ would require $2^6 \equiv 1$, but $2^6 \equiv 25$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $25 \not\equiv -1 \equiv 38$, so the gcds are non-trivial.
-\item[\textbf{(B)}] $7$ does not divide $39 = 3\cdot13$.
-\item[\textbf{(D)}] $2^6 \equiv 25 \ne 1$, so $r \ne 6$ (and the factors would have to come from $2^3$).
+\item[\textbf{(B)}] $2^6 \equiv 25 \ne 1$, so $r \ne 6$ (and the factors would have to come from $2^3$).
+\item[\textbf{(C)}] $7$ does not divide $39 = 3\cdot13$.
+\item[\textbf{(D)}] $25 \not\equiv -1 \equiv 38$, so the gcds are non-trivial.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} $N = 39$, $a = 2$: $r = 12$, $39 = 3 \times 13$.
 \end{solbox}
@@ -2088,12 +2090,12 @@ $r = 6$ would require $2^6 \equiv 1$, but $2^6 \equiv 25$.
 \qmeta{Paragraph based}{$N = 39$: continued fraction}
 The outcome $y = 1707$ is measured. The continued-fraction step gives
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\correctlabel{A}\,$5/12$, so $r = 12$ directly & \optlabel{B}\,$1/2$, so the multiples test is needed \\[3pt]
-\optlabel{C}\,$5/12$, so $r = 5$ & \optlabel{D}\,$2/5$, so $r = 5$
+\optlabel{A}\,$5/12$, so $r = 5$ & \optlabel{B}\,$1/2$, so the multiples test is needed \\[3pt]
+\correctlabel{C}\,$5/12$, so $r = 12$ directly & \optlabel{D}\,$2/5$, so $r = 5$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $5/12$, so $r = 12$ directly
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $5/12$, so $r = 12$ directly
 
 \textbf{\color{brand}Concepts required.} A continued-fraction convergent within $\frac{1}{2r^2}$ of $y/2^t$ is the reduced form of $s/r$.
 
@@ -2104,8 +2106,8 @@ $\gcd(5, 12) = 1$, so the denominator is the order $12$. The numerator $5$ is th
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
+\item[\textbf{(A)}] The numerator $5$ is the random index $s$; the order is the denominator $12$.
 \item[\textbf{(B)}] $1/2 = 0.5$ is far from $0.41675$; that fraction belongs to $y = 2048$.
-\item[\textbf{(C)}] The numerator $5$ is the random index $s$; the order is the denominator $12$.
 \item[\textbf{(D)}] $2/5 = 0.4$ differs by $0.017$, while $5/12$ differs by only $8\times10^{-5}$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Denominator $=$ order when $\gcd(s, r) = 1$; always verify $a^r \equiv 1$.
@@ -2121,11 +2123,11 @@ $\gcd(5, 12) = 1$, so the denominator is the order $12$. The numerator $5$ is th
 \qmeta{Single-correct MCQ}{Beauregard qubit count}
 Beauregard's circuit for Shor's algorithm uses $2n + 3$ logical qubits. For RSA-2048 ($n = 2048$) this is
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$2051$ & \optlabel{B}\,$4096$ & \optlabel{C}\,$6147$ & \correctlabel{D}\,$4099$
+\optlabel{A}\,$6147$ & \correctlabel{B}\,$4099$ & \optlabel{C}\,$4096$ & \optlabel{D}\,$2051$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $4099$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $4099$
 
 \textbf{\color{brand}Concepts required.} Logical-qubit counts of Shor circuits are linear in the bit length $n$.
 
@@ -2136,9 +2138,9 @@ Beauregard's circuit for Shor's algorithm uses $2n + 3$ logical qubits. For RSA-
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $2051 = n + 3$ omits one of the two $n$-qubit registers (work register and adder register).
-\item[\textbf{(B)}] $4096 = 2n$ forgets the three extra qubits (carry/ancilla and the recycled control).
-\item[\textbf{(C)}] $6147 = 3n + 3$; the $3n$ register count belongs to the notebook's construction, not Beauregard's.
+\item[\textbf{(A)}] $6147 = 3n + 3$; the $3n$ register count belongs to the notebook's construction, not Beauregard's.
+\item[\textbf{(C)}] $4096 = 2n$ forgets the three extra qubits (carry/ancilla and the recycled control).
+\item[\textbf{(D)}] $2051 = n + 3$ omits one of the two $n$-qubit registers (work register and adder register).
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Thousands of logical qubits --- each made of hundreds to thousands of physical qubits.
 \end{solbox}
@@ -2149,8 +2151,8 @@ Beauregard's circuit for Shor's algorithm uses $2n + 3$ logical qubits. For RSA-
 \qmeta{Single-correct MCQ}{Published RSA-2048 estimates}
 Which pair of published resource estimates for factoring RSA-2048 is correct?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] both estimates state that RSA-2048 was factored on existing hardware
-\item[\optlabel{B}] Gidney (2025): about $20$ billion qubits in about $8$ hours
+\item[\optlabel{A}] Gidney (2025): about $20$ billion qubits in about $8$ hours
+\item[\optlabel{B}] both estimates state that RSA-2048 was factored on existing hardware
 \item[\correctlabel{C}] Gidney and Ekerå (2019): about $20$ million noisy qubits in about $8$ hours; Gidney (2025): fewer than one million noisy qubits in less than a week
 \item[\optlabel{D}] Gidney and Ekerå (2019): $4099$ physical qubits in one second
 \end{itemize}
@@ -2168,8 +2170,8 @@ million qubits, $< 1$ week. No cryptographically relevant number has been factor
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] No resource estimate claims an actual factorisation of RSA-2048; none has been performed.
-\item[\textbf{(B)}] The 2025 estimate \emph{lowered} the qubit count to under one million; $20$ billion is fabricated.
+\item[\textbf{(A)}] The 2025 estimate \emph{lowered} the qubit count to under one million; $20$ billion is fabricated.
+\item[\textbf{(B)}] No resource estimate claims an actual factorisation of RSA-2048; none has been performed.
 \item[\textbf{(D)}] $4099$ is Beauregard's \emph{logical} count; GE2019 required about $20$ million physical qubits and hours, not seconds.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Distinguish estimates from demonstrations: RSA-2048 remains unfactored.
@@ -2181,11 +2183,11 @@ million qubits, $< 1$ week. No cryptographically relevant number has been factor
 \qmeta{Single-correct MCQ}{$O(n^3)$ scaling}
 With schoolbook arithmetic, modular exponentiation costs $O(n^3)$ gates. Doubling the bit length $n$ of $N$ multiplies the gate count by about
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$4$ & \optlabel{B}\,$2^{n}$ & \optlabel{C}\,$2$ & \correctlabel{D}\,$8$
+\optlabel{A}\,$2$ & \optlabel{B}\,$2^{n}$ & \correctlabel{C}\,$8$ & \optlabel{D}\,$4$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $8$
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $8$
 
 \textbf{\color{brand}Concepts required.} Polynomial scaling: $O(n^3)$ means doubling $n$ multiplies the cost by $2^3$.
 
@@ -2196,9 +2198,9 @@ which is the source of Shor's advantage --- but only on a fault-tolerant machine
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $4$ would be quadratic scaling, $O(n^2)$ --- e.g.\ the QFT alone.
+\item[\textbf{(A)}] $2$ would be linear scaling, $O(n)$.
 \item[\textbf{(B)}] $2^n$ is exponential growth, the cost of brute-force methods, not of Shor's algorithm.
-\item[\textbf{(C)}] $2$ would be linear scaling, $O(n)$.
+\item[\textbf{(D)}] $4$ would be quadratic scaling, $O(n^2)$ --- e.g.\ the QFT alone.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Shor is polynomial ($O(n^3)$ or better), GNFS sub-exponential --- the gap grows with $n$.
 \end{solbox}
@@ -2209,14 +2211,14 @@ which is the source of Shor's advantage --- but only on a fault-tolerant machine
 \qmeta{Single-correct MCQ}{Semiclassical QFT}
 In the ``semiclassical'' (one-control-qubit) implementation of the inverse QFT used by Beauregard, the $t = 2n$ counting qubits are replaced by
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] no qubits: the QFT is computed classically before the circuit
-\item[\optlabel{B}] $2n$ ancilla qubits that are never measured
-\item[\correctlabel{C}] a single qubit that is measured and reset $2n$ times; earlier measurement results classically control the phase corrections
-\item[\optlabel{D}] $n$ qubits, because the QFT needs only half the bits
+\item[\optlabel{A}] $2n$ ancilla qubits that are never measured
+\item[\optlabel{B}] $n$ qubits, because the QFT needs only half the bits
+\item[\optlabel{C}] no qubits: the QFT is computed classically before the circuit
+\item[\correctlabel{D}] a single qubit that is measured and reset $2n$ times; earlier measurement results classically control the phase corrections
 \end{itemize}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} a single qubit that is measured and reset $2n$ times; earlier measurement results classically control the phase corrections
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} a single qubit that is measured and reset $2n$ times; earlier measurement results classically control the phase corrections
 
 \textbf{\color{brand}Concepts required.} The inverse QFT followed by measurement can be performed one qubit at a time with classical feed-forward.
 
@@ -2228,9 +2230,9 @@ measurement statistics are unchanged.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The QFT acts on quantum amplitudes, which cannot be computed classically in advance.
-\item[\textbf{(B)}] Ancilla qubits that are never measured would not reduce the qubit count; the point is to recycle one qubit.
-\item[\textbf{(D)}] The QFT needs all $2n$ bits of precision; they are measured sequentially on one qubit, not reduced to $n$ qubits.
+\item[\textbf{(A)}] Ancilla qubits that are never measured would not reduce the qubit count; the point is to recycle one qubit.
+\item[\textbf{(B)}] The QFT needs all $2n$ bits of precision; they are measured sequentially on one qubit, not reduced to $n$ qubits.
+\item[\textbf{(C)}] The QFT acts on quantum amplitudes, which cannot be computed classically in advance.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Measurement plus classical control trades qubits for mid-circuit measurements.
 \end{solbox}
@@ -2242,14 +2244,14 @@ measurement statistics are unchanged.
 For $N = 21$, $a = 2$, $t = 10$, an approximate inverse QFT keeps only controlled phases between qubits at distance $k - j \le m$. With $m = 2$ the
 number of controlled phases and the (re-executed, exact) success probability are
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] $45$ phases; $0.817$
-\item[\optlabel{B}] $2$ phases; $0.689$
+\item[\correctlabel{A}] $17$ phases; $0.689$ (full QFT: $45$ phases, $0.817$)
+\item[\optlabel{B}] $45$ phases; $0.817$
 \item[\optlabel{C}] $17$ phases; $0.817$ --- truncation never changes the result
-\item[\correctlabel{D}] $17$ phases; $0.689$ (full QFT: $45$ phases, $0.817$)
+\item[\optlabel{D}] $2$ phases; $0.689$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $17$ phases; $0.689$ (full QFT: $45$ phases, $0.817$)
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $17$ phases; $0.689$ (full QFT: $45$ phases, $0.817$)
 
 \textbf{\color{brand}Concepts required.} The approximate QFT drops small-angle controlled phases; it reduces the gate count at a small cost in accuracy.
 
@@ -2260,9 +2262,9 @@ $0.811$ for $m = 4$ and $0.817$ for the full QFT. Very small cut-offs lose accur
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $45$ phases and $0.817$ describe the full QFT, not the truncation $m = 2$.
-\item[\textbf{(B)}] $m = 2$ is the maximum distance, not the number of gates; each distance contributes $t - d$ pairs.
+\item[\textbf{(B)}] $45$ phases and $0.817$ describe the full QFT, not the truncation $m = 2$.
 \item[\textbf{(C)}] Truncation changes the amplitudes; the re-executed simulation shows a drop from $0.817$ to $0.689$.
+\item[\textbf{(D)}] $m = 2$ is the maximum distance, not the number of gates; each distance contributes $t - d$ pairs.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Moderate cut-offs ($m \approx 4$) lose little; aggressive ones lose a lot.
 \end{solbox}
@@ -2273,11 +2275,11 @@ $0.811$ for $m = 4$ and $0.817$ for the full QFT. Very small cut-offs lose accur
 \qmeta{Single-correct MCQ}{Controlled phases in the QFT}
 The full inverse QFT on $t = 8$ counting qubits (notebook default for $N = 15$) contains how many controlled phase gates?
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\optlabel{A}\,$8$ & \optlabel{B}\,$64$ & \correctlabel{C}\,$28$ & \optlabel{D}\,$56$
+\optlabel{A}\,$8$ & \correctlabel{B}\,$28$ & \optlabel{C}\,$64$ & \optlabel{D}\,$56$
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} $28$
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $28$
 
 \textbf{\color{brand}Concepts required.} The QFT on $t$ qubits uses one controlled phase per qubit pair.
 
@@ -2289,7 +2291,7 @@ large $t$ is dwarfed by the $O(n^3)$ cost of the modular exponentiation.
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] $8$ is the number of Hadamards in the inverse QFT, not of controlled phases.
-\item[\textbf{(B)}] $64 = t^2$ counts ordered pairs including $j = k$.
+\item[\textbf{(C)}] $64 = t^2$ counts ordered pairs including $j = k$.
 \item[\textbf{(D)}] $56 = t(t - 1)$ counts each unordered pair twice.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} QFT cost is $O(t^2)$ --- small compared with modular exponentiation.
@@ -2302,14 +2304,14 @@ large $t$ is dwarfed by the $O(n^3)$ cost of the modular exponentiation.
 The recorded gate counts of \texttt{Shor.ipynb} for $N = 15$ are \texttt{x: 1, ccustom\_unitary\_constant: 2, swap: 4, h: 16, cr1: 28} (and
 \texttt{mz: 8}). Why are there $16$ Hadamard gates?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] each controlled multiplication contains $8$ Hadamards
-\item[\optlabel{B}] Hadamards are inserted before every measurement of the work register
-\item[\optlabel{C}] $16 = 2^4$ is the dimension of the work register
-\item[\correctlabel{D}] $8$ create the superposition on the counting qubits and $8$ belong to the inverse QFT
+\item[\correctlabel{A}] $8$ create the superposition on the counting qubits and $8$ belong to the inverse QFT
+\item[\optlabel{B}] $16 = 2^4$ is the dimension of the work register
+\item[\optlabel{C}] each controlled multiplication contains $8$ Hadamards
+\item[\optlabel{D}] Hadamards are inserted before every measurement of the work register
 \end{itemize}
 \end{qitem}
-\begin{solbox}{D}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $8$ create the superposition on the counting qubits and $8$ belong to the inverse QFT
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $8$ create the superposition on the counting qubits and $8$ belong to the inverse QFT
 
 \textbf{\color{brand}Concepts required.} Hadamards appear at the start (superposition) and in the inverse QFT (one per qubit).
 
@@ -2320,9 +2322,9 @@ and the work register is not measured. Total gates without \texttt{mz}: $1 + 2 +
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The multipliers are single \texttt{ccustom\_unitary\_constant} gates; no Hadamards are inside them.
-\item[\textbf{(B)}] The work register is not measured in the notebook; only \texttt{mz(count)} appears.
-\item[\textbf{(C)}] The coincidence $16 = 2^4$ is irrelevant; the count is $t + t$.
+\item[\textbf{(B)}] The coincidence $16 = 2^4$ is irrelevant; the count is $t + t$.
+\item[\textbf{(C)}] The multipliers are single \texttt{ccustom\_unitary\_constant} gates; no Hadamards are inside them.
+\item[\textbf{(D)}] The work register is not measured in the notebook; only \texttt{mz(count)} appears.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Gate counts should be traced back to the circuit's structure.
 \end{solbox}
@@ -2333,9 +2335,9 @@ and the work register is not measured. Total gates without \texttt{mz}: $1 + 2 +
 \qmeta{Single-correct MCQ}{No hardware execution}
 Why does \texttt{Shor.ipynb} refuse to run on hardware targets?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] the inverse QFT cannot be executed on hardware
-\item[\optlabel{B}] Shor's algorithm is mathematically impossible on hardware
-\item[\optlabel{C}] CUDA-Q has no hardware targets
+\item[\optlabel{A}] CUDA-Q has no hardware targets
+\item[\optlabel{B}] the inverse QFT cannot be executed on hardware
+\item[\optlabel{C}] Shor's algorithm is mathematically impossible on hardware
 \item[\correctlabel{D}] its modular multipliers are exact custom unitaries (permutation matrices) registered with \texttt{cudaq.register\_operation}; hardware would need them decomposed into native gates, which the notebook does not do
 \end{itemize}
 \end{qitem}
@@ -2351,9 +2353,9 @@ native implementation; compiling it costs $O(n^2)$--$O(n^3)$ gates per multiplie
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The inverse QFT uses $H$, controlled phases and SWAPs, which compile to native gates.
-\item[\textbf{(B)}] Shor's algorithm is a well-defined circuit; small instances have run on hardware with compiled (often simplified) circuits.
-\item[\textbf{(C)}] CUDA-Q supports several hardware providers; the restriction is the notebook's custom gates.
+\item[\textbf{(A)}] CUDA-Q supports several hardware providers; the restriction is the notebook's custom gates.
+\item[\textbf{(B)}] The inverse QFT uses $H$, controlled phases and SWAPs, which compile to native gates.
+\item[\textbf{(C)}] Shor's algorithm is a well-defined circuit; small instances have run on hardware with compiled (often simplified) circuits.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Running on hardware requires a gate-level multiplier --- the hard engineering part.
 \end{solbox}
@@ -2394,10 +2396,10 @@ $7y \bmod 15 = 15 - (y\cdot2^3 \bmod 15)$.) With the controlled $\times4$ ($6$ c
 In the gate-level circuit ($t = 3$, $a = 7$, $N = 15$) the counting outcome becomes uniformly random in the fully depolarized limit. The success
 probability with the notebook's post-processing is then
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] $0$
+\item[\optlabel{A}] $1/8$
 \item[\correctlabel{B}] $3/8$: $y = 2, 4, 6$ give $r = 4$ and the factors; $y = 0$ gives nothing; odd $y$ give $r' = 8$, and $7^4 \equiv 1$ gives only trivial factors
 \item[\optlabel{C}] $3/4$, the same as without noise
-\item[\optlabel{D}] $1/8$
+\item[\optlabel{D}] $0$
 \end{itemize}
 \end{qitem}
 \begin{solbox}{B}
@@ -2413,9 +2415,9 @@ with this random baseline.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $0$ ignores that random outcomes can still give $r = 4$ by chance.
+\item[\textbf{(A)}] $1/8$ counts only one of the three successful outcomes.
 \item[\textbf{(C)}] $3/4$ is the noiseless success probability; full depolarization destroys the peaks.
-\item[\textbf{(D)}] $1/8$ counts only one of the three successful outcomes.
+\item[\textbf{(D)}] $0$ ignores that random outcomes can still give $r = 4$ by chance.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Compare noisy success rates with the random baseline, never with zero.
 \end{solbox}
@@ -2426,12 +2428,12 @@ with this random baseline.
 \qmeta{Single-correct MCQ}{Memory for $N = 1023$}
 Using the notebook's $3n$-qubit construction, the state-vector memory (16 bytes per amplitude) for $N = 1023$ is about
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,$268$ MB ($24$ qubits) & \correctlabel{B}\,$17.2$ GB ($30$ qubits) \\[3pt]
-\optlabel{C}\,$1.1$ TB ($36$ qubits) & \optlabel{D}\,$16.4$ kB
+\optlabel{A}\,$1.1$ TB ($36$ qubits) & \optlabel{B}\,$16.4$ kB \\[3pt]
+\optlabel{C}\,$268$ MB ($24$ qubits) & \correctlabel{D}\,$17.2$ GB ($30$ qubits)
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $17.2$ GB ($30$ qubits)
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} $17.2$ GB ($30$ qubits)
 
 \textbf{\color{brand}Concepts required.} Memory of the full state vector: $16\cdot2^{3n}$ bytes in the notebook's construction.
 
@@ -2442,9 +2444,9 @@ $32$ qubits, i.e.\ $N \le 1023$. $N = 1024$ would need $11$ bits and $33$ qubits
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] $268$ MB corresponds to $24$ qubits, i.e.\ an $8$-bit $N$ such as $143$.
-\item[\textbf{(C)}] $1.1$ TB corresponds to $36$ qubits, i.e.\ a $12$-bit $N$.
-\item[\textbf{(D)}] $16.4$ kB is $16\cdot2^{10}$: it uses $n$ qubits instead of $3n$.
+\item[\textbf{(A)}] $1.1$ TB corresponds to $36$ qubits, i.e.\ a $12$-bit $N$.
+\item[\textbf{(B)}] $16.4$ kB is $16\cdot2^{10}$: it uses $n$ qubits instead of $3n$.
+\item[\textbf{(C)}] $268$ MB corresponds to $24$ qubits, i.e.\ an $8$-bit $N$ such as $143$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Simulation memory explodes: a few more bits of $N$ exhaust any computer.
 \end{solbox}
@@ -2455,7 +2457,7 @@ $32$ qubits, i.e.\ $N \le 1023$. $N = 1024$ would need $11$ bits and $33$ qubits
 \qmeta{Single-correct MCQ}{Toy RSA}
 Toy RSA: $p = 5$, $q = 11$, $e = 7$. The private exponent $d$ and the ciphertext of $m = 2$ are
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{4}{L}@{}}
-\correctlabel{A}\,$d = 23$; $c = 18$ & \optlabel{B}\,$d = 23$; $c = 14$ & \optlabel{C}\,$d = 3$; $c = 18$ & \optlabel{D}\,$d = 7$; $c = 2$
+\correctlabel{A}\,$d = 23$; $c = 18$ & \optlabel{B}\,$d = 3$; $c = 18$ & \optlabel{C}\,$d = 23$; $c = 14$ & \optlabel{D}\,$d = 7$; $c = 2$
 \end{tabularx}
 \end{qitem}
 \begin{solbox}{A}
@@ -2470,8 +2472,8 @@ algorithm breaks RSA by factoring $N = 55$, which reveals $\varphi(N)$ and hence
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] $c = 2^7 \bmod 55 = 18$, not $14$.
-\item[\textbf{(C)}] $7\cdot3 = 21 \not\equiv 1 \pmod{40}$, so $d \ne 3$.
+\item[\textbf{(B)}] $7\cdot3 = 21 \not\equiv 1 \pmod{40}$, so $d \ne 3$.
+\item[\textbf{(C)}] $c = 2^7 \bmod 55 = 18$, not $14$.
 \item[\textbf{(D)}] $d = e$ would need $49 \equiv 1 \pmod{40}$; and encryption does change the message.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Factoring $N$ gives $\varphi(N)$ and hence $d$: that is the threat.
@@ -2483,12 +2485,12 @@ algorithm breaks RSA by factoring $N = 55$, which reveals $\varphi(N)$ and hence
 \qmeta{Single-correct MCQ}{Post-quantum standards}
 Which standard specifies NIST's lattice-based key-encapsulation mechanism intended to replace RSA/ECDH key exchange?
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,FIPS 197 (AES) & \correctlabel{B}\,FIPS 203 (ML-KEM) \\[3pt]
-\optlabel{C}\,SP 800-90A (random bit generators) & \optlabel{D}\,FIPS 186 (DSA/ECDSA)
+\correctlabel{A}\,FIPS 203 (ML-KEM) & \optlabel{B}\,SP 800-90A (random bit generators) \\[3pt]
+\optlabel{C}\,FIPS 197 (AES) & \optlabel{D}\,FIPS 186 (DSA/ECDSA)
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} FIPS 203 (ML-KEM)
+\begin{solbox}{A}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} FIPS 203 (ML-KEM)
 
 \textbf{\color{brand}Concepts required.} NIST's post-quantum standards: FIPS 203 (ML-KEM), FIPS 204 (ML-DSA), FIPS 205 (SLH-DSA), 2024.
 
@@ -2499,8 +2501,8 @@ symmetric and not broken by Shor; FIPS 186 contains the signature schemes Shor's
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] FIPS 197 is AES, a symmetric cipher; it is not a key-encapsulation mechanism.
-\item[\textbf{(C)}] SP 800-90A specifies random bit generators, not key exchange.
+\item[\textbf{(B)}] SP 800-90A specifies random bit generators, not key exchange.
+\item[\textbf{(C)}] FIPS 197 is AES, a symmetric cipher; it is not a key-encapsulation mechanism.
 \item[\textbf{(D)}] FIPS 186 specifies DSA/ECDSA/RSA signatures --- schemes broken by Shor's algorithm.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Replace RSA/ECC key exchange by ML-KEM (often in hybrid mode).
@@ -2512,14 +2514,14 @@ symmetric and not broken by Shor; FIPS 186 contains the signature schemes Shor's
 \qmeta{Single-correct MCQ}{Impact on RSA, ECC, AES}
 Which statement about the cryptographic impact of a large fault-tolerant quantum computer is correct?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\correctlabel{A}] Shor's algorithm breaks RSA and elliptic-curve cryptography; AES is affected only by Grover's quadratic speed-up, so AES-256 remains adequate
-\item[\optlabel{B}] hash functions such as SHA-256 are broken by Shor's algorithm
-\item[\optlabel{C}] Shor's algorithm breaks AES-256 in polynomial time
-\item[\optlabel{D}] only RSA is affected; elliptic-curve cryptography is immune
+\item[\optlabel{A}] hash functions such as SHA-256 are broken by Shor's algorithm
+\item[\optlabel{B}] only RSA is affected; elliptic-curve cryptography is immune
+\item[\correctlabel{C}] Shor's algorithm breaks RSA and elliptic-curve cryptography; AES is affected only by Grover's quadratic speed-up, so AES-256 remains adequate
+\item[\optlabel{D}] Shor's algorithm breaks AES-256 in polynomial time
 \end{itemize}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} Shor's algorithm breaks RSA and elliptic-curve cryptography; AES is affected only by Grover's quadratic speed-up, so AES-256 remains adequate
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} Shor's algorithm breaks RSA and elliptic-curve cryptography; AES is affected only by Grover's quadratic speed-up, so AES-256 remains adequate
 
 \textbf{\color{brand}Concepts required.} Shor solves the hidden subgroup problem in abelian groups: factoring and discrete logarithms, including on elliptic curves.
 
@@ -2530,9 +2532,9 @@ functions have no such structure; Grover search gives at most a square-root spee
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] Hash functions are affected only by generic (Grover-type) speed-ups, not by Shor.
-\item[\textbf{(C)}] Shor's algorithm needs algebraic periodicity; AES has none, and Grover gives only a square-root speed-up.
-\item[\textbf{(D)}] ECC relies on discrete logarithms, which Shor's algorithm also solves (with fewer qubits than RSA of equal security).
+\item[\textbf{(A)}] Hash functions are affected only by generic (Grover-type) speed-ups, not by Shor.
+\item[\textbf{(B)}] ECC relies on discrete logarithms, which Shor's algorithm also solves (with fewer qubits than RSA of equal security).
+\item[\textbf{(D)}] Shor's algorithm needs algebraic periodicity; AES has none, and Grover gives only a square-root speed-up.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Public-key cryptography falls; symmetric cryptography needs at most larger keys.
 \end{solbox}
@@ -2553,12 +2555,12 @@ Match each fault-tolerance term (List-I) with its meaning (List-II).
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \correctlabel{B}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 \\[3pt]
-\optlabel{C}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 & \optlabel{D}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2
+\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{B}\,P$\to$3, Q$\to$1, R$\to$4, S$\to$2 \\[3pt]
+\optlabel{C}\,P$\to$4, Q$\to$3, R$\to$1, S$\to$2 & \correctlabel{D}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{B}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} P$\to$3, Q$\to$4, R$\to$1, S$\to$2
 
 \textbf{\color{brand}Concepts required.} Fault tolerance encodes logical qubits in many physical qubits and supplies non-Clifford gates via magic states.
 
@@ -2571,8 +2573,8 @@ arithmetic is dominated by Toffoli gates, so magic-state production dominates it
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
 \item[\textbf{(A)}] This swaps code distance and magic states; the distance is a number of errors, magic states are resources.
+\item[\textbf{(B)}] This gives the physical qubit the meaning of code distance; a physical qubit is the noisy hardware element.
 \item[\textbf{(C)}] This swaps logical and physical qubits; the logical qubit is the encoded one.
-\item[\textbf{(D)}] This gives the physical qubit the meaning of code distance; a physical qubit is the noisy hardware element.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Shor's cost on real hardware is dominated by error correction and magic states.
 \end{solbox}
@@ -2593,12 +2595,12 @@ Match each construction for an $n$-bit $N$ (List-I) with its logical-qubit count
 \bottomrule
 \end{tabularx}}
 \par\smallskip\noindent\begin{tabularx}{\linewidth}{@{}*{2}{L}@{}}
-\correctlabel{A}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{B}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1 \\[3pt]
-\optlabel{C}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \optlabel{D}\,P$\to$3, Q$\to$2, R$\to$4, S$\to$1
+\optlabel{A}\,P$\to$3, Q$\to$4, R$\to$1, S$\to$2 & \optlabel{B}\,P$\to$3, Q$\to$2, R$\to$4, S$\to$1 \\[3pt]
+\correctlabel{C}\,P$\to$3, Q$\to$4, R$\to$2, S$\to$1 & \optlabel{D}\,P$\to$4, Q$\to$3, R$\to$2, S$\to$1
 \end{tabularx}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} P$\to$3, Q$\to$4, R$\to$2, S$\to$1
+\begin{solbox}{C}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} P$\to$3, Q$\to$4, R$\to$2, S$\to$1
 
 \textbf{\color{brand}Concepts required.} Different constructions trade qubits for gates and measurements.
 
@@ -2609,9 +2611,9 @@ idealised matrix multipliers one needs only $n + 1$ (1) --- but real multipliers
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] This swaps the notebook and Beauregard: the notebook uses $t + n = 3n$.
-\item[\textbf{(C)}] This swaps Gidney--Ekerå and the idealised semiclassical count.
-\item[\textbf{(D)}] This swaps Beauregard and Gidney--Ekerå; GE2019 uses slightly more than $3n$ qubits but far fewer gates.
+\item[\textbf{(A)}] This swaps Gidney--Ekerå and the idealised semiclassical count.
+\item[\textbf{(B)}] This swaps Beauregard and Gidney--Ekerå; GE2019 uses slightly more than $3n$ qubits but far fewer gates.
+\item[\textbf{(D)}] This swaps the notebook and Beauregard: the notebook uses $t + n = 3n$.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Qubit counts alone do not decide feasibility; gate counts and error rates matter too.
 \end{solbox}
@@ -2703,14 +2705,14 @@ measurements on a quantum processor.
 \qmeta{Paragraph based}{Error-free probability vs success}
 At $p = 0.01$, the probability that \emph{all} $127$ CNOTs are free of error is about $0.99^{127}$. Compare it with the success probability.
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\correctlabel{A}] $0.99^{127} \approx 0.28$, yet the success probability is $0.703$: many errors do not change $y$ or still lead to a correct order
-\item[\optlabel{B}] $0.99^{127} \approx 0.28$, so the success probability must be at most $0.28$
-\item[\optlabel{C}] $0.99^{127} \approx 0.88$, equal to the success probability
-\item[\optlabel{D}] $0.99^{127} \approx 0.01$, so the result is pure noise
+\item[\optlabel{A}] $0.99^{127} \approx 0.88$, equal to the success probability
+\item[\correctlabel{B}] $0.99^{127} \approx 0.28$, yet the success probability is $0.703$: many errors do not change $y$ or still lead to a correct order
+\item[\optlabel{C}] $0.99^{127} \approx 0.01$, so the result is pure noise
+\item[\optlabel{D}] $0.99^{127} \approx 0.28$, so the success probability must be at most $0.28$
 \end{itemize}
 \end{qitem}
-\begin{solbox}{A}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(A)}} $0.99^{127} \approx 0.28$, yet the success probability is $0.703$: many errors do not change $y$ or still lead to a correct order
+\begin{solbox}{B}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(B)}} $0.99^{127} \approx 0.28$, yet the success probability is $0.703$: many errors do not change $y$ or still lead to a correct order
 
 \textbf{\color{brand}Concepts required.} The error-free probability bounds nothing: many errors are harmless for the final answer.
 
@@ -2722,9 +2724,9 @@ with probability $0.375$.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(B)}] Errors that do not change $y$, or move it to another successful value, do not cause failure; $0.703 > 0.28$ contradicts this option.
-\item[\textbf{(C)}] $0.99^{127} \approx 0.28$, not $0.88$; $0.88 \approx 0.99^{13}$.
-\item[\textbf{(D)}] $0.99^{127} \approx 0.28$, not $0.01$; and $0.703$ is well above the random baseline $0.375$.
+\item[\textbf{(A)}] $0.99^{127} \approx 0.28$, not $0.88$; $0.88 \approx 0.99^{13}$.
+\item[\textbf{(C)}] $0.99^{127} \approx 0.28$, not $0.01$; and $0.703$ is well above the random baseline $0.375$.
+\item[\textbf{(D)}] Errors that do not change $y$, or move it to another successful value, do not cause failure; $0.703 > 0.28$ contradicts this option.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Estimate error impact by simulation, not by the naive product of gate fidelities.
 \end{solbox}
@@ -2735,14 +2737,14 @@ with probability $0.375$.
 \qmeta{Paragraph based}{Interpreting noisy results}
 Which conclusion is supported by the table?
 \begin{itemize}[leftmargin=2.6em, labelsep=0.4em, itemsep=2pt, topsep=3pt]
-\item[\optlabel{A}] noise increases the success probability
-\item[\optlabel{B}] the results show that a quantum processor factored $15$
-\item[\correctlabel{C}] the success probability decreases monotonically from $0.750$ towards the random baseline $0.375$; at $p = 0.03$ it is $0.665$, still above the baseline
-\item[\optlabel{D}] at $p = 0.03$ the circuit is completely random
+\item[\optlabel{A}] the results show that a quantum processor factored $15$
+\item[\optlabel{B}] noise increases the success probability
+\item[\optlabel{C}] at $p = 0.03$ the circuit is completely random
+\item[\correctlabel{D}] the success probability decreases monotonically from $0.750$ towards the random baseline $0.375$; at $p = 0.03$ it is $0.665$, still above the baseline
 \end{itemize}
 \end{qitem}
-\begin{solbox}{C}
-\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(C)}} the success probability decreases monotonically from $0.750$ towards the random baseline $0.375$; at $p = 0.03$ it is $0.665$, still above the baseline
+\begin{solbox}{D}
+\textbf{\color{brand}Correct answer.} \textcolor{okgreen}{\textbf{(D)}} the success probability decreases monotonically from $0.750$ towards the random baseline $0.375$; at $p = 0.03$ it is $0.665$, still above the baseline
 
 \textbf{\color{brand}Concepts required.} Noise interpolates between the ideal distribution and the uniform baseline.
 
@@ -2754,9 +2756,9 @@ order is a demonstration, not evidence of quantum advantage.
 
 \textbf{\color{brand}Why the other options are incorrect.}
 \begin{itemize}[leftmargin=2.4em, itemsep=1pt, topsep=2pt]
-\item[\textbf{(A)}] The values decrease with $p$; noise never helped here.
-\item[\textbf{(B)}] These are simulations on \texttt{density-matrix-cpu}; no quantum processor was used.
-\item[\textbf{(D)}] $0.665$ is far above the random baseline $0.375$; the circuit is not yet completely random.
+\item[\textbf{(A)}] These are simulations on \texttt{density-matrix-cpu}; no quantum processor was used.
+\item[\textbf{(B)}] The values decrease with $p$; noise never helped here.
+\item[\textbf{(C)}] $0.665$ is far above the random baseline $0.375$; the circuit is not yet completely random.
 \end{itemize}
 \textbf{\color{brand}Key takeaway.} Label simulated results as simulations; compare them with the right baseline.
 \end{solbox}

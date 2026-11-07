@@ -502,10 +502,12 @@ $|E| = 90$: $\approx 2.8\times10^3\times$ longer on a CPU.
 \end{wexample}
 
 \section{Backends, memory, noise and variants}
+\begin{sloppypar}
 \textbf{Backends} (\texttt{resolve\_backend}): \texttt{cpu}+\texttt{statevector} $\to$ \texttt{qpp-cpu}; \texttt{cpu}+\texttt{density\_matrix} $\to$
 \texttt{density-matrix-cpu} ($16\times4^n$ B); \texttt{gpu}+\texttt{statevector} $\to$ \texttt{nvidia}; \texttt{gpu}+\texttt{mps} $\to$ \texttt{tensornet-mps};
 \texttt{cpu}+\texttt{mps} $\to$ error (needs a GPU); \texttt{multi-gpu} needs \texttt{mpiexec}, one rank per GPU; 36 qubits in fp64 ($1.1$ TB) need 16 GPUs of 80 GB.
 MPS is efficient when few edges cross each cut of the qubit order ($\chi \le 2^{p\,m_k}$): rings yes, dense graphs no.
+\end{sloppypar}
 
 \textbf{Noise} (illustrative global depolarising model): $\langle C\rangle_{\text{noisy}} = F\langle C\rangle + (1 - F)\frac W2$, $F = (1-\varepsilon)^{N_{\text{CNOT}}}$;
 default with $\varepsilon = 0.5\,\%$: $F = 0.548$, $\langle C\rangle \approx 18.0$. Limited connectivity adds SWAPs (3 CNOTs each).

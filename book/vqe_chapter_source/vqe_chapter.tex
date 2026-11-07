@@ -445,8 +445,10 @@ $E(\theta) = -\cos\theta + \tfrac12\sin\theta$, $\theta_0 = 0$, step $\theta_{k+
 \end{center}
 At $k = 0$: $E(\frac\pi2) = 0.5$, $E(-\frac\pi2) = -0.5$, so $\partial_\theta E = 0.5$. The energies approach $E_0 = -1.1180$ from above.
 \end{wexample}
+\begin{sloppypar}
 \textbf{In the notebook}: \texttt{minimize(energy, initial\_theta, method="COBYLA", options=\{"maxiter": 300, "rhobeg": 0.3\})}; every evaluation is stored and the
 \emph{best} one (\texttt{argmin(energy\_history)}) is reported, not necessarily \texttt{opt.x}. A \texttt{MAXFUN} message means the budget, not convergence, stopped the run.
+\end{sloppypar}
 
 %=====================================================================================================
 \section{Fully worked problems}
@@ -479,7 +481,7 @@ Reminder: $\braket{Z} = P(0) - P(1)$, so for example a qubit with $P(1) = 0.2$ h
 \section{The implementation in \texttt{VQE.ipynb}}
 \subsection{Structure and code}
 \begin{enumerate}[itemsep=1pt]
-\item Section 3 (inputs): \texttt{HAMILTONIAN = "tfim" | "H2" | "custom"}, \texttt{N\_QUBITS = 15}, \texttt{TFIM\_J = 1.0}, \texttt{TFIM\_H = 0.5}, \texttt{ANSATZ = "auto"}, \texttt{ANSATZ\_LAYERS = 2},
+\item \sloppy Section 3 (inputs): \texttt{HAMILTONIAN = "tfim" | "H2" | "custom"}, \texttt{N\_QUBITS = 15}, \texttt{TFIM\_J = 1.0}, \texttt{TFIM\_H = 0.5}, \texttt{ANSATZ = "auto"}, \texttt{ANSATZ\_LAYERS = 2},
 \texttt{OPTIMIZER = "COBYLA"}, \texttt{MAX\_EVALUATIONS = 300}, \texttt{OBJECTIVE\_SHOTS = None}, \texttt{SHOTS = 4000}, \texttt{SEED = 42}.
 \item Section 4: Pauli terms (Ising: $14$ $ZZ$ + $15$ $X$ = 29), \texttt{build\_spin\_operator} with \texttt{cudaq.SpinOperator.from\_word}, exact reference.
 \item Section 7: kernels \texttt{hea\_ansatz}, \texttt{ucc\_ansatz} (+ sampled versions with \texttt{mz}).

@@ -13,6 +13,10 @@
 \usepackage{fancyhdr, lastpage}
 \usepackage{pifont}
 \usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+% SILICO FELLER watermark: official logo, centred, ~8 % opacity, behind all content, on every page
+\AddToShipoutPictureBG{\AtPageCenter{\makebox(0,0){\tikz\node[opacity=0.08, inner sep=0pt]{\includegraphics[width=0.72\paperwidth]{../../../assets/branding/silico_feller_logo.png}};}}}
 \usepackage[hidelinks]{hyperref}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \definecolor{brand}{HTML}{1F4E79}
@@ -33,7 +37,6 @@
   title={#1}, left=6pt, right=6pt, top=4pt, bottom=4pt}
 \newtcolorbox{solbox}[1]{enhanced, breakable, colback=okgreen!3, colframe=okgreen!60!black, fonttitle=\bfseries,
   title={Answer: (#1) \quad Detailed solution}, left=6pt, right=6pt, top=3pt, bottom=4pt, before skip=4pt, after skip=6pt}
-\newcommand{\bub}[1]{\tikz[baseline=-0.65ex]\node[draw, circle, inner sep=0pt, minimum size=4.6mm, font=\scriptsize]{#1};}
 \allowdisplaybreaks
 \setlength{\emergencystretch}{3em}
 
@@ -68,7 +71,7 @@
 \textbf{A}~Mathematical and Quantum Foundations, \textbf{B}~Quantum Noise Fundamentals, \textbf{C}~Noise Models and Simulation, \textbf{D}~Advanced Noise Analysis and Implementation.
 \item Every question is of the \textbf{single-correct} type: four options, exactly one correct. Question formats used:
 single-correct MCQ, matching lists (List-I/List-II), Assertion--Reason, Statement~I/II and paragraph-based questions.
-\item Mark your answers on the \textbf{Response Sheet} at the end of this paper by darkening ONE bubble per question.
+\item For every question choose \textbf{ONE} option, (A), (B), (C) or (D), and record it against the question number in the answer script provided by the invigilator.
 \item Calculators are \textbf{not} allowed. Rough work may be done on separate sheets.
 \item Unless a question says otherwise, use the \textbf{conventions} printed below; they apply to every section.
 \item The detailed solutions are in the separate \emph{Answer Book}; do not consult it before finishing the test.
@@ -1080,117 +1083,5 @@ Which conclusion about this ZNE experiment is correct?
 \qsep
 
 \newpage
-
-\begin{center}{\Large\bfseries\color{brand} RESPONSE SHEET}\\[2pt]
-{\small Darken exactly ONE bubble per question. Leave all four bubbles empty to skip a question (0 marks).}\end{center}
-\textbf{Name:} \hrulefill\quad \textbf{Roll No.:} \rule{35mm}{0.4pt}\par\medskip
-\noindent\begin{minipage}[t]{0.235\linewidth}\centering
-\textbf{Section A}\\[2pt]
-\begin{tabular}{@{}r@{\hspace{5pt}}l@{}}
-\textbf{1} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{2} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{3} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{4} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{5} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{6} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{7} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{8} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{9} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{10} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{11} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{12} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{13} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{14} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{15} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{16} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{17} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{18} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{19} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{20} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\end{tabular}
-\end{minipage}\hfill\begin{minipage}[t]{0.235\linewidth}\centering
-\textbf{Section B}\\[2pt]
-\begin{tabular}{@{}r@{\hspace{5pt}}l@{}}
-\textbf{21} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{22} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{23} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{24} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{25} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{26} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{27} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{28} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{29} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{30} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{31} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{32} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{33} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{34} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{35} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{36} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{37} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{38} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{39} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{40} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\end{tabular}
-\end{minipage}\hfill\begin{minipage}[t]{0.235\linewidth}\centering
-\textbf{Section C}\\[2pt]
-\begin{tabular}{@{}r@{\hspace{5pt}}l@{}}
-\textbf{41} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{42} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{43} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{44} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{45} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{46} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{47} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{48} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{49} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{50} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{51} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{52} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{53} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{54} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{55} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{56} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{57} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{58} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{59} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{60} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\end{tabular}
-\end{minipage}\hfill\begin{minipage}[t]{0.235\linewidth}\centering
-\textbf{Section D}\\[2pt]
-\begin{tabular}{@{}r@{\hspace{5pt}}l@{}}
-\textbf{61} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{62} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{63} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{64} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{65} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{66} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{67} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{68} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{69} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{70} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{71} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{72} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{73} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{74} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{75} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{76} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{77} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{78} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{79} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\textbf{80} & \bub{A}\,\bub{B}\,\bub{C}\,\bub{D} \\[1.6pt]
-\end{tabular}
-\end{minipage}
-\par\bigskip
-\begin{center}\textbf{Score computation} (filled in by the evaluator, using the Answer Book)\\[4pt]
-\renewcommand{\arraystretch}{1.5}
-\begin{tabular}{|c|>{\raggedright\arraybackslash}p{4.6cm}|c|c|c|c|}\hline
-\textbf{Sec.} & \textbf{Topic} & \textbf{Attempted} & \textbf{Correct} $N_{\mathrm c}$ & \textbf{Wrong} $N_{\mathrm w}$ & \textbf{Marks} $3N_{\mathrm c} - N_{\mathrm w}$ \\ \hline
-A & Mathematical and Quantum Foundations & & & & \\ \hline
-B & Quantum Noise Fundamentals & & & & \\ \hline
-C & Noise Models and Simulation & & & & \\ \hline
-D & Advanced Noise Analysis and Implementation & & & & \\ \hline
-\multicolumn{5}{|r|}{\textbf{Total (out of 240)}} & \\ \hline
-\end{tabular}\end{center}
 
 \end{document}

@@ -1,0 +1,37 @@
+% =====================================================================================
+% SILICO FELLER branding for the beamer lecture decks (16:9).
+% \input this file in the preamble of every presentations/<algorithm>_source/<algorithm>_lecture.tex,
+% after graphicx is loaded and the colours/fonts are set. It is the "slide master":
+%   * the official logo (assets/branding/silico_feller_logo.png, unmodified, aspect ratio kept)
+%     is drawn at the top-right of EVERY slide through the background template, so new or
+%     re-ordered slides get it automatically;
+%   * the frame-title box is narrowed on the right so titles wrap before they can reach the logo.
+% =====================================================================================
+\makeatletter
+\newcommand{\sflogofile}{../../assets/branding/silico_feller_logo.png}
+\newlength{\sflogoheight}\setlength{\sflogoheight}{5.4mm}   % logo height on the slide (width follows the aspect ratio)
+\newlength{\sflogomargin}\setlength{\sflogomargin}{2.5mm}   % distance from the top and right paper edges
+\newlength{\sflogoreserve}\setlength{\sflogoreserve}{2.6cm} % horizontal space kept free for the logo in the title row
+
+% logo on every slide (background layer: never covers slide content)
+\setbeamertemplate{background}{%
+  \vbox to \paperheight{%
+    \vskip\sflogomargin
+    \hbox to \paperwidth{\hfill\includegraphics[height=\sflogoheight]{\sflogofile}\hskip\sflogomargin}%
+    \vfill}}
+
+% frame title: same look as beamer's default, but it stops \sflogoreserve before the right edge
+\setbeamertemplate{frametitle}{%
+  \ifbeamercolorempty[bg]{frametitle}{}{\nointerlineskip}%
+  \begin{beamercolorbox}[sep=0.3cm,left,wd=\paperwidth]{frametitle}%
+    \usebeamerfont{frametitle}%
+    \vbox{}\vskip-1ex%
+    \parbox[t]{\dimexpr\paperwidth-0.6cm-\sflogoreserve\relax}{\raggedright
+      \strut\insertframetitle\strut\par
+      \ifx\insertframesubtitle\@empty\else
+        {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\insertframesubtitle\strut\par}%
+      \fi}%
+    \vskip-1ex%
+    \vskip-.3cm%
+  \end{beamercolorbox}}
+\makeatother

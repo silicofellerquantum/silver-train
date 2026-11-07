@@ -13,6 +13,10 @@
 \usepackage{fancyhdr, lastpage}
 \usepackage{pifont}
 \usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+% SILICO FELLER watermark: official logo, centred, ~8 % opacity, behind all content, on every page
+\AddToShipoutPictureBG{\AtPageCenter{\makebox(0,0){\tikz\node[opacity=0.08, inner sep=0pt]{\includegraphics[width=0.72\paperwidth]{../../../assets/branding/silico_feller_logo.png}};}}}
 \usepackage[hidelinks]{hyperref}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \definecolor{brand}{HTML}{1F4E79}
@@ -33,7 +37,6 @@
   title={#1}, left=6pt, right=6pt, top=4pt, bottom=4pt}
 \newtcolorbox{solbox}[1]{enhanced, breakable, colback=okgreen!3, colframe=okgreen!60!black, fonttitle=\bfseries,
   title={Correct answer: (#1) \quad Detailed solution}, left=6pt, right=6pt, top=3pt, bottom=4pt, before skip=4pt, after skip=6pt}
-\newcommand{\bub}[1]{\tikz[baseline=-0.65ex]\node[draw, circle, inner sep=0pt, minimum size=4.6mm, font=\scriptsize]{#1};}
 \allowdisplaybreaks
 
 \begin{document}
@@ -68,8 +71,7 @@ Each question has \textbf{four} options (A), (B), (C) and (D). \textbf{ONLY ONE}
 \end{infobox}
 
 \begin{infobox}{How to evaluate}
-For each section count $C$ = number of correct answers and $W$ = number of questions answered wrongly (or with more than
-one bubble darkened). Section marks $= 3C - W$; unanswered questions score $0$. The total is out of $240$.
+For each section count $C$ = number of correct answers and $W$ = number of questions answered wrongly (or with more than one option marked). Section marks $= 3C - W$; unanswered questions score $0$. The total is out of $240$.
 Every numerical answer was re-computed independently (NumPy, including gate-by-gate simulation of the Grover circuits, and CUDA-Q running the notebook's own kernels on
 the CPU simulator) by \texttt{verify\_answers.py} in the source folder.
 \end{infobox}

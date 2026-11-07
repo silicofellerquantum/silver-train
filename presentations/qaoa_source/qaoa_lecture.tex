@@ -42,6 +42,7 @@
 \setbeamertemplate{itemize items}[circle]
 \setbeamertemplate{enumerate items}[default]
 \setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\input{../../assets/branding/silicofeller-beamer.tex}   % SILICO FELLER logo on every slide
 \setbeamertemplate{footline}{%
   \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.4ex,dp=1ex,leftskip=0.4cm,rightskip=0.4cm]{normal text}%
     \color{qgrey}\tiny The Quantum Approximate Optimization Algorithm\ \ $\cdot$\ \ \insertsectionhead\hfill\insertframenumber\,/\,\inserttotalframenumber
@@ -908,7 +909,7 @@ return the sampled bitstring z with the largest cut C(z), and <C> = W/2 - object
 \end{frame}
 
 \begin{frame}[fragile]{Building the instance and the classical reference (Section 4)}
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{6.4}{7.6}\selectfont]
 graph_rng = np.random.default_rng(SEED)                      # reproducible random graph
 edges = [(i, j, 1.0) for i in range(N_QUBITS) for j in range(i + 1, N_QUBITS)
          if graph_rng.random() < EDGE_PROBABILITY]           # each pair with probability 0.3
@@ -929,7 +930,7 @@ def brute_force_maxcut():                                    # all 2^N splits, v
 \end{frame}
 
 \begin{frame}[fragile]{The cost Hamiltonian and the initial angles (Section 7a)}
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{6.4}{7.6}\selectfont]
 def cost_hamiltonian():
     """H_C = sum_(i,j) w_ij/2 Z_i Z_j  (maximising the cut <=> minimising <H_C>)."""
     hamiltonian = None

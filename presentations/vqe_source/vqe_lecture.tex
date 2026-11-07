@@ -41,6 +41,7 @@
 \setbeamertemplate{itemize items}[circle]
 \setbeamertemplate{enumerate items}[default]
 \setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\input{../../assets/branding/silicofeller-beamer.tex}   % SILICO FELLER logo on every slide
 \setbeamertemplate{footline}{%
   \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.4ex,dp=1ex,leftskip=0.4cm,rightskip=0.4cm]{normal text}%
     \color{qgrey}\tiny The Variational Quantum Eigensolver\ \ $\cdot$\ \ \insertsectionhead\hfill\insertframenumber\,/\,\inserttotalframenumber
@@ -231,7 +232,7 @@
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{block}{Electronic Hamiltonian}
-        \[ H = \sum_{pq}h_{pq}a_p^\dagger a_q + \frac12\sum_{pqrs}h_{pqrs}a_p^\dagger a_q^\dagger a_ra_s + E_{\mathrm{const}} \]
+        \[ \begin{aligned} H = {}&\sum_{pq}h_{pq}a_p^\dagger a_q\\ &+ \frac12\sum_{pqrs}h_{pqrs}a_p^\dagger a_q^\dagger a_ra_s + E_{\mathrm{const}} \end{aligned} \]
         $h_{pq}$: one-electron integrals (kinetic + nuclear attraction), $h_{pqrs}$: electron repulsion integrals, computed classically (PySCF).
       \end{block}
       \small Number of terms $O(N^4)$ --- polynomial, although the state space is $2^N$.
@@ -623,7 +624,7 @@
 \begin{frame}{Unitary coupled cluster (UCC)}
   \begin{columns}[T]
     \begin{column}{0.52\textwidth}
-      \[ \ket{\psi} = e^{T - T^\dagger}\ket{\mathrm{HF}},\quad T = \sum_{ia}t_i^aa_a^\dagger a_i + \sum_{ijab}t_{ij}^{ab}a_a^\dagger a_b^\dagger a_ja_i \]
+      \[ \begin{aligned} \ket{\psi} &= e^{T - T^\dagger}\ket{\mathrm{HF}},\\ T &= \sum_{ia}t_i^aa_a^\dagger a_i + \sum_{ijab}t_{ij}^{ab}a_a^\dagger a_b^\dagger a_ja_i \end{aligned} \]
       ($i, j$ occupied, $a, b$ virtual).
       \begin{itemize}
         \item $T - T^\dagger$ is anti-Hermitian $\Rightarrow$ $e^{T - T^\dagger}$ unitary (classical CC uses non-unitary $e^T$).
