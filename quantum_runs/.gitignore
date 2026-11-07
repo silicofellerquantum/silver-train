@@ -1,0 +1,16 @@
+# Never commit credentials
+*.xlsx
+*.xls
+*.csv.keys
+.env
+.env.*
+*key*.json
+# Local working files
+__pycache__/
+.ipynb_checkpoints/
+*.tmp
+results/dryrun/
+# Keep each run's small exports (benchmark report JSON, circuit drawings) - the root
+# .gitignore ignores exports/ - but not the full-circuit QIR files (up to ~130 MB each).
+!results/*/exports/
+results/*/exports/*.ll
