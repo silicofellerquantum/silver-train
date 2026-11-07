@@ -47,6 +47,8 @@ RUNS = {
     # 27 qubits ~5.4 days; HHL 23 qubits ~4.6 days).
     # 119 = 7 x 17 (7 bits) -> 3 x 7 = 21 qubits (estimate ~38 min)
     "shor_sim_21q": ("Shor.ipynb", False, "", ["N_TO_FACTOR=119"] + CPU),
+    # 221 = 13 x 17 (8 bits) -> 24 qubits; the 21-qubit run took 4 min (~6x under its estimate)
+    "shor_sim_24q": ("Shor.ipynb", False, "", ["N_TO_FACTOR=221"] + CPU),
     # random 256 x 256 system (8 qubits) + 10 clock qubits + 1 ancilla = 19 qubits
     "hhl_sim_19q": ("HHL.ipynb", False, "", ['MATRIX_A="random"', "RANDOM_SIZE=256",
                                               "NUM_CLOCK_QUBITS=10"] + CPU),
