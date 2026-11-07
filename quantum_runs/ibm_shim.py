@@ -280,9 +280,15 @@ def _target_for(acct, backend):
     return _targets[backend]
 
 
+TRANSPILE_SEED = 20261107                                  # same circuit -> same chip layout every run
+
+
 def _isa(circuits, target):
-    from cudaq_ibm import to_isa
-    return [to_isa(c, target) for c in circuits]
+    # Same as the bridge's cudaq_ibm.to_isa (transpile, optimization level 1) with a fixed seed,
+    # so a resumed run produces identical hardware circuits.
+    from qiskit import transpile
+    return [transpile(c, target=target, optimization_level=1, seed_transpiler=TRANSPILE_SEED)
+            for c in circuits]
 
 
 def _stats(isa):
@@ -403,9 +409,10 @@ def _run_pubs(circuits, shots, kind):
                 pool.mark_bad(acct, f"{code} {body}")
                 continue
             raise
+        # Cache key from the logical (pre-transpile) circuits: stable across runs and sessions.
+        key = _job_key([qasm3.dumps(c) for c in circuits], shots, backend)
         isas = _isa(circuits, target)
         qasms = [qasm3.dumps(i) for i in isas]
-        key = _job_key(qasms, shots, backend)
         cached = _load_json(RAW_DIR / f"{key}.json", None)
         if cached and cached.get("status") == "COMPLETED":
             return cached["data"], isas

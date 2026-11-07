@@ -57,11 +57,19 @@ RUNS = {
 }
 
 
+# Each IBM run stays on one chip, so its jobs do not queue behind the other runs' jobs
+# (the large QFT / Grover circuits held up the small optimizer jobs on a shared chip).
+BACKENDS = {"qft_ibm_156q": "ibm_kingston", "grover_ibm_156q": "ibm_kingston",
+            "vqe_ibm_156q": "ibm_fez", "qaoa_ibm_156q": "ibm_fez", "qml_ibm_156q": "ibm_marrakesh"}
+
+
 def launch(label):
     nb, ibm, group, overrides = RUNS[label]
     run_dir = HERE / "results" / label
     run_dir.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, QR_ACCOUNTS=group, QR_MODE=os.environ.get("QR_MODE", "ibm"))
+    if ibm and label in BACKENDS and "QR_IBM_BACKEND" not in os.environ:
+        env["QR_IBM_BACKEND"] = BACKENDS[label]
     cmd = [PY, str(HERE / "run_notebook.py"), nb, label] + (["--ibm"] if ibm else []) + overrides
     log = open(run_dir / "run.log", "a")
     log.write(f"\n=== {time.strftime('%Y-%m-%d %H:%M:%S')} start: {' '.join(cmd[2:])}\n")

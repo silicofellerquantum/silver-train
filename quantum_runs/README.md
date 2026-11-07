@@ -8,6 +8,30 @@ saves the executed copy here.
 
 Results: [`results/summary.md`](results/summary.md), one folder per run in `results/`.
 
+## Status (paused 2026-11-07, 17:30 UTC)
+
+| Run | Status |
+|---|---|
+| `noise_sim_1000q` | done |
+| `shor_sim_21q` | done: 119 = 7 × 17, 94% of shots yield the factors |
+| `qft_ibm_156q`, `grover_ibm_156q` | 1 job each, submitted to IBM, not finished when paused |
+| `vqe_ibm_156q`, `qaoa_ibm_156q`, `qml_ibm_156q` | first IBM job done (in `results/ibm_raw/`); paused during their next job |
+| `hhl_sim_19q`, `shor_sim_24q` | stopped while simulating; re-run from the start |
+
+To resume, set up the environment (see *Re-running* below), then:
+
+```bash
+QR_KEYS_XLSX=/path/to/API_KEYS.xlsx python quantum_runs/run_all.py \
+    qft_ibm_156q grover_ibm_156q vqe_ibm_156q qaoa_ibm_156q qml_ibm_156q hhl_sim_19q shor_sim_24q
+python quantum_runs/make_summary.py
+```
+
+Completed IBM jobs are reused from `results/ibm_raw/`. The jobs that were still in flight
+when paused (listed with `"status": "SUBMITTED"` in `results/ibm_raw/`) were keyed by an
+earlier cache scheme, so a resumed run submits those circuits once more (a few QPU seconds
+each; every account has 600 s). From now on the cache key is the logical circuit and the
+transpiler seed is fixed, so later resumes never resubmit a finished circuit.
+
 ## Runs
 
 | Run | Notebook | Where | Qubits | Settings that differ from the notebook defaults |
