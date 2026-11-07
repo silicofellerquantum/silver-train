@@ -17,9 +17,15 @@ Results: [`results/summary.md`](results/summary.md), one folder per run in `resu
 | `vqe_ibm_156q` | VQE | IBM | 156 | `OPTIMIZER="Powell"`, 5 energy evaluations, 4000 shots per term group |
 | `qaoa_ibm_156q` | QAOA | IBM | 156 | `GRAPH="ring"` (156 edges), 6 evaluations, 4000 shots |
 | `qml_ibm_156q` | QML | IBM | 156 | 12 × 13 images, 2 train / 2 test images, `OPTIMIZER="Powell"`, 3 iterations |
-| `shor_sim_27q` | Shor | CPU simulator | 27 | factor 391 = 17 × 23 |
-| `hhl_sim_23q` | HHL | CPU simulator | 23 | random 1024 × 1024 system, 12 clock qubits |
+| `shor_sim_21q` | Shor | CPU simulator | 21 | factor 119 = 7 × 17 |
+| `hhl_sim_19q` | HHL | CPU simulator | 19 | random 256 × 256 system, 10 clock qubits |
 | `noise_sim_1000q` | Noise_Simulation | CPU (stabilizer) | 1000 | `N_QUBITS=1000` |
+
+Simulator sizes are the largest that finish in about an hour on the 4-core machine used: each
+extra qubit doubles the simulation time, and the notebooks' own estimates were ~5.4 days per
+attempt for Shor at 27 qubits (391 = 17 × 23, the largest that fits in 16 GB RAM), ~7.9 h at
+24 qubits, and ~4.6 days for HHL at 23 qubits. On a GPU (the notebooks' intended target) the
+same notebooks reach larger sizes.
 
 Why three notebooks are not on IBM: they raise an error for `BACKEND="hardware"` by design.
 Shor and HHL build their circuits from exact custom unitaries (permutation matrices and matrix

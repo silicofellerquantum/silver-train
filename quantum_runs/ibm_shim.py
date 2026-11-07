@@ -453,7 +453,11 @@ def _run_pubs(circuits, shots, kind):
             raise RuntimeError(f"IBM job failed: {_scrub(text)[:500]}") from None
 
         data = [pub["data"] for pub in result["results"]]
-        qsec = (job.get("usage") or {}).get("quantum_seconds") or (job.get("usage") or {}).get("seconds")
+        try:                                                 # QPU time is reported under /metrics
+            usage = acct.client._get(f"/jobs/{job_id}/metrics").get("usage") or {}
+        except Exception:
+            usage = job.get("usage") or {}
+        qsec = usage.get("quantum_seconds") or usage.get("seconds")
         _write_json(RAW_DIR / f"{key}.json", {"status": "COMPLETED", "job_id": job_id, "sno": acct.sno,
                                               "backend": backend, "run": RUN_LABEL, "kind": kind,
                                               "quantum_seconds": qsec, "wall_s": round(time.time() - t0, 1),

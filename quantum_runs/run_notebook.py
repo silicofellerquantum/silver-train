@@ -28,6 +28,9 @@ def main(argv):
     overrides = [a for a in argv[2:] if a != "--ibm"]
 
     nb = nbformat.read(REPO / nb_name, 4)
+    for c in nb.cells:                                  # the repo notebooks are saved with outputs:
+        if c.cell_type == "code":                       # clear them so a cell that never ran here
+            c.outputs, c.execution_count = [], None     # cannot show a stale result
     cell = next(c for c in nb.cells if c.cell_type == "code" and "Section 3 - INPUT PARAMETERS" in c.source)
     for ov in overrides:
         name, value = ov.split("=", 1)
@@ -56,15 +59,19 @@ def main(argv):
     client = NotebookClient(nb, timeout=None, kernel_name="python3", allow_errors=True,
                             resources={"metadata": {"path": str(run_dir)}})
     t0 = time.time()
+    aborted = None
     try:
         client.execute()
         print(f"executed in {time.time() - t0:.1f}s")
     except Exception as exc:                           # keep partial outputs for debugging
-        print(f"EXECUTION ABORTED after {time.time() - t0:.1f}s: {type(exc).__name__}: {exc}")
+        aborted = f"{type(exc).__name__}: {str(exc)[:300]}"
+        print(f"EXECUTION ABORTED after {time.time() - t0:.1f}s: {aborted}")
     out = run_dir / nb_name
     nbformat.write(nb, out)
     errs = [(i, o.ename, o.evalue[:300]) for i, c in enumerate(nb.cells) if c.cell_type == "code"
             for o in c.get("outputs", []) if o.output_type == "error"]
+    if aborted:
+        errs.append((-1, "ExecutionAborted", aborted))
     # The notebooks catch execution errors themselves and print "EXECUTION FAILED: ..."
     for i, c in enumerate(nb.cells):
         if c.cell_type != "code":

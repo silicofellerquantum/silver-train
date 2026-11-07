@@ -42,12 +42,14 @@ RUNS = {
     "qml_ibm_156q": ("QML.ipynb", True, "25-33",
                      ["IMAGE_ROWS=12", "IMAGE_COLS=13", "TRAIN_IMAGES=2", "TEST_IMAGES=2",
                       'OPTIMIZER="Powell"', "MAX_ITERATIONS=3", 'TARGET="ibm"']),
-    # 391 = 17 x 23 (9 bits) -> 3 x 9 = 27 qubits, the largest state vector that fits in RAM
-    "shor_sim_27q": ("Shor.ipynb", False, "", ["N_TO_FACTOR=391", "MAX_SIMULATION_QUBITS=27",
-                                                "MEMORY_SAFETY_FRACTION=0.9"] + CPU),
-    # random 1024 x 1024 system (10 qubits) + 12 clock qubits + 1 ancilla = 23 qubits
-    "hhl_sim_23q": ("HHL.ipynb", False, "", ['MATRIX_A="random"', "RANDOM_SIZE=1024",
-                                              "NUM_CLOCK_QUBITS=12"] + CPU),
+    # Simulator sizes are the largest that finish in about an hour on this 4-core machine
+    # (each extra qubit doubles the time; the notebooks' own estimates: Shor 24 qubits ~7.9 h,
+    # 27 qubits ~5.4 days; HHL 23 qubits ~4.6 days).
+    # 119 = 7 x 17 (7 bits) -> 3 x 7 = 21 qubits (estimate ~38 min)
+    "shor_sim_21q": ("Shor.ipynb", False, "", ["N_TO_FACTOR=119"] + CPU),
+    # random 256 x 256 system (8 qubits) + 10 clock qubits + 1 ancilla = 19 qubits
+    "hhl_sim_19q": ("HHL.ipynb", False, "", ['MATRIX_A="random"', "RANDOM_SIZE=256",
+                                              "NUM_CLOCK_QUBITS=10"] + CPU),
     # GHZ + Pauli noise runs on the stabilizer simulator, which scales to large circuits
     "noise_sim_1000q": ("Noise_Simulation.ipynb", False, "", ["N_QUBITS=1000"] + CPU),
 }

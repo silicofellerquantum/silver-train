@@ -1,0 +1,8 @@
+{
+ "status": "SUBMITTED",
+ "job_id": "dbnlo3k4148s73918a9g",
+ "sno": 25,
+ "backend": "ibm_kingston",
+ "run": "qml_ibm_156q",
+ "kind": "observe"
+}

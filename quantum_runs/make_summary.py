@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results"
 
 ORDER = ["qft_ibm_156q", "grover_ibm_156q", "vqe_ibm_156q", "qaoa_ibm_156q", "qml_ibm_156q",
-         "shor_sim_27q", "hhl_sim_23q", "noise_sim_1000q"]
+         "shor_sim_21q", "hhl_sim_19q", "noise_sim_1000q"]
 KEYS = ("Algorithm", "Number of qubits", "CUDA-Q target", "Number of shots", "Expected result",
         "Actual result", "Error", "Total wall time", "Gates in", "VQE energy", "Test accuracy",
         "Best cut", "Factors", "QCNN", "Training finished", "test accuracy")
@@ -43,7 +43,12 @@ def jobs_for(label):
     path = RESULTS / "jobs" / f"{label}.csv"
     if not path.exists():
         return []
-    return list(csv.DictReader(open(path)))
+    rows = list(csv.DictReader(open(path)))
+    usage = json.loads((RESULTS / "qpu_seconds.json").read_text()) if (RESULTS / "qpu_seconds.json").exists() else {}
+    for r in rows:
+        if not r.get("quantum_seconds") and r["job_id"] in usage:
+            r["quantum_seconds"] = str(usage[r["job_id"]])
+    return rows
 
 
 def main():
