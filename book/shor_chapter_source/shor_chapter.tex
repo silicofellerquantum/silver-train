@@ -1,0 +1,603 @@
+% Chapter "Shor's Algorithm" -- build with:  latexmk -pdf shor_chapter.tex
+% Companion of book/qft_chapter_source/qft_chapter.tex (same layout, box styles and section pattern).
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[a4paper, top=22mm, bottom=22mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{braket}
+\usepackage{array, tabularx, booktabs}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{quantikz2, arrows.meta, positioning}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{needspace}
+\graphicspath{{../../presentations/shor_source/figures/}}
+\input{../../presentations/shor_source/figures/shor_numbers.tex}
+
+\definecolor{brand}{HTML}{1F4E79}
+\definecolor{okgreen}{HTML}{1B7F3B}
+\definecolor{warn}{HTML}{B5551B}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{3em}
+\allowdisplaybreaks
+
+\newtcolorbox{defn}[1]{enhanced, breakable, colback=brand!5, colframe=brand, fonttitle=\bfseries, title={Definition: #1}}
+\newtcolorbox{keyres}[1]{enhanced, breakable, colback=okgreen!5, colframe=okgreen!70!black, fonttitle=\bfseries, title={Key result: #1}}
+\newtcolorbox{trap}{enhanced, breakable, colback=warn!6, colframe=warn, fonttitle=\bfseries, title={Common trap}}
+\newtcolorbox{method}[1]{enhanced, breakable, colback=black!3, colframe=black!55, fonttitle=\bfseries, title={Method: #1}}
+\newtcolorbox{checklist}{enhanced, breakable, colback=white, colframe=black!35, fonttitle=\bfseries, title={Checklist}}
+\newcounter{wex}[chapter]
+\newtcolorbox{wexample}[1]{enhanced, breakable, colback=white, colframe=brand!60, coltitle=black, colbacktitle=brand!15,
+  fonttitle=\bfseries, title={\refstepcounter{wex}Worked example \thesection.\arabic{wex}: #1}}
+\newenvironment{steps}{\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=4.2em, itemsep=2pt]}{\end{enumerate}}
+
+\lstset{language=Python, basicstyle=\ttfamily\footnotesize, keywordstyle=\color{brand}\bfseries,
+  commentstyle=\color{black!55}\itshape, stringstyle=\color{warn}, showstringspaces=false,
+  frame=single, rulecolor=\color{brand!40}, backgroundcolor=\color{brand!3}, columns=fullflexible}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{black!70}Chapter: Shor's Algorithm}
+\fancyhead[R]{\small\color{black!70}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+
+\begin{document}
+\begin{titlepage}
+\centering
+{\color{brand}\rule{\linewidth}{1.5pt}}\\[10pt]
+{\Huge\bfseries\color{brand} Shor's Algorithm}\\[8pt]
+{\LARGE Factoring by Quantum Period Finding}\\[6pt]
+{\large A step-by-step chapter: from modular arithmetic to a CUDA-Q implementation}\\[6pt]
+{\color{brand}\rule{\linewidth}{1.5pt}}
+\vspace{18mm}
+
+\begin{minipage}{0.86\linewidth}
+\large
+\textbf{What you will be able to do after this chapter}
+\begin{itemize}[itemsep=3pt]
+\item compute gcds, inverses, totients and multiplicative orders by hand, and use repeated squaring and the Chinese remainder theorem;
+\item explain why factoring is hard classically (trial division, Pollard rho, GNFS) and why RSA depends on it;
+\item prove the reduction of factoring to order finding and decide when an attempt succeeds or must be repeated;
+\item derive the order-finding circuit: registers, controlled modular multiplication, phase kickback, inverse QFT and phase estimation;
+\item turn a measured value into the period with continued fractions and verify the factors;
+\item read and modify \texttt{Shor.ipynb}, estimate qubits, gates and memory, and interpret recorded, re-executed and noisy results honestly;
+\item discuss resource estimates, fault tolerance, RSA, elliptic curves and post-quantum cryptography;
+\item solve every type of question in the accompanying 80-question Shor assessment.
+\end{itemize}
+\end{minipage}
+\vfill
+{\small Companion material in the same repository: \texttt{presentations/Shor\_Lecture.pdf} (slides),
+\texttt{Shor.ipynb} (CUDA-Q notebook) and \texttt{assessments/} (question paper and answer book).}
+\end{titlepage}
+
+\tableofcontents
+\setcounter{chapter}{0}
+\chapter*{Shor's Algorithm --- Factoring by Quantum Period Finding}
+\addcontentsline{toc}{chapter}{Shor's Algorithm --- Factoring by Quantum Period Finding}
+\markboth{Shor's Algorithm}{Shor's Algorithm}
+
+\section*{How to use this chapter}
+The chapter is built as a staircase. Sections~1--3 are the \emph{number theory and classical background} (modular arithmetic, orders,
+classical factoring, RSA, and the reduction of factoring to order finding). Sections~4--7 are the \emph{quantum part} (registers and
+unitary multiplication, period finding with the QFT, phase estimation, continued fractions). Section~8 solves complete problems.
+Sections~9--12 cover \emph{circuits and resources}, the \emph{implementation} in \texttt{Shor.ipynb}, \emph{noise and limitations}, and
+\emph{cryptography}. Section~13 collects problem-solving strategies and maps every assessment question to the section that teaches it;
+Section~14 has 16 practice problems with answers.
+
+Each section has: the idea in words, the precise statement, a derivation, \textbf{worked examples} solved step by step, \textbf{common traps}
+and a short checklist. Statements are marked as \emph{general theory}, \emph{the notebook's implementation}, or \emph{illustrative
+experiments}; ``previously recorded'' results are the outputs stored in \texttt{Shor.ipynb}, ``re-executed'' results were produced for this
+package with \texttt{presentations/shor\_source/make\_figures.py}. All simulations ran on a CPU with CUDA-Q \numcudaqversion; \textbf{no
+physical quantum processor and no GPU were used}. Every number in the assessment was recomputed by
+\texttt{assessments/shor\_test\_source/verify\_answers.py}.
+
+\begin{defn}{Conventions used everywhere in this chapter}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+\item $a \bmod N \in \{0, \dots, N - 1\}$; $a \equiv b \pmod N$ means $N \mid a - b$. $n = \lceil\log_2(N + 1)\rceil$ = \texttt{N.bit\_length()}.
+\item The \textbf{order} $r = \operatorname{ord}_N(a)$ is the least $r > 0$ with $a^r \equiv 1 \pmod N$ (defined when $\gcd(a, N) = 1$).
+\item Circuit: $t$ counting qubits (notebook: $t = 2n$), $n$ work qubits in $\ket1$, controlled $U_c\ket y = \ket{cy \bmod N}$ ($y < N$; identity for $y \ge N$).
+\item The measured integer $y \in \{0, \dots, 2^t - 1\}$ is read with the \textbf{most significant bit first}. $\mathrm{QFT}\ket x = 2^{-t/2}\sum_ye^{2\pi ixy/2^t}\ket y$.
+\item $R_1(\lambda) = \operatorname{diag}(1, e^{i\lambda})$; \texttt{cr1} is its controlled version. Memory: 16 bytes per complex amplitude.
+\end{itemize}
+\end{defn}
+
+%=====================================================================================================
+\section{Number theory toolkit}
+\subsection{Divisibility, gcd and the Euclidean algorithm}
+Every integer $N > 1$ is a product of primes in exactly one way. The \textbf{greatest common divisor} $\gcd(a, b)$ is the largest integer dividing both;
+$a, b$ are \textbf{coprime} if it is $1$. The Euclidean algorithm uses $\gcd(a, b) = \gcd(b, a \bmod b)$ and needs $O(\log\min(a, b))$ divisions, so it is
+fast even for 2048-bit numbers. Running it backwards (\emph{extended Euclid}) writes $\gcd(a, b) = ua + vb$.
+
+\begin{wexample}{$\gcd(1071, 462)$ and an inverse}
+\begin{steps}
+\item $1071 = 2\cdot462 + 147$; $462 = 3\cdot147 + 21$; $147 = 7\cdot21 + 0$. The last non-zero remainder is $\gcd = 21$.
+\item Inverse of $3$ modulo $20$: $20 = 6\cdot3 + 2$, $3 = 1\cdot2 + 1$, so $1 = 3 - 2 = 3 - (20 - 6\cdot3) = 7\cdot3 - 20$: $3^{-1} \equiv 7$. Check: $21 \equiv 1$.
+\end{steps}
+\end{wexample}
+
+\subsection{Modular arithmetic, inverses and permutations}
+Sums and products may be reduced modulo $N$ at every step. $a$ has an inverse modulo $N$ iff $\gcd(a, N) = 1$. Then $y \mapsto ay \bmod N$ is a
+\textbf{bijection} of $\{0, \dots, N - 1\}$ (it has the inverse $y \mapsto a^{-1}y$). If $\gcd(a, N) = d > 1$ two inputs collide, e.g.\ $3\cdot0 \equiv 3\cdot5 \pmod{15}$.
+
+\begin{keyres}{Why coprimality matters for the quantum circuit}
+$U_a\ket y = \ket{ay \bmod N}$ is a permutation matrix, hence unitary, exactly when $\gcd(a, N) = 1$. Shor's circuit can therefore only be built for
+coprime bases --- and a non-coprime base already reveals the factor $\gcd(a, N)$.
+\end{keyres}
+
+\subsection{Euler's totient, orders and the Carmichael function}
+$\varphi(N)$ counts the residues coprime to $N$: $\varphi(p) = p - 1$, $\varphi(pq) = (p - 1)(q - 1)$ for distinct primes, $\varphi(p^k) = p^{k-1}(p - 1)$.
+\textbf{Euler's theorem}: $a^{\varphi(N)} \equiv 1$ for $\gcd(a, N) = 1$ (Fermat's little theorem for prime $N$). The order $r$ divides every exponent $e$
+with $a^e \equiv 1$; in particular $r \mid \lambda(N) \mid \varphi(N)$, where the \textbf{Carmichael function} is $\lambda(pq) = \operatorname{lcm}(p - 1, q - 1)$ for odd
+primes. Hence $f(x) = a^x \bmod N$ is periodic with period exactly $r$.
+
+\begin{wexample}{Orders modulo 15 and 35}
+\begin{steps}
+\item $\varphi(15) = 8$, $\lambda(15) = \operatorname{lcm}(2, 4) = 4$. Powers of $2$: $2, 4, 8, 1$ ($r = 4$); of $4$: $4, 1$ ($r = 2$); of $14 \equiv -1$: $r = 2$.
+\item $\lambda(35) = \operatorname{lcm}(4, 6) = 12$, so the possible orders are $1, 2, 3, 4, 6, 12$; an order such as $5$ is impossible because $5 \nmid 12$.
+\item $3$ modulo $35$: $\operatorname{ord}_5(3) = 4$, $\operatorname{ord}_7(3) = 6$, so $\operatorname{ord}_{35}(3) = \operatorname{lcm}(4, 6) = 12$ (CRT, below).
+\end{steps}
+\end{wexample}
+
+\subsection{Modular exponentiation by repeated squaring}
+Write $x = \sum_jx_j2^j$. Then $a^x = \prod_j(a^{2^j})^{x_j}$: square $n - 1$ times and multiply in the powers with $x_j = 1$. For an $m$-bit exponent with
+$w$ one-bits this costs $(m - 1) + (w - 1)$ modular multiplications, e.g.\ $14$ for $x = 1000 = 1111101000_2$, instead of $999$.
+
+\begin{wexample}{$3^{13} \bmod 17$}
+$13 = 1101_2$. $3^2 = 9$, $3^4 = 81 \equiv 13$, $3^8 \equiv 13^2 = 169 \equiv 16$. $3^{13} = 3^8\cdot3^4\cdot3 \equiv 16\cdot13\cdot3 = 624 = 36\cdot17 + 12 \equiv 12$.
+\end{wexample}
+The quantum circuit uses the same structure: counting qubit $j$ controls a multiplication by the classically precomputed $a^{2^j} \bmod N$.
+
+\subsection{Chinese remainder theorem and square roots of one}
+For coprime $p, q$, $x \bmod pq$ corresponds one-to-one to the pair $(x \bmod p, x \bmod q)$. Modulo an odd prime, $x^2 \equiv 1$ has only $x \equiv \pm1$; modulo
+$pq$ the four combinations $(\pm1, \pm1)$ give \textbf{four} square roots of $1$. For $15$: $1, 4, 11, 14$.
+\begin{keyres}{Non-trivial square roots factor $N$}
+If $x^2 \equiv 1$ and $x \not\equiv \pm1 \pmod N$, then $N \mid (x - 1)(x + 1)$ but $N$ divides neither factor, so $\gcd(x - 1, N)$ and $\gcd(x + 1, N)$ are
+non-trivial factors. Example: $x = 4$, $N = 15$: $\gcd(3, 15) = 3$, $\gcd(5, 15) = 5$.
+\end{keyres}
+\begin{trap}
+$\varphi(N)$ is an exponent that works, but it is rarely the order: $\operatorname{ord}_{15}(4) = 2 \ne 8$. And the order is the \emph{smallest} exponent ---
+multiples of $r$ such as $2r$ also satisfy $a^{2r} \equiv 1$.
+\end{trap}
+\begin{checklist}
+Can you: run Euclid; find an inverse; compute $\varphi$ and $\lambda$; list powers to find an order; use $r \mid \lambda(N)$ to exclude orders; find all square roots
+of $1$ modulo $pq$?
+\end{checklist}
+
+%=====================================================================================================
+\section{Classical factoring and RSA}
+\subsection{How hard is factoring?}
+\begin{center}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll}
+\toprule \textbf{method} & \textbf{cost for an $n$-bit $N$} & \textbf{type}\\ \midrule
+trial division up to $\sqrt N$ & $O(2^{n/2})$ & exponential\\
+Pollard's rho & $O(N^{1/4}) = O(2^{n/4})$ expected & exponential\\
+elliptic-curve method (ECM) & sub-exponential in the size of the smallest factor & good for small factors\\
+quadratic sieve & $\exp\big((1 + o(1))\sqrt{\ln N\ln\ln N}\big)$ & sub-exponential\\
+general number field sieve & $\exp\big((64/9)^{1/3}(\ln N)^{1/3}(\ln\ln N)^{2/3}(1 + o(1))\big)$ & sub-exponential\\
+Shor (quantum, fault-tolerant) & $O(n^3)$ gates (schoolbook arithmetic) & polynomial\\ \bottomrule
+\end{tabular}}
+\end{center}
+The record for a hard RSA-type number factored classically is RSA-250 (829 bits, 2020) with the GNFS, about 2700 core-years. Trial division would need
+$\approx2^{1024}$ divisions for RSA-2048.
+
+\begin{trap}
+``All classical factoring algorithms are exponential'' is false: the quadratic sieve and the GNFS are sub-exponential. Shor's advantage is
+\emph{super-polynomial} over the best known classical algorithm, not over trial division only. Factoring is also not known to be NP-complete.
+\end{trap}
+
+\subsection{RSA in five lines}
+Choose primes $p, q$, publish $N = pq$ and $e$ with $\gcd(e, \varphi(N)) = 1$; keep $d = e^{-1} \bmod \varphi(N)$. Encrypt $c = m^e \bmod N$, decrypt
+$m = c^d \bmod N$. Factoring $N$ gives $\varphi(N)$, hence $d$.
+\begin{wexample}{Toy RSA}
+$p = 5$, $q = 11$, $N = 55$, $\varphi = 40$, $e = 7$. $d = 23$ since $7\cdot23 = 161 = 4\cdot40 + 1$. For $m = 2$: $c = 2^7 = 128 \equiv 18$, and $18^{23} \equiv 2 \pmod{55}$.
+\end{wexample}
+
+%=====================================================================================================
+\section{From factoring to order finding}
+\begin{method}{Shor's reduction (classical)}
+Input: odd composite $N$ that is not a prime power.
+\begin{enumerate}[itemsep=1pt]
+\item Choose $a$ uniformly in $\{2, \dots, N - 2\}$. If $d = \gcd(a, N) > 1$, output $d$ (lucky, no quantum step).
+\item Find $r = \operatorname{ord}_N(a)$ \hfill\emph{(the only quantum step)}.
+\item If $r$ is odd or $a^{r/2} \equiv -1 \pmod N$: the attempt \textbf{fails} --- go to 1.
+\item Otherwise output $\gcd(a^{r/2} - 1, N)$ and $\gcd(a^{r/2} + 1, N)$.
+\end{enumerate}
+\end{method}
+\textbf{Why it works.} $x = a^{r/2}$ satisfies $x^2 = a^r \equiv 1$. $x \not\equiv 1$ because $r$ is minimal; if also $x \not\equiv -1$, $x$ is a non-trivial square root
+of $1$ (Section 1.5). \textbf{How often it works.} If $N$ has $k \ge 2$ distinct odd prime factors, a random coprime $a$ succeeds with probability at least
+$1 - 2^{-(k-1)}$; for an RSA modulus at least $\frac12$, so the expected number of attempts is at most $2$.
+
+\begin{wexample}{Successful and failing bases for $N = 21$}
+\begin{steps}
+\item $a = 2$: $2, 4, 8, 16, 11, 1$ $\Rightarrow r = 6$; $2^3 = 8 \not\equiv 20$; $\gcd(7, 21) = 7$, $\gcd(9, 21) = 3$. \textbf{Success}: $21 = 3\times7$.
+\item $a = 4$: $4, 16, 1$ $\Rightarrow r = 3$, odd. \textbf{Failure} --- choose another $a$.
+\item $a = 5$: $5, 4, 20, 16, 17, 1$ $\Rightarrow r = 6$, but $5^3 \equiv 20 \equiv -1$: gcds $1$ and $21$. \textbf{Failure}.
+\item $a = 6$: $\gcd(6, 21) = 3$. \textbf{Lucky} factor without quantum computation.
+\end{steps}
+\end{wexample}
+
+\begin{trap}
+The order is \emph{not} a factor: for $N = 15$, $a = 7$, $r = 4$ does not divide $15$. And a correct order does not guarantee factors ($a = 14$ modulo $15$:
+$r = 2$, $14 \equiv -1$). Report failed attempts as failures.
+\end{trap}
+\textbf{Excluded cases.} Even $N$: factor $2$. Prime $N$: nothing to do (Miller--Rabin). Prime powers $N = p^k$: $\mathbb Z_{p^k}^*$ is cyclic, so the
+only square roots of $1$ are $\pm1$ and the reduction always fails; integer $k$-th roots find $p$ classically. \texttt{Shor.ipynb} handles all three classically.
+
+%=====================================================================================================
+\section{The quantum toolkit for Shor}
+\subsection{Registers and the reversible exponentiation}
+The \textbf{counting register} ($t$ qubits) holds the exponent $x$; the \textbf{work register} ($n$ qubits) holds values modulo $N$. Because
+$x \mapsto a^x \bmod N$ is not injective ($a^{x+r} = a^x$), it cannot act in place; instead
+\[ \ket x\ket1 \longmapsto \ket x\ket{a^x \bmod N} \]
+is realised by multiplying the work register by $a^{x_j2^j}$ for each bit --- a product of controlled $U_{a^{2^j}}$. After Hadamards on the counting
+register, the result is the entangled state $2^{-t/2}\sum_x\ket x\ket{a^x \bmod N}$.
+\begin{trap}
+``Quantum parallelism evaluates $f$ on all $x$, so we can read off the period'' --- a measurement returns one random pair $(x, f(x))$, no more than a
+classical evaluation. The period must be extracted by \textbf{interference}.
+\end{trap}
+
+\subsection{Eigenvectors of $U_a$ and phase kickback}
+On the orbit $\ket1 \to \ket a \to \dots \to \ket{a^{r-1}} \to \ket1$, $U_a$ is a cyclic shift of length $r$. Its eigenvectors and eigenvalues are
+\[ \ket{u_s} = \frac{1}{\sqrt r}\sum_{k=0}^{r-1}e^{-2\pi isk/r}\ket{a^k \bmod N},\qquad U_a\ket{u_s} = e^{2\pi is/r}\ket{u_s},\qquad s = 0, \dots, r - 1, \]
+and $\frac{1}{\sqrt r}\sum_s\ket{u_s} = \ket1$ (the sum of $r$-th roots of unity vanishes unless $k = 0$). A controlled-$U$ acting on an eigenvector leaves the
+target unchanged and \textbf{kicks back} the phase onto the control: $\frac{1}{\sqrt2}(\ket0 + \ket1)\ket u \mapsto \frac{1}{\sqrt2}(\ket0 + e^{i\phi}\ket1)\ket u$.
+With $U^{2^j}$ the kicked phase is $2^j\phi$.
+
+\begin{wexample}{Eigenvalues of $U_2$ modulo 15 and a kicked-back phase}
+\begin{steps}
+\item Orbit $1 \to 2 \to 4 \to 8 \to 1$: $r = 4$, eigenvalues $e^{2\pi is/4} = 1, i, -1, -i$.
+\item Control in $\ket+$, phase $\phi = 2\pi/3$: the control becomes $\frac{1}{\sqrt2}(\ket0 + e^{2\pi i/3}\ket1)$ with $\langle X\rangle = \cos\phi = -\frac12$.
+\end{steps}
+\end{wexample}
+
+\subsection{Gates you meet in the circuit}
+$H$ (superposition), $X$ (prepares $\ket1$), controlled-$U_c$ (multiplication), SWAP, and $R_1(\lambda)$ with its controlled version:
+$R_1(\pi) = Z$, $R_1(\pi/2) = S$, $R_1(\pi/4) = T$, $R_1(-\pi/2) = S^\dagger$. $H^{\otimes n}\ket x = 2^{-n/2}\sum_y(-1)^{x\cdot y}\ket y$. A controlled SWAP (Fredkin) is
+$\mathrm{CNOT}\cdot\mathrm{Toffoli}\cdot\mathrm{CNOT}$ $= 8$ CNOTs with the 6-CNOT Toffoli.
+\begin{checklist}
+Explain why $U_a$ is unitary; write $\ket{u_s}$; show $\sum_s\ket{u_s} \propto \ket1$; compute a kicked-back phase for $U^{2^j}$; name $R_1(\pi), R_1(\pi/2), R_1(\pi/4)$.
+\end{checklist}
+
+%=====================================================================================================
+\section{Period finding and the quantum Fourier transform}
+\subsection{The circuit}
+\begin{center}
+\begin{quantikz}[row sep=0.25cm, column sep=0.35cm]
+  \lstick{$\ket0$ ($x_2$, MSB)} & \gate{H} & & & \ctrl{3} & \gate[3]{\mathrm{QFT}^{-1}} & \meter{} \\
+  \lstick{$\ket0$ ($x_1$)} & \gate{H} & & \ctrl{2} & & & \meter{} \\
+  \lstick{$\ket0$ ($x_0$, LSB)} & \gate{H} & \ctrl{1} & & & & \meter{} \\
+  \lstick{$\ket1$ (work, $n$ qubits)} & \qwbundle{n} & \gate{U_a} & \gate{U_{a^2}} & \gate{U_{a^4}} & &
+\end{quantikz}
+\end{center}
+($t = 3$ shown.) The states are
+\begin{align*}
+\ket{\psi_1} &= 2^{-t/2}\textstyle\sum_x\ket x\ket1, &
+\ket{\psi_2} &= 2^{-t/2}\textstyle\sum_x\ket x\ket{a^x \bmod N} = 2^{-t/2}\sum_{v}\Big(\sum_{x:\,a^x \equiv v}\ket x\Big)\ket v.
+\end{align*}
+For each value $v$ the exponents form an arithmetic progression $x_0, x_0 + r, x_0 + 2r, \dots$ (a \emph{comb}). Measuring the work register (or not ---
+the statistics of $y$ are the same) leaves one comb in the counting register.
+
+\subsection{What the inverse QFT does to a comb}
+The inverse QFT maps $\ket x \mapsto 2^{-t/2}\sum_ye^{-2\pi ixy/2^t}\ket y$. For a comb with $M$ teeth,
+\[ P(y) = \frac{1}{2^tM}\Big|\sum_{m=0}^{M-1}e^{-2\pi imry/2^t}\Big|^2 = \frac{\sin^2(\pi Mry/2^t)}{2^tM\sin^2(\pi ry/2^t)}, \]
+independent of the offset $x_0$, and large only for $y \approx k2^t/r$. If $r \mid 2^t$ the peaks are exact: $P(k2^t/r) = 1/r$ for $k = 0, \dots, r - 1$ and
+$0$ elsewhere. Otherwise each peak has finite width and the integer nearest to $k2^t/r$ is obtained with probability at least $\frac{4}{\pi^2}\cdot\frac1r$.
+
+\begin{wexample}{$N = 15$ and $N = 21$ with the notebook's register sizes}
+\begin{steps}
+\item $N = 15$, $a = 7$ (or $2$), $t = 8$: $r = 4$ divides $256$; outcomes $0, 64, 128, 192$ with probability exactly $\frac14$ each.
+\item $N = 15$, $a = 11$: $r = 2$; outcomes $0, 128$, each $\frac12$.
+\item $N = 21$, $a = 2$, $t = 10$: $1024/6 = 170.67$; peaks near $0, 171, 341, 512, 683, 853$. $P(0) = P(512) = \frac16$ exactly; $P(171) = \numpeaktwentyone$ and
+      $P(170) = 0.0285$ (re-executed state vector).
+\end{steps}
+\end{wexample}
+
+\subsection{The QFT circuit}
+$t$ Hadamards, $t(t - 1)/2$ controlled phases $R_1(\pm2\pi/2^k)$ and $\lfloor t/2\rfloor$ SWAPs: $O(t^2)$ gates. The notebook's inverse QFT performs the SWAPs
+first and then, for each qubit $j$ from the last to the first, the controlled phases \texttt{cr1(-pi/2**(k-j))} followed by $H$; for $t = 8$ that is
+$4$ SWAPs, $28$ controlled phases and $8$ Hadamards.
+\begin{trap}
+The QFT is \emph{not} Shor's algorithm. It neither computes $a^x \bmod N$ (the expensive part) nor outputs $r$ or the factors. Its role is to turn
+periodicity into peaks that a single measurement can sample.
+\end{trap}
+
+%=====================================================================================================
+\section{Quantum phase estimation}
+Phase estimation (QPE) with $t$ counting qubits estimates $\varphi$ in $U\ket u = e^{2\pi i\varphi}\ket u$. After the controlled $U^{2^j}$ gates the counting register
+is $2^{-t/2}\sum_xe^{2\pi ix\varphi}\ket x$, and after the inverse QFT
+\[ P(y) = \Big|\frac{1}{2^t}\sum_{x=0}^{2^t-1}e^{2\pi ix(\varphi - y/2^t)}\Big|^2 = \frac{\sin^2(\pi2^t\delta)}{4^t\sin^2(\pi\delta)},\qquad \delta = \varphi - \frac{y}{2^t}. \]
+If $2^t\varphi$ is an integer, $y = 2^t\varphi$ with probability $1$; otherwise the nearest $y$ has probability $\ge 4/\pi^2 \approx 0.405$.
+
+\begin{keyres}{Order finding is phase estimation of $U_a$}
+With the work register in $\ket1 = \frac{1}{\sqrt r}\sum_s\ket{u_s}$, QPE returns $y \approx 2^ts/r$ for a uniformly random $s \in \{0, \dots, r - 1\}$: the same peaks as
+in the period-finding picture. The controlled $U_a^{2^j} = U_{a^{2^j} \bmod N}$ are built from classically precomputed constants.
+\end{keyres}
+
+\begin{wexample}{QPE with $t = 3$}
+\begin{steps}
+\item $\varphi = 3/8 = 0.011_2$: $y = 3$ (bits $011$) with probability $1$.
+\item $\varphi = 1/3$: $8\varphi = 2.67$; $\delta = 1/3 - 3/8 = -1/24$; $P(3) = \frac{\sin^2(\pi/3)}{64\sin^2(\pi/24)} = \frac{0.75}{64\times0.01704} \approx 0.688$; $P(2) \approx 0.175$.
+\end{steps}
+\end{wexample}
+
+%=====================================================================================================
+\section{Continued fractions and classical post-processing}
+\subsection{Why the measurement is not the period}
+$y$ is random; it only satisfies $y/2^t \approx s/r$. If $\gcd(s, r) > 1$ the reduced fraction reveals only a divisor of $r$; $y = 0$ ($s = 0$) occurs for
+every $r$ and carries no information. The quantum computer proposes candidates; the classical computer \emph{verifies} them.
+
+\subsection{Continued fractions}
+Write $x = [a_0; a_1, a_2, \dots]$ with $a_0 = \lfloor x\rfloor$ and recursion on $1/(x - a_0)$. The truncations (convergents) are the best rational approximations.
+\textbf{Legendre's theorem:} if $|x - s/r| < 1/(2r^2)$ then $s/r$ (in lowest terms) is a convergent of $x$. With $2^t \ge N^2$ and $r < N$, the outcome nearest a
+peak satisfies $|y/2^t - s/r| \le 2^{-t-1} \le 1/(2N^2) < 1/(2r^2)$. This is why $t \approx 2n$; the notebook's $t = 2n$ always satisfies $2^t \ge N^2$.
+
+\begin{method}{Post-processing used by \texttt{Shor.ipynb} (\texttt{candidate\_orders})}
+\begin{enumerate}[itemsep=1pt]
+\item If $y = 0$: no candidate.
+\item $s/r' = $ \texttt{Fraction(y, 2**t).limit\_denominator(N)} (closest fraction with denominator $\le N$).
+\item Take the smallest multiple $kr'$ ($k = 1, 2, \dots$) with $a^{kr'} \equiv 1 \pmod N$ --- this repairs $\gcd(s, r) > 1$.
+\item Apply the reduction: $r$ even, $x = a^{r/2} \not\equiv -1$, $p = \gcd(x - 1, N)$, $q = \gcd(x + 1, N)$; check $pq = N$.
+\end{enumerate}
+\end{method}
+
+\begin{wexample}{$y = 171$ for $N = 21$, $a = 2$, $t = 10$}
+\begin{steps}
+\item $171/1024 = 0.16699 = [0; 5, 1, 84, 2]$; convergents $0, \frac15, \frac16, \frac{85}{511}, \dots$
+\item The largest-denominator convergent with denominator $\le 21$ is $\frac16$: $r' = 6$; $2^6 = 64 \equiv 1$, so $r = 6$.
+\item $2^3 = 8$: $\gcd(7, 21) = 7$, $\gcd(9, 21) = 3$.
+\end{steps}
+\end{wexample}
+
+\begin{wexample}{The multiples test: $y = 512$ for $N = 21$}
+$512/1024 = 1/2$ (here $s = 3$, $r = 6$, $\gcd = 3$). Test $2k$: $2^2 = 4$, $2^4 = 16$, $2^6 = 64 \equiv 1$: $r = 6$. Without the test, a shot gives $r$ directly only
+with probability about $\varphi(r)/r$ ($=\frac13$ for $r = 6$ or $12$).
+\end{wexample}
+
+\begin{trap}
+The numerator of the fraction is $s$, not $r$. A candidate must be verified ($a^r \equiv 1$); denominators larger than $N$ are never orders.
+\end{trap}
+
+%=====================================================================================================
+\section{Fully worked problems}
+\begin{wexample}{Factoring $N = 15$ with $a = 2$, step by step}
+\begin{steps}
+\item $\gcd(2, 15) = 1$: continue. $n = 4$, $t = 8$, 12 qubits.
+\item $f(x) = 2^x \bmod 15$: $1, 2, 4, 8, 1, 2, 4, 8, \dots$ --- period $r = 4$ (listed only because $N$ is tiny; this table is what the quantum computer replaces).
+\item Constants $2^{2^j} \bmod 15$: $2, 4, 1, 1, \dots$ --- only $U_2$ and $U_4$ are applied.
+\item After the inverse QFT: $y \in \{0, 64, 128, 192\}$, each with probability $\frac14$.
+\item $y = 64 \to \frac14$, $y = 192 \to \frac34$: $r = 4$. $y = 128 \to \frac12 \to$ multiples $\to 4$. $y = 0$: nothing.
+\item Verify $2^4 = 16 \equiv 1$; $r$ even; $2^2 = 4 \not\equiv 14$.
+\item $\gcd(3, 15) = 3$, $\gcd(5, 15) = 5$; $3\times5 = 15$. Success probability per shot $\frac34$.
+\end{steps}
+Re-executed with the notebook's circuit (1000 shots, seed 42): success fraction $\numshotfifteentwo$ (exact $\numsuccfifteentwo$). This is a classical
+simulation, not a quantum-hardware run.
+\end{wexample}
+
+\begin{wexample}{Factoring $N = 35$ with $a = 3$}
+\begin{steps}
+\item $\gcd(3, 35) = 1$; $n = 6$, $t = 12$, 18 qubits.
+\item $r = \operatorname{lcm}(\operatorname{ord}_5 3, \operatorname{ord}_7 3) = \operatorname{lcm}(4, 6) = 12$; peaks near $k\cdot4096/12 = 341.33k$.
+\item An outcome $y = 1365$: $1365/4096 = 0.33325 \approx \frac13$ $\Rightarrow r' = 3$; $3^3 = 27 \ne 1$, $3^6 = 729 \equiv 29 \ne 1$, $3^9 \equiv 29\cdot27 = 783 \equiv 13$, $3^{12} \equiv 1$: $r = 12$.
+\item $3^6 \equiv 29 \not\equiv 34$: $\gcd(28, 35) = 7$, $\gcd(30, 35) = 5$.
+\end{steps}
+Re-executed exact success probability per shot: $\numsuccthirtyfivethree$ ($\numtimethirtyfivethree$\,s on the CPU for 1000 shots).
+\end{wexample}
+
+\begin{wexample}{Reading a distribution with a failing base}
+$N = 15$, $a = 14$: $r = 2$, outcomes $0$ and $128$. $y = 128$ gives $r = 2$ correctly, but $14 \equiv -1$: gcds $1$ and $15$. The success probability is $0$ for
+\emph{every} shot --- the algorithm must change $a$, not take more shots.
+\end{wexample}
+
+%=====================================================================================================
+\section{Circuit architecture and resources}
+\subsection{Register sizes and qubit counts}
+\begin{center}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llll}
+\toprule \textbf{construction} & \textbf{logical qubits} & \textbf{RSA-2048} & \textbf{idea}\\ \midrule
+\texttt{Shor.ipynb} & $3n$ & 6144 & $t = 2n$ counting, $n$ work, matrix multipliers\\
+Beauregard (2003) & $2n + 3$ & 4099 & semiclassical QFT, QFT-based adders\\
+Gidney--Ekerå (2019) & $3n + 0.002n\log_2n$ & 6190 & windowed arithmetic, coset representation\\
+idealised semiclassical & $n + 1$ & 2049 & one recycled control, oracle multipliers\\ \bottomrule
+\end{tabular}}
+\end{center}
+The \textbf{semiclassical QFT} (Griffiths--Niu) measures the counting qubits one at a time and applies the remaining phase corrections classically
+controlled, so one control qubit is reused $2n$ times. Real arithmetic needs \textbf{ancillas} (carries, temporary results) and uncomputation.
+
+\subsection{Gates, depth and connectivity}
+Modular exponentiation dominates: $t = 2n$ controlled multiplications, each $O(n^2)$ gates with schoolbook arithmetic, $O(n^3)$ in total (doubling $n$
+multiplies the cost by $8$). The QFT costs only $O(t^2)$, or $O(t\log t)$ approximated. On hardware with limited connectivity, SWAP networks or lattice
+surgery add overhead.
+\begin{wexample}{Counting gates of a gate-level multiplier for $N = 15$ (illustrative)}
+Multiplying by $2$ modulo $15$ is a cyclic rotation of the 4 work bits (three SWAPs); by $7 \equiv -8$: three rotations, then $X$ on all bits (valid on
+$y = 1, \dots, 14$). Controlled: $9$ Fredkins ($72$ CNOTs) $+$ $4$ CNOTs $= 76$ CNOTs. With the controlled $\times4$ ($48$ CNOTs) and the inverse QFT for $t = 3$ (one
+SWAP $= 3$ CNOTs, $3$ controlled phases) the circuit has $\numglcx$ CNOTs and $\numglgates$ gates in total. Such shortcuts use the known answer and do not generalise.
+\end{wexample}
+
+%=====================================================================================================
+\section{The implementation in \texttt{Shor.ipynb}}
+\subsection{Structure and code}
+The notebook validates $N$ (even, prime, prime power are handled classically), picks $a$ (\texttt{BASE\_A}; invalid or lucky bases are reported and
+replaced by a random coprime base), computes $n$ and $t$, builds the circuit with CUDA-Q's kernel builder, samples it, post-processes every outcome and
+retries with a new base up to \texttt{MAX\_ATTEMPTS = 5} times. Hardware targets are refused because the multipliers are matrix gates.
+\begin{lstlisting}
+def mulmod_matrix(c, modulus, n):      # permutation |y> -> |c*y mod N>, identity for y >= N
+    dim = 2 ** n
+    matrix = np.zeros((dim, dim))
+    for y in range(dim):
+        matrix[(c * y) % modulus if y < modulus else y, y] = 1.0
+    return matrix
+
+kernel.x(work[n - 1])                  # |1>: last work qubit = least significant bit
+kernel.h(count)
+for j in range(t):
+    c = pow(a, 2 ** j, modulus)        # classical repeated squaring
+    if c == 1:
+        continue                       # identity
+    name = f"mulmod_{c}_mod_{modulus}"
+    cudaq.register_operation(name, mulmod_matrix(c, modulus, n))   # once per name
+    getattr(kernel, name)(count[t - 1 - j], *[work[i] for i in range(n)])
+# inverse QFT: swaps, then cr1(-pi/2**(k-j)) and h; finally kernel.mz(count)
+\end{lstlisting}
+\texttt{count[0]} is the most significant bit of $y$, so counting qubit $t - 1 - j$ controls $U_{a^{2^j}}$.
+
+\subsection{Results}
+\textbf{Previously recorded run} (\texttt{Shor.ipynb}, CUDA-Q 0.16.0, \texttt{qpp-cpu}, fp64, no GPU): $N = 15$, $a = 7$, 12 qubits, $51$ gates plus $8$
+measurements (\texttt{h}: 16, \texttt{cr1}: 28, \texttt{swap}: 4, \texttt{x}: 1, controlled custom multipliers: 2), depth 20; 1000 shots gave
+$y = 192, 128, 0, 64$ with counts $272, 268, 234, 226$; $0.766$ of the shots yielded $15 = 3\times5$; whole execution cell $0.073$\,s.
+
+\textbf{Re-executed cases} (same builder, \texttt{make\_figures.py}): the recorded counts were reproduced (\numreproduced).
+\begin{center}
+\resizebox{\linewidth}{!}{\input{../../presentations/shor_source/figures/cases.tex}}
+\end{center}
+\textbf{Reverse estimation} (recorded): 100 logical qubits allow 33-bit $N$ with $3n$ and 48-bit $N$ with $2n + 3$; an 80 GB memory budget allows a 32-qubit
+state vector, i.e.\ $N \le 1023$.
+\begin{trap}
+Simulation verifies the circuit; it does not demonstrate a quantum speed-up --- the simulator itself does work exponential in the number of qubits.
+\end{trap}
+
+%=====================================================================================================
+\section{Noise, approximations and limitations}
+\subsection{Noisy and approximate circuits (illustrative experiments)}
+The gate-level $N = 15$ circuit ($t = 3$) was run on \texttt{density-matrix-cpu} with a one-qubit depolarizing channel $p$ after every $H$, $R_z$, $X$ and a
+two-qubit depolarizing channel $p$ after every CNOT and controlled phase. The success probability per shot falls from $\numglsucc$ to $\numnoisesuccone$ at
+$p = 0.01$ and $\numnoisesuccthree$ at $p = 0.03$, towards the \textbf{random baseline} $\numunifsucc$ (uniformly random $y$: $y = 2, 4, 6$ succeed). Note that
+$0.99^{127} \approx 0.28$ is much smaller than $0.703$: many errors do not change the answer.
+
+Approximate inverse QFT for $N = 21$, $t = 10$ (keep controlled phases between qubits at distance $\le m$):
+\begin{center}\input{../../presentations/shor_source/figures/approx.tex}\end{center}
+
+\subsection{Limitations}
+\begin{itemize}[itemsep=2pt]
+\item \textbf{Qubits}: thousands of logical qubits for RSA-2048; each logical qubit needs hundreds to thousands of physical qubits.
+\item \textbf{Gates}: billions of Toffoli gates; non-Clifford gates require magic states, which dominate the cost.
+\item \textbf{Errors}: physical error rates $\sim10^{-3}$ must be suppressed by error correction (surface code: $\approx2d^2$ physical qubits per logical qubit,
+      logical error $\sim(p/p_{\text{th}})^{(d+1)/2}$).
+\item \textbf{Depth, connectivity, real-time decoding} and mid-circuit measurement for the semiclassical QFT.
+\item \textbf{Published estimates} (not experiments): Gidney--Ekerå 2019, $\approx20$ million noisy qubits and $\approx8$ hours; Gidney 2025, fewer than one
+      million noisy qubits and less than a week (physical error rate $10^{-3}$, $1\,\mu$s cycle).
+\end{itemize}
+\begin{trap}
+Demonstrations that ``factor $15$ or $21$'' use a handful of qubits and often circuits simplified with knowledge of the answer (Smolin, Smith and Vargo, 2013).
+They say nothing about the feasibility of factoring RSA-2048.
+\end{trap}
+
+%=====================================================================================================
+\section{Cryptography and outlook}
+Shor's period finding solves factoring and discrete logarithms in any abelian group: RSA, Diffie--Hellman, DSA, ECDH and ECDSA are broken by a large
+fault-tolerant quantum computer (elliptic curves need fewer qubits than RSA of equal classical strength). Symmetric ciphers and hash functions only face
+Grover's square-root speed-up; AES-256 remains adequate. \textbf{Post-quantum cryptography} replaces the public-key schemes with classical algorithms
+believed to resist quantum attacks: NIST FIPS 203 (ML-KEM), FIPS 204 (ML-DSA) and FIPS 205 (SLH-DSA), published in August 2024. Organisations migrate now
+because of \textbf{harvest-now-decrypt-later}: data recorded today could be decrypted later, and migrations take years (Mosca: act if data lifetime plus
+migration time exceeds the time to a cryptographically relevant quantum computer).
+
+\textbf{Research directions}: cheaper arithmetic (windowing, approximate residue arithmetic), better codes and magic-state production, Ekerå--Håstad and
+Regev-type variants, elliptic-curve discrete logarithms, and honest benchmarking.
+
+%=====================================================================================================
+\section{Problem-solving strategies and question map}
+\subsection{Strategy by question format}
+\begin{itemize}[itemsep=3pt]
+\item \textbf{Single-correct numerical:} compute fully, then sanity-check: orders divide $\lambda(N)$; probabilities sum to $1$; denominators $\le N$; qubits $= 3n$ in the
+      notebook. Typical distractors: ``a multiple of the order'', ``$\varphi(N)$ instead of the order'', ``amplitude instead of probability'', ``numerator instead of
+      denominator'', ``forgot the work register''.
+\item \textbf{Matching lists:} solve the most definite row first, then eliminate options.
+\item \textbf{Assertion--Reason:} judge A and R \emph{independently}; only if both are true ask whether R \emph{explains} A.
+\item \textbf{Statement I/II:} one counterexample ($y = 0$, $a = N - 1$, $N = p^k$) kills a ``for every'' statement.
+\item \textbf{Paragraph:} the first question computes $r$; the second reuses it for gcds or continued fractions.
+\end{itemize}
+\subsection{Fast checks that catch most mistakes}
+\begin{enumerate}[itemsep=2pt]
+\item Is $\gcd(a, N) = 1$? Is $N$ a prime power?
+\item Verify every candidate order by $a^r \equiv 1$ and check that no smaller divisor works.
+\item $a^{r/2} \equiv -1$? Then the attempt fails.
+\item Multiply the factors back together.
+\item Recorded vs.\ re-executed vs.\ illustrative vs.\ estimated numbers --- which one does the question use?
+\end{enumerate}
+\subsection{Map: assessment questions $\to$ sections of this chapter}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Questions} & \textbf{Where to learn it}\\ \midrule
+Q.1--Q.10, Q.12, Q.15, Q.18 & Section 1 (gcd, inverses, totient, order, repeated squaring, CRT, square roots of 1)\\
+Q.13, Q.16, Q.72 & Section 2 (classical factoring, complexity, RSA)\\
+Q.11, Q.14, Q.17, Q.19, Q.20, Q.41--Q.45, Q.57, Q.59 & Section 3 (reduction, success and failure cases, prime powers)\\
+Q.21--Q.28, Q.30, Q.31, Q.36, Q.37 & Section 4 (registers, unitarity, eigenvectors, kickback, gates)\\
+Q.29, Q.32, Q.35, Q.38, Q.47, Q.51, Q.53, Q.66 & Section 5 (period finding, interference, QFT)\\
+Q.39, Q.40 & Section 6 (phase estimation)\\
+Q.48--Q.50, Q.52, Q.56, Q.58, Q.60 & Section 7 (continued fractions, post-processing)\\
+Q.42, Q.47, Q.48, Q.59 & Section 8 (worked problems)\\
+Q.33, Q.34, Q.46, Q.61, Q.63, Q.64, Q.69, Q.71, Q.76, Q.78 & Section 9 (qubits, memory, gates, constructions)\\
+Q.54, Q.55, Q.67, Q.68 & Section 10 (the notebook's code and recorded results)\\
+Q.62, Q.65, Q.70, Q.75, Q.79, Q.80 & Section 11 (estimates, approximate QFT, noise, fault tolerance)\\
+Q.73, Q.74, Q.77 & Section 12 (cryptography, post-quantum standards)\\
+\bottomrule
+\end{tabularx}
+
+%=====================================================================================================
+\section{Practice problems}
+Try each before looking at the answers on the next page. They use the same ideas as the assessment but different numbers.
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $\gcd(252, 198)$ by the Euclidean algorithm.
+\item The inverse of $5$ modulo $17$.
+\item $\varphi(77)$.
+\item The order of $3$ modulo $7$.
+\item $5^{21} \bmod 11$ (use the order of $5$).
+\item All square roots of $1$ modulo $21$.
+\item $N = 35$, $a = 2$: the order, and the factors from the reduction.
+\item Qubits and state-vector memory of the notebook's circuit for $N = 55$.
+\item $N = 35$, $a = 2$, $t = 12$: the outcome $y = 3072$ is measured. What does the post-processing return?
+\item \texttt{Fraction(205, 512).limit\_denominator(21)}.
+\item For $r = 10$ dividing $2^t$, the fraction of shots whose reduced fraction has denominator $r$ (no multiples test).
+\item QPE with $t = 2$ and $\varphi = 1/3$: the most likely outcome and its probability.
+\item Beauregard's qubit count for RSA-3072.
+\item The number of controlled phase gates in a full QFT on 12 qubits.
+\item Toy RSA with $p = 3$, $q = 11$, $e = 3$: $d$, and the ciphertext of $m = 4$.
+\item A report says ``a two-qubit device factored $35$ with Shor's algorithm''. What do you conclude?
+\end{enumerate}
+
+\newpage
+\subsection*{Answers to the practice problems}
+\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=2.6em, itemsep=3pt]
+\item $252 = 1\cdot198 + 54$, $198 = 3\cdot54 + 36$, $54 = 1\cdot36 + 18$, $36 = 2\cdot18$: $\gcd = 18$.
+\item $5\cdot7 = 35 = 2\cdot17 + 1$: $5^{-1} \equiv 7$.
+\item $(7 - 1)(11 - 1) = 60$.
+\item $3, 2, 6, 4, 5, 1$: order $6$ ($3$ is a primitive root modulo $7$).
+\item $5^2 \equiv 3$, $5^4 \equiv 9$, $5^5 \equiv 45 \equiv 1$: order $5$; $21 = 4\cdot5 + 1$, so $5^{21} \equiv 5$.
+\item $1, 8, 13, 20$ ($8^2 = 64 = 3\cdot21 + 1$).
+\item $\operatorname{ord}_5 2 = 4$, $\operatorname{ord}_7 2 = 3$: $r = 12$; $2^6 = 64 \equiv 29 \not\equiv 34$; $\gcd(28, 35) = 7$, $\gcd(30, 35) = 5$.
+\item $55 = 110111_2$: $n = 6$, $18$ qubits; $16\cdot2^{18} = 4\,194\,304$ bytes $\approx4.2$ MB.
+\item $3072/4096 = 3/4$: $r' = 4$; $2^4 = 16$, $2^8 \equiv 11$, $2^{12} \equiv 1$: the multiples test gives $r = 12$, then the factors $7$ and $5$ as in P7.
+\item $205/512 = 0.40039$; the closest fraction with denominator $\le 21$ is $2/5$.
+\item $\varphi(10)/10 = 4/10 = 0.4$ ($s = 1, 3, 7, 9$).
+\item $4\varphi = 1.33$: $y = 1$ with $P \approx 0.70$ (then $y = 2$: $0.19$).
+\item $2\cdot3072 + 3 = 6147$ logical qubits.
+\item $\binom{12}{2} = 66$.
+\item $\varphi(33) = 20$, $3\cdot7 = 21 \equiv 1$: $d = 7$; $c = 4^3 = 64 \equiv 31 \pmod{33}$ (check: $31^7 \equiv 4$).
+\item Two qubits cannot hold the registers for $N = 35$ (the notebook would need 18); the circuit must have been compiled using the known period or factors.
+      It is a demonstration of a few gates, not evidence that Shor's algorithm scales.
+\end{enumerate}
+
+\subsection*{Summary of the chapter in ten lines}
+\begin{enumerate}[itemsep=1pt]
+\item Factoring reduces classically to finding the order $r$ of a random coprime $a$ modulo $N$.
+\item If $r$ is even and $a^{r/2} \not\equiv -1$, then $\gcd(a^{r/2} \pm 1, N)$ are the factors; otherwise repeat (success $\ge \frac12$ per base for RSA moduli).
+\item Even $N$, primes, prime powers and lucky bases are handled classically.
+\item $U_a$ is a permutation (unitary) because $\gcd(a, N) = 1$; its eigenphases are $s/r$.
+\item Circuit: $H^{\otimes t}$, controlled $U_{a^{2^j}}$ (repeated squaring), inverse QFT, measure $y$.
+\item Outcomes peak at $y \approx k2^t/r$; exact peaks when $r \mid 2^t$; $y = 0$ is uninformative.
+\item Continued fractions turn $y/2^t$ into $s/r$; verify $a^r \equiv 1$, test multiples, then take gcds.
+\item The notebook uses $3n$ qubits and matrix multipliers: fine for simulation ($N \le 1023$ in 80 GB), impossible on hardware.
+\item Real implementations need $\approx2n$--$3n$ logical and $10^6$--$10^7$ physical qubits for RSA-2048 (estimates).
+\item RSA and ECC must migrate to post-quantum cryptography (FIPS 203/204/205); no RSA-size number has been factored by a quantum computer.
+\end{enumerate}
+\end{document}

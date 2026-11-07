@@ -30,6 +30,14 @@ presentations/qaoa_source/qaoa_lecture.pdf
 book/qaoa_chapter_source/qaoa_chapter.pdf
 assessments/qaoa_test_source/build/*
 !assessments/qaoa_test_source/build/*.tex
+presentations/qml_source/qml_lecture.pdf
+book/qml_chapter_source/qml_chapter.pdf
+assessments/qml_test_source/build/*
+!assessments/qml_test_source/build/*.tex
+presentations/noise_source/noise_lecture.pdf
+book/noise_chapter_source/noise_chapter.pdf
+assessments/noise_test_source/build/*
+!assessments/noise_test_source/build/*.tex
 presentations/vqe_source/vqe_lecture.pdf
 book/vqe_chapter_source/vqe_chapter.pdf
 assessments/vqe_test_source/build/*
@@ -38,3 +46,7 @@ presentations/hhl_source/hhl_lecture.pdf
 book/hhl_chapter_source/hhl_chapter.pdf
 assessments/hhl_test_source/build/*
 !assessments/hhl_test_source/build/*.tex
+presentations/shor_source/shor_lecture.pdf
+book/shor_chapter_source/shor_chapter.pdf
+assessments/shor_test_source/build/*
+!assessments/shor_test_source/build/*.tex

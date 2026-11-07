@@ -72,6 +72,44 @@ report built only from real measurements.
   each wrong option is wrong and a key takeaway. Source: `assessments/qaoa_test_source/` - check with
   `python verify_answers.py --cudaq` (176 checks, including a rebuild of the notebook's CUDA-Q kernel) and rebuild with
   `python generate_papers.py`.
+* [`presentations/QML_Lecture.pdf`](presentations/QML_Lecture.pdf) - a 74-slide lecture on Quantum Machine Learning in
+  the same style, from classical ML (losses, gradient descent, neural networks, evaluation) through qubits, gates and
+  entanglement to data encoding, quantum kernels, variational circuits, the parameter-shift rule, VQC / QSVM / QNN / QCNN /
+  QGAN / qPCA / clustering / quantum RL, barren plateaus, noise, a line-by-line walkthrough of `QML.ipynb`, recorded and
+  re-executed results, classical baselines, limits and research directions, exercises with answers, and a syllabus map.
+  Every slide on an algorithm is tagged *in repository*, *theory only* or *illustrative experiment*. Source:
+  `presentations/qml_source/` (`python make_figures.py` re-executes the notebook's pipeline and the illustrative
+  experiments with CUDA-Q - about 10 minutes on a 4-core CPU - then `latexmk -pdf qml_lecture.tex`).
+* [`book/QML_Chapter.pdf`](book/QML_Chapter.pdf) - book chapter "QML" with worked examples, common traps, a map from every
+  assessment question to its section, and practice problems with answers. Source: `book/qml_chapter_source/`.
+* [`assessments/QML_Question_Paper.pdf`](assessments/QML_Question_Paper.pdf) and
+  [`assessments/QML_Answer_Book.pdf`](assessments/QML_Answer_Book.pdf) - an 80-question QML test in the QFT format
+  (A Classical Machine Learning and Mathematics, B Quantum Computing Foundations, C Quantum Machine Learning
+  Fundamentals, D Advanced QML and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
+  response sheet). The Answer Book has the key, a topic-wise map, a quick-marking grid and, for every question, the
+  concepts required, relevant formulae, a step-by-step explanation, why each wrong option is wrong and a key takeaway.
+  Source: `assessments/qml_test_source/` - check with `python verify_answers.py --cudaq` (280 checks, including a rebuild
+  of the notebook's QCNN kernel in CUDA-Q, exact parameter-shift gradients and gate counts) and rebuild with
+  `python generate_papers.py`.
+* [`presentations/Noise_Lecture.pdf`](presentations/Noise_Lecture.pdf) - a 59-slide lecture on quantum noise simulation
+  in the same style: ideal vs noisy computing, sources of noise, decoherence and fidelity, density matrices, Kraus operators
+  and CPTP maps, bit / phase / bit-phase flip, depolarizing, amplitude and phase damping, two-qubit and readout noise, T1/T2,
+  error rates, CUDA-Q noise models and simulation methods, a line-by-line walkthrough of `Noise_Simulation.ipynb`, recorded
+  and re-executed results, noise on small QFT / QAOA / VQE circuits, ZNE, readout mitigation, dynamical decoupling, the
+  bit-flip code, hardware considerations, exercises and a syllabus map. Slides are tagged *in repository*, *theory only* or
+  *illustrative experiment*. Source: `presentations/noise_source/` (`python make_figures.py` re-executes the notebook's
+  sweep - identical to the recorded outputs - and all experiments with CUDA-Q in about 5 minutes on a CPU, then
+  `latexmk -pdf noise_lecture.tex`).
+* [`book/Noise_Chapter.pdf`](book/Noise_Chapter.pdf) - book chapter "Quantum Noise Simulation" with worked examples, common
+  traps, a map from every assessment question to its section, and practice problems with answers. Source:
+  `book/noise_chapter_source/`.
+* [`assessments/Noise_Question_Paper.pdf`](assessments/Noise_Question_Paper.pdf) and
+  [`assessments/Noise_Answer_Book.pdf`](assessments/Noise_Answer_Book.pdf) - an 80-question test in the QFT format
+  (A Mathematical and Quantum Foundations, B Quantum Noise Fundamentals, C Noise Models and Simulation, D Advanced Noise
+  Analysis and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR response sheet), with
+  key, topic map, quick-marking grid and full solutions. Source: `assessments/noise_test_source/` - check with
+  `python verify_answers.py --cudaq` (283 checks, including CUDA-Q's channel conventions, the notebook's own noise model and
+  an exact re-run of the recorded sweep) and rebuild with `python generate_papers.py`.
 * [`presentations/VQE_Lecture.pdf`](presentations/VQE_Lecture.pdf) - a lecture on the Variational Quantum Eigensolver in the
   same style: eigenvalue problems, molecular Hamiltonians and second quantisation, Jordan-Wigner / Bravyi-Kitaev, Pauli
   decomposition and measurement, the variational principle, Hartree-Fock / UCC / hardware-efficient ansaetze, optimizers,
@@ -107,6 +145,26 @@ report built only from real measurements.
   Note: with `NUM_CLOCK_QUBITS = 3` (default system, $\kappa = 4 > 3$ levels) the notebook's printed "ideal" success
   probability (0.632716) uses $C = 4/3 > \lambda_{\min}$ and is not a probability; the circuit gives 0.3285. The notebook
   itself is unchanged.
+* [`presentations/Shor_Lecture.pdf`](presentations/Shor_Lecture.pdf) - a 72-slide lecture on Shor's algorithm in the same
+  style (16 modules for a two-hour session): number theory, classical factoring and RSA, the reduction of factoring to order
+  finding, quantum foundations, period finding, the QFT's role, phase estimation, continued fractions, fully worked
+  N = 15 and N = 21 examples, circuit architecture and resources, the CUDA-Q code of `Shor.ipynb`, recorded and re-executed
+  results, a gate-level N = 15 circuit under depolarizing noise, an approximate QFT, limitations, post-quantum cryptography
+  and research directions, with a syllabus coverage map. Every result is labelled *in repository*, *recorded run*, *theory
+  only* or *illustrative experiment*; nothing was run on a GPU or on quantum hardware. Source: `presentations/shor_source/`
+  (`python make_figures.py` re-executes the notebook's circuit builder with CUDA-Q on a CPU - about one minute - then
+  `latexmk -pdf shor_lecture.tex`).
+* [`book/Shor_Chapter.pdf`](book/Shor_Chapter.pdf) - book chapter "Shor's Algorithm" (17 pages) with worked examples, common
+  traps, checklists, a map from every assessment question to its section, and 16 practice problems with answers. Source:
+  `book/shor_chapter_source/` (build after `make_figures.py`, since it reads its tables).
+* [`assessments/Shor_Question_Paper.pdf`](assessments/Shor_Question_Paper.pdf) and
+  [`assessments/Shor_Answer_Book.pdf`](assessments/Shor_Answer_Book.pdf) - an 80-question test in the QFT format
+  (A Mathematical and Number Theory Foundations, B Quantum Computing Foundations, C Shor's Algorithm Fundamentals,
+  D Advanced Shor's Algorithm and Implementation; 4 x 20 single-correct questions, +3 / 0 / -1, 3 hours, 240 marks, OMR
+  response sheet), with key, topic map, quick-marking grid and full solutions explaining every option. Source:
+  `assessments/shor_test_source/` - check with `python verify_answers.py --cudaq` (exact integer/Fraction arithmetic,
+  checks against `build_shor.py` and the recorded outputs, and CUDA-Q runs of the notebook's builder for N = 15, 21, 33, 39)
+  and rebuild with `python generate_papers.py`.
 
 ## Structure of the notebooks
 
