@@ -1,0 +1,9 @@
+{
+ "status": "SUBMITTED",
+ "job_id": "dboli88qtr0c738d1jk0",
+ "sno": 1,
+ "backend": "ibm_marrakesh",
+ "run": "qft_ibm_63q",
+ "kind": "sample",
+ "logical_key": "0285f2a2ceeb30ae090bca5b"
+}

@@ -413,9 +413,20 @@ def _run_pubs(circuits, shots, kind):
         key = _job_key([qasm3.dumps(c) for c in circuits], shots, backend)
         isas = _isa(circuits, target)
         qasms = [qasm3.dumps(i) for i in isas]
+        global _call_index
         cached = _load_json(RAW_DIR / f"{key}.json", None)
         if cached and cached.get("status") == "COMPLETED":
-            return cached["data"], isas
+            return cached["data"], isas              # cache hits never went to IBM: not counted
+        if not cached:
+            adopted = _try_adopt(kind, circuits, shots, key)
+            if adopted:
+                data, rec = adopted
+                _call_index += 1
+                owner = next(a for a in pool.accounts if a.sno == rec["sno"])
+                _append_csv(JOBS_CSV, _job_row(kind, isas, shots, owner, rec["backend"], rec["job_id"],
+                                               "COMPLETED", rec["quantum_seconds"],
+                                               "submitted before the pause, result reused"))
+                return data, isas
 
         left = _usage_left(acct)
         if left is not None and left <= 1.0:
@@ -430,7 +441,8 @@ def _run_pubs(circuits, shots, kind):
             else:
                 job_id = acct.client.submit_sampler(backend, qasms, shots)
                 _write_json(RAW_DIR / f"{key}.json", {"status": "SUBMITTED", "job_id": job_id, "sno": acct.sno,
-                                                      "backend": backend, "run": RUN_LABEL, "kind": kind})
+                                                      "backend": backend, "run": RUN_LABEL, "kind": kind,
+                                                      "logical_key": key})
                 print(f"[ibm] submitted job {job_id} ({len(qasms)} circuit(s), {shots} shots, "
                       f"{isas[0].num_qubits}-qubit chip {backend}, account S.No {acct.sno})")
             t0 = time.time()
@@ -468,9 +480,68 @@ def _run_pubs(circuits, shots, kind):
         _write_json(RAW_DIR / f"{key}.json", {"status": "COMPLETED", "job_id": job_id, "sno": acct.sno,
                                               "backend": backend, "run": RUN_LABEL, "kind": kind,
                                               "quantum_seconds": qsec, "wall_s": round(time.time() - t0, 1),
-                                              "data": data})
+                                              "logical_key": key, "data": data})
+        _call_index += 1
         _append_csv(JOBS_CSV, _job_row(kind, isas, shots, acct, backend, job_id, "COMPLETED", qsec, ""))
         return data, isas
+
+
+# ---- adopting jobs recorded before the cache key changed -------------------------------
+# Records written before 2026-11-07 17:30 UTC were keyed by the transpiled circuit (not
+# reproducible). A run calls IBM in a fixed order and every earlier result comes back from
+# the cache unchanged, so the k-th call of a resumed run is the k-th call of the original
+# run. Such a record is reused only if its job at IBM matches this call: same kind, same
+# number of circuits, same shots and same qubit count.
+_legacy = None
+_call_index = 0
+
+
+def _legacy_records():
+    global _legacy
+    if _legacy is None:
+        recs = []
+        for f in sorted(RAW_DIR.glob("*.json")):
+            d = _load_json(f, {})
+            if d.get("run") == RUN_LABEL and not d.get("logical_key") and d.get("job_id"):
+                d["_file"] = str(f)
+                recs.append(d)
+        recs.sort(key=lambda d: (0 if d.get("status") == "COMPLETED" else 1, d.get("job_id")))
+        _legacy = recs
+    return _legacy
+
+
+def _try_adopt(kind, circuits, shots, key):
+    """Return (data, record) of the matching legacy job for this call, or None."""
+    recs = _legacy_records()
+    if _call_index >= len(recs):
+        return None
+    rec = recs[_call_index]
+    acct = next((a for a in _accounts().accounts if a.sno == rec["sno"]), None)
+    if acct is None or rec.get("kind") != kind:
+        return None
+    if acct.client is None:
+        from cudaq_ibm import IBMQuantumClient
+        acct.client = IBMQuantumClient(api_key=acct._key, crn=acct._crn, timeout=120.0)
+    job = acct.client._get(f"/jobs/{rec['job_id']}")
+    if str(job.get("state", {}).get("status", "")).upper() != "COMPLETED":
+        return None
+    pubs = (job.get("params") or {}).get("pubs") or []
+    widths = {int(m) for p in pubs for m in re.findall(r"qubit\[(\d+)\]", str(p[0]))[:1]}
+    if len(pubs) != len(circuits) or any(int(p[2]) != shots for p in pubs):
+        print(f"[ibm] earlier job {rec['job_id']} does not match this call - not reused")
+        return None
+    if widths and max(widths) < max(c.num_qubits for c in circuits):
+        return None
+    data = rec.get("data") or [pub["data"] for pub in acct.client.results(rec["job_id"])["results"]]
+    usage = acct.client._get(f"/jobs/{rec['job_id']}/metrics").get("usage") or {}
+    qsec = usage.get("quantum_seconds") or usage.get("seconds")
+    _write_json(RAW_DIR / f"{key}.json", {"status": "COMPLETED", "job_id": rec["job_id"], "sno": rec["sno"],
+                                          "backend": rec.get("backend") or job.get("backend"), "run": RUN_LABEL,
+                                          "kind": kind, "quantum_seconds": qsec, "logical_key": key,
+                                          "adopted_from_earlier_session": True, "data": data})
+    Path(rec["_file"]).unlink(missing_ok=True)
+    print(f"[ibm] reused finished job {rec['job_id']} from before the pause ({qsec} QPU s)")
+    return data, dict(rec, quantum_seconds=qsec, backend=rec.get("backend") or job.get("backend"))
 
 
 def _drop_cache(key):

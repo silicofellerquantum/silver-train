@@ -5,8 +5,9 @@
  "backend": "ibm_kingston",
  "run": "qaoa_ibm_156q",
  "kind": "observe",
- "quantum_seconds": null,
- "wall_s": 196.7,
+ "quantum_seconds": 4,
+ "logical_key": "b31682dde39a6ac8a4c2c8c2",
+ "adopted_from_earlier_session": true,
  "data": [
   {
    "meas": {

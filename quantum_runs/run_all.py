@@ -28,6 +28,10 @@ CPU = ['BACKEND="cpu"', 'LIVE_MEMORY_DISPLAY=False', 'EXPORT_DIR="exports"']
 RUNS = {
     # 156 qubits = every qubit of the IBM Heron chip
     "qft_ibm_156q": ("QFT.ipynb", True, "1-6", ["N_QUBITS=156"] + IBM),
+    # The QFT notebook's analysis section stores outcomes as 64-bit integers, so it stops
+    # with OverflowError above 63 qubits (the 156-qubit hardware result itself is complete).
+    # 63 qubits is the largest size where the whole notebook, analysis included, runs.
+    "qft_ibm_63q": ("QFT.ipynb", True, "1-6", ["N_QUBITS=63"] + IBM),
     # one Grover iteration: the optimal count (~pi/4 * 2^78) cannot be built at this size
     "grover_ibm_156q": ("Grover.ipynb", True, "7-12",
                         ["N_QUBITS=156", "GROVER_ITERATIONS=1", "RUN_ITERATION_SWEEP=False"] + IBM),
@@ -59,8 +63,9 @@ RUNS = {
 
 # Each IBM run stays on one chip, so its jobs do not queue behind the other runs' jobs
 # (the large QFT / Grover circuits held up the small optimizer jobs on a shared chip).
-BACKENDS = {"qft_ibm_156q": "ibm_kingston", "grover_ibm_156q": "ibm_kingston",
-            "vqe_ibm_156q": "ibm_fez", "qaoa_ibm_156q": "ibm_fez", "qml_ibm_156q": "ibm_marrakesh"}
+BACKENDS = {"qft_ibm_156q": "ibm_kingston", "qft_ibm_63q": "ibm_marrakesh", "grover_ibm_156q": "ibm_kingston",
+            "vqe_ibm_156q": "ibm_marrakesh", "qaoa_ibm_156q": "ibm_marrakesh",
+            "qml_ibm_156q": "ibm_marrakesh"}   # queues on 2026-11-09: fez 249, kingston 182, marrakesh 31
 
 
 def launch(label):

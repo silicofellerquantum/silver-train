@@ -1,0 +1,2 @@
+time_utc,run,kind,circuits,shots,account_sno,backend,job_id,status,quantum_seconds,chip_qubits_used,depth,two_qubit_gates,note
+2026-11-09T05:23:50+00:00,grover_ibm_156q,sample,1,2000,7,ibm_kingston,dbnlm5k4148s73918780,COMPLETED,21,156,274020,121332,"submitted before the pause, result reused"

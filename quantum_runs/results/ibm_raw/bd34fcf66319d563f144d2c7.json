@@ -1,0 +1,9 @@
+{
+ "status": "SUBMITTED",
+ "job_id": "dbolhntt7fqc73881qjg",
+ "sno": 19,
+ "backend": "ibm_marrakesh",
+ "run": "qaoa_ibm_156q",
+ "kind": "observe",
+ "logical_key": "bd34fcf66319d563f144d2c7"
+}

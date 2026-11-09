@@ -48,7 +48,14 @@ def jobs_for(label):
     for r in rows:
         if not r.get("quantum_seconds") and r["job_id"] in usage:
             r["quantum_seconds"] = str(usage[r["job_id"]])
-    return rows
+    # A job logged before the pause and reused after it appears twice: keep the later row.
+    latest = {}
+    for r in rows:
+        if r["status"] != "COMPLETED" or not r["job_id"]:
+            latest[id(r)] = r
+        else:
+            latest[r["job_id"]] = r
+    return list(latest.values())
 
 
 def main():

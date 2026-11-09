@@ -1,8 +1,0 @@
-{
- "status": "SUBMITTED",
- "job_id": "dbnltv5t7fqc73ajrr4g",
- "sno": 25,
- "backend": "ibm_marrakesh",
- "run": "qml_ibm_156q",
- "kind": "observe"
-}
