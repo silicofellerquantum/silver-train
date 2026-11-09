@@ -1,3 +1,7 @@
 time_utc,run,kind,circuits,shots,account_sno,backend,job_id,status,quantum_seconds,chip_qubits_used,depth,two_qubit_gates,note
 2026-11-07T17:12:48+00:00,vqe_ibm_156q,observe,2,4000,13,ibm_kingston,dbnlmitt7fqc73ajrg6g,COMPLETED,,156,1384,1165,
 2026-11-09T05:23:45+00:00,vqe_ibm_156q,observe,2,4000,13,ibm_kingston,dbnlmitt7fqc73ajrg6g,COMPLETED,5,156,1410,1039,"submitted before the pause, result reused"
+2026-11-09T05:43:29+00:00,vqe_ibm_156q,observe,2,4000,13,ibm_marrakesh,dbolhp0qtr0c738d1iu0,COMPLETED,5,156,1410,1039,
+2026-11-09T05:43:54+00:00,vqe_ibm_156q,observe,2,4000,13,ibm_marrakesh,dbolr0oou4as73csad70,COMPLETED,5,156,1410,1039,
+2026-11-09T05:44:17+00:00,vqe_ibm_156q,observe,2,4000,13,ibm_marrakesh,dbolr6s4148s739t7ol0,COMPLETED,5,156,1410,1039,
+2026-11-09T05:44:29+00:00,vqe_ibm_156q,sample,1,4000,13,ibm_marrakesh,dbolrcgou4as73csadu0,COMPLETED,3,156,1410,1039,

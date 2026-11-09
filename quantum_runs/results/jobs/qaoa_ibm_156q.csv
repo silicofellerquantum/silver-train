@@ -2,3 +2,7 @@ time_utc,run,kind,circuits,shots,account_sno,backend,job_id,status,quantum_secon
 2026-11-07T17:12:46+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_kingston,dbnlmi8qtr0c73ad9l50,COMPLETED,,156,4603,1545,
 2026-11-09T05:23:40+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_kingston,dbnlmi8qtr0c73ad9l50,COMPLETED,4,156,4762,1650,"submitted before the pause, result reused"
 2026-11-09T05:23:42+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_fez,dbnltvgou4as73b4q4fg,COMPLETED,4,156,4762,1650,"submitted before the pause, result reused"
+2026-11-09T05:43:38+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_marrakesh,dbolhntt7fqc73881qjg,COMPLETED,4,156,4762,1650,
+2026-11-09T05:44:11+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_marrakesh,dbolr2oou4as73csadbg,COMPLETED,4,156,4762,1650,
+2026-11-09T05:44:33+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_marrakesh,dbolrb5t7fqc73882ca0,COMPLETED,4,156,4762,1650,
+2026-11-09T05:44:56+00:00,qaoa_ibm_156q,observe,1,4000,19,ibm_marrakesh,dbolrgk4148s739t7p30,COMPLETED,4,156,4762,1650,
