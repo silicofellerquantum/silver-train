@@ -14,6 +14,7 @@ expected outcome of a scaling run on current devices.
 | `qaoa_ibm_156q` | 156 | IBM ibm_fez, ibm_kingston, ibm_marrakesh | completed | 6 | 24 | <C> = 71.98 on a 156-node ring; exact max cut 156 (notebook's local search: 140) -> ratio 0.46, below random (0.5) |
 | `qml_ibm_156q` | 156 | IBM ibm_kingston, ibm_marrakesh | completed | 6 | 17 | test accuracy 50% (= random guessing), training 100% on 2 images |
 | `shor_sim_21q` | 21 | CPU simulator | completed | 0 | 0 | 119 = 7 x 17; 94% of shots yield the factors |
+| `shor_sim_24q` | 24 | CPU simulator | completed | 0 | 0 | 221 = 13 x 17; 95.6% of shots yield the factors (59 min on 4 CPU cores) |
 | `hhl_sim_19q` | 19 | CPU simulator | completed | 0 | 0 | solution fidelity 0.9952 |
 | `noise_sim_1000q` | 1000 | CPU simulator | completed | 0 | 0 | GHZ, depolarizing p = 0.01: Hellinger fidelity 0.0003 |
 
@@ -153,6 +154,20 @@ Notebook: `results/shor_sim_21q/Shor.ipynb`
     Total wall time of execution cell   : 229.6732 s
     Expected result                     : 119 = 7 x 17 (trial division)
     Actual result                       : 119 = 7 x 17
+
+## shor_sim_24q
+
+Notebook: `results/shor_sim_24q/Shor.ipynb`
+
+    CUDA-Q target     : qpp-cpu  (qpp-cpu)
+    Factors by trial division (reference): (13, 17)
+    Algorithm                           : Shor's algorithm (integer factorization)
+    Number of qubits                    : 24
+    CUDA-Q target                       : qpp-cpu
+    Number of shots                     : 1000
+    Total wall time of execution cell   : 3532.5028 s
+    Expected result                     : 221 = 13 x 17 (trial division)
+    Actual result                       : 221 = 13 x 17
 
 ## hhl_sim_19q
 

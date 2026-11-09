@@ -8,44 +8,50 @@ saves the executed copy here.
 
 Results: [`results/summary.md`](results/summary.md), one folder per run in `results/`.
 
-## Status (paused 2026-11-07, 17:30 UTC)
+## Status: complete (2026-11-09)
 
-| Run | Status |
-|---|---|
-| `noise_sim_1000q` | done |
-| `shor_sim_21q` | done: 119 = 7 × 17, 94% of shots yield the factors |
-| `qft_ibm_156q`, `grover_ibm_156q` | 1 job each, submitted to IBM, not finished when paused |
-| `vqe_ibm_156q`, `qaoa_ibm_156q`, `qml_ibm_156q` | first IBM job done (in `results/ibm_raw/`); paused during their next job |
-| `hhl_sim_19q`, `shor_sim_24q` | stopped while simulating; re-run from the start |
+All runs finished; headline results are in [`results/summary.md`](results/summary.md).
+IBM usage: 20 jobs, 95 QPU seconds in total (each account has 600 s per 28 days).
 
-To resume, set up the environment (see *Re-running* below), then:
+| Run | Qubits | Result |
+|---|---|---|
+| `qft_ibm_156q` | 156 | hardware result complete (4000 distinct outcomes from 4000 shots); the notebook's analysis section stops above 63 qubits (64-bit integers) |
+| `qft_ibm_63q` | 63 | full notebook analysis: 0% of shots on the 8 expected peaks (ideal 100%) |
+| `grover_ibm_156q` | 156 | 1 iteration: P(marked) 0/2000, theory ~0 |
+| `vqe_ibm_156q` | 156 | E = -43.65 vs exact -165.04 |
+| `qaoa_ibm_156q` | 156 | approximation ratio 0.46 (exact max cut 156), random assignment 0.5 |
+| `qml_ibm_156q` | 156 | test accuracy 50% (random guessing) |
+| `shor_sim_21q` | 21 | 119 = 7 × 17, 94% of shots yield the factors |
+| `shor_sim_24q` | 24 | 221 = 13 × 17, 95.6% of shots yield the factors |
+| `hhl_sim_19q` | 19 | solution fidelity 0.9952 |
+| `noise_sim_1000q` | 1000 | GHZ with 1% depolarizing noise per gate: Hellinger fidelity 0.0003 |
 
-```bash
-QR_KEYS_XLSX=/path/to/API_KEYS.xlsx python quantum_runs/run_all.py \
-    qft_ibm_156q grover_ibm_156q vqe_ibm_156q qaoa_ibm_156q qml_ibm_156q hhl_sim_19q shor_sim_24q
-python quantum_runs/make_summary.py
-```
+At the full width of the chip every hardware result is dominated by noise: the circuits have
+roughly 1,000-116,000 two-qubit gates, each failing ~0.3-1% of the time. The same pipeline
+gives correct answers on small circuits (checked on a noisy and a noiseless local copy of the
+chip), and the simulator results are correct, so the hardware results show where current
+devices stop, not a problem in the code. A qubit sweep (e.g. 4-32 qubits) on the same chips
+would show where each algorithm still works.
 
-Completed IBM jobs are reused from `results/ibm_raw/`. The jobs that were still in flight
-when paused (listed with `"status": "SUBMITTED"` in `results/ibm_raw/`) were keyed by an
-earlier cache scheme, so a resumed run submits those circuits once more (a few QPU seconds
-each; every account has 600 s). From now on the cache key is the logical circuit and the
-transpiler seed is fixed, so later resumes never resubmit a finished circuit.
+Runs were paused on 2026-11-07 and resumed on 2026-11-09; the five jobs in flight finished at
+IBM during the pause and their results were reused, not resubmitted.
 
 ## Runs
 
 | Run | Notebook | Where | Qubits | Settings that differ from the notebook defaults |
 |---|---|---|---|---|
 | `qft_ibm_156q` | QFT | IBM | 156 | `N_QUBITS=156` |
+| `qft_ibm_63q` | QFT | IBM | 63 | `N_QUBITS=63` (largest size the notebook's analysis section supports) |
 | `grover_ibm_156q` | Grover | IBM | 156 | `GROVER_ITERATIONS=1` (the optimal ~π/4·2^78 iterations cannot be built), no iteration sweep |
 | `vqe_ibm_156q` | VQE | IBM | 156 | `OPTIMIZER="Powell"`, 5 energy evaluations, 4000 shots per term group |
 | `qaoa_ibm_156q` | QAOA | IBM | 156 | `GRAPH="ring"` (156 edges), 6 evaluations, 4000 shots |
 | `qml_ibm_156q` | QML | IBM | 156 | 12 × 13 images, 2 train / 2 test images, `OPTIMIZER="Powell"`, 3 iterations |
 | `shor_sim_21q` | Shor | CPU simulator | 21 | factor 119 = 7 × 17 |
+| `shor_sim_24q` | Shor | CPU simulator | 24 | factor 221 = 13 × 17 |
 | `hhl_sim_19q` | HHL | CPU simulator | 19 | random 256 × 256 system, 10 clock qubits |
 | `noise_sim_1000q` | Noise_Simulation | CPU (stabilizer) | 1000 | `N_QUBITS=1000` |
 
-Simulator sizes are the largest that finish in about an hour on the 4-core machine used: each
+Simulator sizes are the largest that finish in about an hour on the 4-core machine used (Shor at 24 qubits took 59 min): each
 extra qubit doubles the simulation time, and the notebooks' own estimates were ~5.4 days per
 attempt for Shor at 27 qubits (391 = 17 × 23, the largest that fits in 16 GB RAM), ~7.9 h at
 24 qubits, and ~4.6 days for HHL at 23 qubits. On a GPU (the notebooks' intended target) the

@@ -69,7 +69,7 @@ RESULT = {
                      "-> ratio 0.46, below random (0.5)",
     "qml_ibm_156q": "test accuracy 50% (= random guessing), training 100% on 2 images",
     "shor_sim_21q": "119 = 7 x 17; 94% of shots yield the factors",
-    "shor_sim_24q": "see below",
+    "shor_sim_24q": "221 = 13 x 17; 95.6% of shots yield the factors (59 min on 4 CPU cores)",
     "hhl_sim_19q": "solution fidelity 0.9952",
     "noise_sim_1000q": "GHZ, depolarizing p = 0.01: Hellinger fidelity 0.0003",
 }
